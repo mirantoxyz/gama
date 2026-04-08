@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMK Teknik Alat Berat | Masa Depan Industri Indonesia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #EAB308;
+            --secondary: #0F172A;
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #FAFAFA;
+        }
+        .heading-font { font-family: 'Oswald', sans-serif; }
+        
+        /* Smooth Scroll */
+        html { scroll-behavior: smooth; }
+
+        /* Modern Glassmorphism */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Carousel Styles */
+        .carousel-item {
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            position: absolute;
+            inset: 0;
+        }
+        .carousel-item.active {
+            opacity: 1;
+            z-index: 10;
+        }
+
+        /* Ken Burns Effect Refined */
+        @keyframes kenburns {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); }
+        }
+        .hero-zoom { animation: kenburns 15s infinite alternate ease-in-out; }
+
+        /* Reveal Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Floating Animation for Icons */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 4s infinite ease-in-out; }
+
+        /* Gear Rotation */
+        @keyframes gear-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .rotate-slow { animation: gear-rotate 20s infinite linear; }
+
+        /* AI Chatbot Styles */
+        #chat-window {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+        }
+        #chat-window.open {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .ai-glow {
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+        }
+    </style>
+</head>
+<body class="text-slate-900">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 w-full z-[100] glass-nav border-b border-slate-200/50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-yellow-500">
+                    <i data-lucide="cog" class="w-6 h-6 rotate-slow"></i>
+                </div>
+                <div class="hidden sm:block">
+                    <span class="block font-extrabold text-slate-900 leading-none tracking-tight text-lg heading-font">SMK ALAT BERAT</span>
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Bina Insan Teknisi</span>
+                </div>
+            </div>
+            
+            <div class="hidden lg:flex items-center gap-10">
+                <div class="flex gap-8 text-sm font-semibold text-slate-600">
+                    <a href="#home" class="hover:text-yellow-600 transition-colors">Beranda</a>
+                    <a href="#sambutan" class="hover:text-yellow-600 transition-colors">Sambutan</a>
+                    <a href="#profil" class="hover:text-yellow-600 transition-colors">Profil</a>
+                    <a href="#keunggulan" class="hover:text-yellow-600 transition-colors">Keunggulan</a>
+                    <a href="#berita" class="hover:text-yellow-600 transition-colors">Berita</a>
+                </div>
+                <a href="#" class="bg-slate-900 text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-yellow-500 hover:text-slate-900 transition-all duration-300">
+                    PPDB 2024
+                </a>
+            </div>
+
+            <button id="menuBtn" class="lg:hidden p-2 text-slate-900">
+                <i data-lucide="align-right" class="w-7 h-7"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenu" class="fixed inset-0 bg-white z-[90] flex flex-col items-center justify-center gap-8 text-2xl font-bold opacity-0 invisible transition-all duration-300 lg:hidden">
+        <a href="#home" class="mobile-link">Beranda</a>
+        <a href="#sambutan" class="mobile-link">Sambutan</a>
+        <a href="#profil" class="mobile-link">Profil</a>
+        <a href="#keunggulan" class="mobile-link">Keunggulan</a>
+        <a href="#berita" class="mobile-link">Berita</a>
+        <button id="closeMenu" class="absolute top-6 right-6 p-2"><i data-lucide="x" class="w-8 h-8"></i></button>
+    </div>
+
+    <!-- Hero Carousel Section -->
+    <section id="home" class="relative h-screen overflow-hidden bg-slate-900">
+        <!-- Slides -->
+        <div class="carousel-container relative h-full">
+            <!-- Slide 1 -->
+            <div class="carousel-item active">
+                <img src="https://images.unsplash.com/photo-1579453992209-76860368c049?auto=format&fit=crop&w=1920&q=80" class="w-full h-full object-cover hero-zoom opacity-50" alt="Alat Berat">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-slate-900/40"></div>
+                <div class="absolute inset-0 flex items-center">
+                    <div class="container mx-auto px-6">
+                        <div class="max-w-4xl">
+                            <div class="inline-flex items-center gap-2 bg-yellow-500/20 border border-yellow-500/30 backdrop-blur-md px-4 py-2 rounded-full mb-8">
+                                <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                                <span class="text-yellow-500 text-xs font-bold uppercase tracking-widest">Unggul & Terakreditasi</span>
+                            </div>
+                            <h1 class="text-5xl md:text-8xl font-bold text-white heading-font leading-[0.95] mb-8">
+                                KUASAI RAKSASA <br> <span class="text-yellow-500">BAJA INDUSTRI</span>
+                            </h1>
+                            <p class="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl font-light leading-relaxed">
+                                Menyiapkan mekanik profesional bersertifikasi internasional untuk menggerakkan roda ekonomi bangsa.
+                            </p>
+                            <div class="flex flex-wrap gap-4">
+                                <a href="#" class="bg-yellow-500 text-slate-900 px-8 py-4 rounded-xl font-bold hover:shadow-[0_0_20px_rgba(234,179,8,0.4)] transition-all flex items-center gap-2 group">
+                                    Daftar Online <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="carousel-item">
+                <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=1920&q=80" class="w-full h-full object-cover hero-zoom opacity-50" alt="Siswa Praktik">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-slate-900/40"></div>
+                <div class="absolute inset-0 flex items-center">
+                    <div class="container mx-auto px-6">
+                        <div class="max-w-4xl">
+                            <div class="inline-flex items-center gap-2 bg-blue-500/20 border border-blue-500/30 backdrop-blur-md px-4 py-2 rounded-full mb-8 text-blue-400">
+                                <i data-lucide="cpu" class="w-4 h-4"></i>
+                                <span class="text-xs font-bold uppercase tracking-widest">Teknologi Modern</span>
+                            </div>
+                            <h1 class="text-5xl md:text-8xl font-bold text-white heading-font leading-[0.95] mb-8">
+                                WORKSHOP BERSTANDAR <br> <span class="text-blue-400">MANUFAKTUR GLOBAL</span>
+                            </h1>
+                            <p class="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl font-light">
+                                Fasilitas praktik lengkap dengan unit alat berat asli untuk simulasi pekerjaan nyata di lapangan.
+                            </p>
+                            <div class="flex flex-wrap gap-4">
+                                <a href="#" class="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-700 transition-all flex items-center gap-2">
+                                    Tour Fasilitas <i data-lucide="video" class="w-5 h-5"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="carousel-item">
+                <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1920&q=80" class="w-full h-full object-cover hero-zoom opacity-50" alt="Lulusan Bekerja">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-slate-900/40"></div>
+                <div class="absolute inset-0 flex items-center">
+                    <div class="container mx-auto px-6">
+                        <div class="max-w-4xl">
+                            <div class="inline-flex items-center gap-2 bg-green-500/20 border border-green-500/30 backdrop-blur-md px-4 py-2 rounded-full mb-8 text-green-400">
+                                <i data-lucide="handshake" class="w-4 h-4"></i>
+                                <span class="text-xs font-bold uppercase tracking-widest">Kerjasama Industri</span>
+                            </div>
+                            <h1 class="text-5xl md:text-8xl font-bold text-white heading-font leading-[0.95] mb-8">
+                                JALUR CEPAT <br> <span class="text-green-400">KARIR PROFESIONAL</span>
+                            </h1>
+                            <p class="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl font-light">
+                                Penyerapan lulusan tinggi melalui kemitraan strategis dengan perusahaan pertambangan dan konstruksi nasional.
+                            </p>
+                            <div class="flex flex-wrap gap-4">
+                                <a href="#" class="bg-green-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-green-700 transition-all flex items-center gap-2">
+                                    Data Alumni <i data-lucide="users" class="w-5 h-5"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carousel Controls -->
+        <div class="absolute bottom-12 right-6 md:right-12 z-20 flex gap-4">
+            <button id="prevBtn" class="w-14 h-14 rounded-full border border-white/20 bg-white/5 backdrop-blur-md flex items-center justify-center text-white hover:bg-yellow-500 hover:text-slate-900 transition-all">
+                <i data-lucide="chevron-left"></i>
+            </button>
+            <button id="nextBtn" class="w-14 h-14 rounded-full border border-white/20 bg-white/5 backdrop-blur-md flex items-center justify-center text-white hover:bg-yellow-500 hover:text-slate-900 transition-all">
+                <i data-lucide="chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Indicators -->
+        <div class="absolute bottom-12 left-6 md:left-12 z-20 flex gap-2">
+            <div class="indicator w-12 h-1 bg-white/30 rounded-full cursor-pointer transition-all active bg-yellow-500"></div>
+            <div class="indicator w-12 h-1 bg-white/30 rounded-full cursor-pointer transition-all"></div>
+            <div class="indicator w-12 h-1 bg-white/30 rounded-full cursor-pointer transition-all"></div>
+        </div>
+    </section>
+
+    <!-- Sambutan Kepala Sekolah -->
+    <section id="sambutan" class="py-32 bg-slate-50 relative overflow-hidden">
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="grid lg:grid-cols-5 gap-16 items-center">
+                <div class="lg:col-span-2 reveal">
+                    <div class="relative group">
+                        <div class="absolute -inset-4 bg-yellow-500 rounded-[2.5rem] rotate-3 opacity-20 group-hover:rotate-6 transition-transform"></div>
+                        <div class="relative rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white aspect-[4/5]">
+                            <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80" 
+                                 class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="Kepala Sekolah">
+                        </div>
+                        <div class="absolute -bottom-6 -left-6 bg-slate-900 text-white p-8 rounded-3xl shadow-xl border-l-4 border-yellow-500">
+                            <h4 class="font-bold text-xl heading-font uppercase italic">Drs. H. Mulyadi, M.T.</h4>
+                            <p class="text-xs text-yellow-500 font-bold uppercase tracking-widest mt-1">Kepala Sekolah SMK TAB</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-3 reveal" style="transition-delay: 200ms;">
+                    <div class="flex flex-wrap items-center gap-4 mb-6">
+                        <div class="bg-yellow-100 text-yellow-700 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                            Pesan dari Pimpinan
+                        </div>
+                        <button onclick="playGreetingAI()" id="tts-btn" class="flex items-center gap-2 bg-slate-900 text-white px-4 py-1.5 rounded-full text-xs font-bold hover:bg-yellow-500 hover:text-slate-900 transition-all">
+                            <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Dengarkan Sambutan ✨
+                        </button>
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-bold text-slate-900 mb-8 heading-font uppercase leading-tight">
+                        MEMBANGUN <span class="text-yellow-600">KOMPETENSI,</span> <br> MENGGERAKKAN <span class="text-slate-400">NEGERI</span>
+                    </h2>
+                    <div class="relative">
+                        <i data-lucide="quote" class="w-12 h-12 text-yellow-500/20 absolute -top-6 -left-6"></i>
+                        <div id="greeting-text" class="space-y-6 text-slate-600 text-lg leading-relaxed italic font-light">
+                            <p>"Dunia industri alat berat menuntut presisi, kedisiplinan, dan mental yang kuat. Di SMK Teknik Alat Berat, kami tidak hanya mencetak teknisi handal, tetapi juga pribadi berkarakter yang siap menghadapi tantangan global."</p>
+                            <p>"Kami mengundang putra-putri terbaik bangsa untuk bergabung dalam ekosistem pendidikan yang inovatif, di mana teknologi dan karakter berpadu dalam harmoni."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Brief About & AI Analysis -->
+    <section id="profil" class="py-32 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-20 items-center">
+                <div class="relative reveal">
+                    <div class="aspect-[4/5] rounded-[2rem] overflow-hidden shadow-2xl">
+                        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80" 
+                             class="w-full h-full object-cover" alt="Workshop Siswa">
+                    </div>
+                    <div class="absolute -bottom-10 -right-10 bg-yellow-500 p-10 rounded-[2rem] hidden md:block animate-float shadow-xl">
+                        <i data-lucide="shield-check" class="w-12 h-12 text-slate-900 mb-4"></i>
+                        <h4 class="text-slate-900 font-bold text-xl leading-tight">Terakreditasi <br> Unggul (A)</h4>
+                    </div>
+                </div>
+                <div class="reveal" style="transition-delay: 200ms;">
+                    <span class="text-yellow-600 font-bold uppercase tracking-widest text-sm mb-4 block">Tentang Kami</span>
+                    <h2 class="text-4xl md:text-5xl font-bold text-slate-900 mb-8 heading-font tracking-tight uppercase">Masa Depan Anda <br> Adalah <span class="text-slate-400">Prioritas Kami</span></h2>
+                    <p class="text-slate-600 text-lg leading-relaxed mb-8 font-light">
+                        Didirikan dengan visi memenuhi kebutuhan industri pertambangan dan konstruksi, SMK Teknik Alat Berat hadir sebagai pusat keunggulan (*Center of Excellence*).
+                    </p>
+                    
+                    <!-- AI Career Feature -->
+                    <div class="bg-slate-50 p-6 rounded-3xl border border-slate-200 mb-8 ai-glow">
+                        <h5 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-5 h-5 text-yellow-500"></i> Analisis Karir AI ✨
+                        </h5>
+                        <p class="text-sm text-slate-500 mb-4">Cari tahu posisi apa yang paling cocok untuk minat Anda di industri alat berat.</p>
+                        <div class="flex gap-2">
+                            <input type="text" id="career-input" placeholder="Contoh: Saya suka mesin diesel..." class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                            <button onclick="analyzeCareerAI()" id="analyze-btn" class="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-yellow-500 transition-all">Cek ✨</button>
+                        </div>
+                        <div id="career-result" class="mt-4 text-sm text-slate-700 hidden leading-relaxed"></div>
+                    </div>
+
+                    <a href="#" class="inline-flex items-center gap-2 text-slate-900 font-bold hover:text-yellow-600 transition-colors">
+                        Lihat Profil Lengkap <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-20 bg-slate-900">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-12">
+                <div class="text-center reveal">
+                    <p class="text-yellow-500 text-5xl font-bold heading-font mb-2 counter" data-target="15">0</p>
+                    <p class="text-slate-400 text-xs uppercase tracking-widest font-bold">Partner Industri</p>
+                </div>
+                <div class="text-center reveal" style="transition-delay: 100ms;">
+                    <p class="text-white text-5xl font-bold heading-font mb-2 counter" data-target="1200">0</p>
+                    <p class="text-slate-400 text-xs uppercase tracking-widest font-bold">Alumni Bekerja</p>
+                </div>
+                <div class="text-center reveal" style="transition-delay: 200ms;">
+                    <p class="text-yellow-500 text-5xl font-bold heading-font mb-2 counter" data-target="24">0</p>
+                    <p class="text-slate-400 text-xs uppercase tracking-widest font-bold">Unit Alat Berat</p>
+                </div>
+                <div class="text-center reveal" style="transition-delay: 300ms;">
+                    <p class="text-white text-5xl font-bold heading-font mb-2 counter" data-target="100">0</p>
+                    <p class="text-slate-400 text-xs uppercase tracking-widest font-bold">% Sertifikasi</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer & Chatbot -->
+    <footer class="bg-slate-900 text-white pt-24 pb-12">
+        <div class="container mx-auto px-6">
+            <!-- Footer content simplified for brevity -->
+            <div class="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em]">
+                <p>&copy; 2024 SMK TEKNIK ALAT BERAT. ALL RIGHTS RESERVED.</p>
+                <div class="flex gap-10">
+                    <a href="#" class="hover:text-white">Safety Policy</a>
+                    <a href="#" class="hover:text-white">Privacy Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AI Chatbot Floating Button -->
+    <div class="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-4">
+        <div id="chat-window" class="w-80 md:w-96 h-[500px] bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col mb-4">
+            <div class="bg-slate-900 p-4 flex items-center justify-between text-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center text-slate-900">
+                        <i data-lucide="bot" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold leading-none">Asisten AI SMK ✨</p>
+                        <p class="text-[10px] text-yellow-500 uppercase tracking-widest mt-1">Online</p>
+                    </div>
+                </div>
+                <button onclick="toggleChat()" class="text-white/50 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50 text-sm">
+                <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 max-w-[85%]">
+                    Halo! Saya asisten AI SMK Teknik Alat Berat. Ada yang bisa saya bantu terkait PPDB atau kurikulum? ✨
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-white flex gap-2">
+                <input type="text" id="chat-input" placeholder="Tanya sesuatu..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none">
+                <button onclick="sendMessage()" id="send-btn" class="bg-slate-900 text-white p-2 rounded-xl hover:bg-yellow-500 transition-all">
+                    <i data-lucide="send" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        <button onclick="toggleChat()" class="w-16 h-16 bg-yellow-500 rounded-full shadow-2xl flex items-center justify-center text-slate-900 hover:scale-110 transition-all animate-bounce ai-glow">
+            <i data-lucide="message-square" class="w-8 h-8"></i>
+        </button>
+    </div>
+
+    <script>
+        // API CONFIGURATION
+        const apiKey = ""; // Diset secara internal oleh sistem
+        const modelName = "gemini-2.5-flash-preview-09-2025";
+        const ttsModel = "gemini-2.5-flash-preview-tts";
+
+        // Lucide Icons
+        lucide.createIcons();
+
+        // Carousel Logic
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.carousel-item');
+        const indicators = document.querySelectorAll('.indicator');
+        const totalSlides = slides.length;
+
+        function updateCarousel(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            indicators.forEach(ind => ind.classList.remove('active', 'bg-yellow-500'));
+            indicators.forEach(ind => ind.classList.add('bg-white/30'));
+            currentSlide = (index + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].classList.add('active', 'bg-yellow-500');
+            indicators[currentSlide].classList.remove('bg-white/30');
+        }
+
+        document.getElementById('nextBtn')?.addEventListener('click', () => updateCarousel(currentSlide + 1));
+        document.getElementById('prevBtn')?.addEventListener('click', () => updateCarousel(currentSlide - 1));
+        indicators.forEach((indicator, i) => {
+            indicator.addEventListener('click', () => updateCarousel(i));
+        });
+        setInterval(() => updateCarousel(currentSlide + 1), 6000);
+
+        // Chatbot Toggle
+        function toggleChat() {
+            document.getElementById('chat-window').classList.toggle('open');
+        }
+
+        // --- GEMINI API CALLS WITH BACKOFF ---
+        async function callGemini(prompt, systemPrompt = "") {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: systemPrompt ? { parts: [{ text: systemPrompt }] } : undefined
+            };
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text;
+                } catch (err) {
+                    await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+                }
+            }
+            return "Maaf, terjadi gangguan pada sistem AI. Silakan coba lagi nanti.";
+        }
+
+        // AI Chatbot Logic
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const container = document.getElementById('chat-messages');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            // User Message
+            container.innerHTML += `<div class="bg-slate-900 text-white p-3 rounded-2xl rounded-tr-none self-end ml-auto max-w-[85%]">${msg}</div>`;
+            input.value = "";
+            container.scrollTop = container.scrollHeight;
+
+            const systemPrompt = "Anda adalah asisten AI resmi SMK Teknik Alat Berat. Bantu pengunjung seputar pendaftaran siswa baru, fasilitas alat berat, kurikulum mekanik, dan prospek kerja. Jawab dengan ramah, informatif, dan gunakan emoji ✨ jika perlu.";
+            
+            const response = await callGemini(msg, systemPrompt);
+            container.innerHTML += `<div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 max-w-[85%]">${response}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // AI Career Analysis Logic
+        async function analyzeCareerAI() {
+            const input = document.getElementById('career-input');
+            const resultDiv = document.getElementById('career-result');
+            const btn = document.getElementById('analyze-btn');
+            const interest = input.value.trim();
+            if (!interest) return;
+
+            btn.disabled = true;
+            btn.innerHTML = "Menganalisis...";
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = "<em>Mencari kecocokan karir...</em>";
+
+            const prompt = `Saya adalah siswa yang berminat pada: "${interest}". Di industri alat berat, posisi pekerjaan apa yang paling cocok untuk saya? Berikan 1 rekomendasi singkat saja.`;
+            const system = "Anda adalah konsultan karir industri alat berat. Berikan saran karir teknis yang spesifik di industri alat berat berdasarkan minat siswa.";
+            
+            const response = await callGemini(prompt, system);
+            resultDiv.innerHTML = `<strong>Saran AI:</strong> ${response}`;
+            btn.disabled = false;
+            btn.innerHTML = "Cek ✨";
+        }
+
+        // AI Text-to-Speech Greeting
+        async function playGreetingAI() {
+            const btn = document.getElementById('tts-btn');
+            const greetingText = document.getElementById('greeting-text').innerText;
+            
+            btn.disabled = true;
+            btn.innerHTML = "Menyiapkan Audio...";
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${ttsModel}:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: `Bacakan dengan nada wibawa: ${greetingText}` }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } }
+                }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                const pcmData = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                
+                if (pcmData) {
+                    const audioBlob = pcmToWav(pcmData, 24000); // 24kHz default
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+                }
+            } catch (err) {
+                console.error("TTS Error:", err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Dengarkan Sambutan ✨`;
+            }
+        }
+
+        // Helper PCM to WAV
+        function pcmToWav(base64Pcm, sampleRate) {
+            const buffer = Uint8Array.from(atob(base64Pcm), c => c.charCodeAt(0)).buffer;
+            const length = buffer.byteLength;
+            const wavHeader = new ArrayBuffer(44);
+            const view = new DataView(wavHeader);
+            
+            view.setUint32(0, 0x52494646, false); // "RIFF"
+            view.setUint32(4, 36 + length, true);
+            view.setUint32(8, 0x57415645, false); // "WAVE"
+            view.setUint32(12, 0x666d7420, false); // "fmt "
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); // PCM
+            view.setUint16(22, 1, true); // Mono
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            view.setUint32(36, 0x64617461, false); // "data"
+            view.setUint32(40, length, true);
+            
+            return new Blob([wavHeader, buffer], { type: 'audio/wav' });
+        }
+
+        // --- Observer & Reveal ---
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('active');
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        // Counter Logic
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target.classList.contains('counted')) {
+                    const target = +entry.target.getAttribute('data-target');
+                    let current = 0;
+                    const update = () => {
+                        if (current < target) {
+                            current += target / 30;
+                            entry.target.innerText = Math.ceil(current) + (target === 100 ? '%' : '+');
+                            setTimeout(update, 50);
+                        } else entry.target.innerText = target + (target === 100 ? '%' : '+');
+                    };
+                    update();
+                    entry.target.classList.add('counted');
+                }
+            });
+        }, { threshold: 0.5 });
+        document.querySelectorAll('.counter').forEach(c => counterObserver.observe(c));
+    </script>
+</body>
+</html>
