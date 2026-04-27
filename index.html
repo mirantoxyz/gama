@@ -121,7 +121,16 @@
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'smk-gajahmada-final-menu';
-        const firebaseConfig = JSON.parse(__firebase_config);
+        const firebaseConfig = {
+  apiKey: "AIzaSyDYwSaA2Jlk311AenolGQO_kIQy9Ywtx-8",
+  authDomain: "smkgajahmada1-metro.firebaseapp.com",
+  projectId: "smkgajahmada1-metro",
+  storageBucket: "smkgajahmada1-metro.firebasestorage.app",
+  messagingSenderId: "964658751342",
+  appId: "1:964658751342:web:84a8445bbc2fe1ee7b037f",
+  measurementId: "G-EVBEPBL922"
+};
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
