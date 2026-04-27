@@ -33,7 +33,7 @@
         
         /* Input File Styling */
         input[type="file"]::file-selector-button {
-            background-color: #1e3a8a; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-right: 12px;
+            background-color: #1e3a8a; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-right: 12px; font-size: 11px;
         }
         input[type="file"]::file-selector-button:hover { background-color: #1e40af; }
     </style>
@@ -143,7 +143,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const storage = getStorage(app);
-        const appId = 'smk-gm1-prod'; // ID unik untuk jalur penyimpanan data
+        const appId = 'smk-gm1-prod'; 
 
         // Security Helpers
         const escapeHTML = (str) => {
@@ -156,24 +156,31 @@
             return Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
         };
 
-        // File Upload Helper
-        const uploadImage = async (fileInputId, oldUrlId) => {
+        // File & URL Handler Helper
+        const processImage = async (fileInputId, urlInputId, oldUrl) => {
             const fileInput = document.getElementById(fileInputId);
-            const oldUrlInput = oldUrlId ? document.getElementById(oldUrlId) : null;
+            const urlInput = document.getElementById(urlInputId);
             
+            // 1. Prioritaskan jika ada file yang dipilih untuk diunggah
             if (fileInput && fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 const storageRef = ref(storage, `uploads/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`);
                 const uploadTask = await uploadBytesResumable(storageRef, file);
                 return await getDownloadURL(uploadTask.ref);
             }
-            return oldUrlInput ? oldUrlInput.value : '';
+            
+            // 2. Jika tidak ada file, periksa apakah ada URL yang dimasukkan manual
+            if (urlInput && urlInput.value.trim() !== '') {
+                return urlInput.value.trim();
+            }
+
+            // 3. Kembalikan URL lama jika tidak ada perubahan
+            return oldUrl || '';
         };
 
         // State Management
         let userRole = sessionStorage.getItem('secured_user_role') || null; 
         
-        // Daftar Halaman Tersedia (Untuk Target Menu)
         const availablePages = [
             { id: 'home', title: 'Beranda Utama' },
             { id: 'profil', title: 'Profil Sekolah' },
@@ -186,7 +193,6 @@
             { id: 'alumni-tracer', title: 'Form Penelusuran Alumni' }
         ];
 
-        // Data Default (Akan diganti otomatis jika sudah ada data di Firebase)
         let siteConfig = {
             logoImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png",
             name: "SMK Gajahmada 1 Metro",
@@ -252,11 +258,10 @@
 
         const init = async () => {
             try {
-                // Karena pakai DB Pribadi, paksakan penggunaan Anonymous Auth (Abaikan token preview)
                 await signInAnonymously(auth);
             } catch (error) {
-                console.warn("Informasi: Firebase Anonymous Auth belum diaktifkan di Firebase Console Anda.", error);
-                showToast("Peringatan: Website dalam mode Read-Only. Aktifkan Anonymous Sign-In di Firebase!");
+                console.warn("Informasi: Firebase Anonymous Auth belum diaktifkan.", error);
+                showToast("Mode Read-Only. Aktifkan Anonymous Sign-In di Firebase!");
             } finally {
                 setupListeners();
             }
@@ -337,7 +342,6 @@
                 }
             });
 
-            // Separator Vertikal
             deskHTML += `</div><div class="h-6 w-px bg-slate-200 mx-3"></div>`;
             deskHTML += `<button onclick="navigate('admin')" class="p-3 text-slate-400 hover:text-blue-700 transition-colors" title="Dashboard"><i data-lucide="settings" size="20"></i></button>`;
             mobHTML += `<button onclick="navigate('admin')" class="block w-full text-center bg-blue-900 text-white font-bold py-4 rounded-xl mt-6 transition hover:bg-black uppercase text-xs tracking-widest"><i data-lucide="shield-check" class="inline w-4 h-4 mr-2"></i> Area Administrator</button>`;
@@ -374,7 +378,7 @@
             switch(page) {
                 case 'home':
                     content.innerHTML = `
-                        <!-- Carousel Dinamis yang Diperbaiki -->
+                        <!-- Carousel -->
                         <section class="relative bg-slate-900 overflow-hidden h-[400px] md:h-[600px] group">
                             <div id="carousel-inner" class="h-full relative">
                                 ${galleryList.length > 0 ? galleryList.map((g, i) => `
@@ -693,11 +697,13 @@
                             </div>
                             <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Tempat Kerja / Universitas Saat Ini</label><input type="text" id="tracer-workplace" required placeholder="Misal: PT Astra / Universitas Lampung" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></div>
                             
-                            <!-- Foto Upload -->
+                            <!-- Foto Upload / URL -->
                             <div>
-                                <label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Upload Foto Terbaru (Rasio 1:1)</label>
-                                <input type="file" id="tracer-image-file" accept="image/*" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm text-slate-500">
-                                <input type="hidden" id="tracer-image-old" value="">
+                                <label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Upload / URL Foto Terbaru (Rasio 1:1)</label>
+                                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                                    <input type="file" id="tracer-image-file" accept="image/*" class="w-full text-sm text-slate-500 mb-2">
+                                    <input type="url" id="tracer-image-url" placeholder="Atau masukkan URL foto..." class="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 bg-white text-sm">
+                                </div>
                             </div>
                             
                             <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Kesan & Pesan</label><textarea id="tracer-quote" required placeholder="Ceritakan pengalaman singkat Anda..." rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></textarea></div>
@@ -809,10 +815,12 @@
                         <div class="space-y-6">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Identitas Dasar</h4>
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload Logo Sekolah</label>
-                                <input type="file" id="conf-logo-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-slate-50 focus:bg-white text-xs text-slate-500 mb-2" ${siteConfig.logoImage ? '' : 'required'}>
-                                <input type="hidden" id="conf-logo-old" value="${siteConfig.logoImage || ''}">
-                                ${siteConfig.logoImage ? `<img src="${siteConfig.logoImage}" class="h-10 ml-2 rounded object-contain border bg-white p-1">` : ''}
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload / URL Logo Sekolah</label>
+                                <div class="bg-slate-50 p-2 rounded-2xl border border-slate-200">
+                                    <input type="file" id="conf-logo-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
+                                    <input type="url" id="conf-logo-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-white text-xs outline-none">
+                                </div>
+                                ${siteConfig.logoImage ? `<img src="${siteConfig.logoImage}" class="h-10 mt-2 rounded object-contain border bg-white p-1">` : ''}
                             </div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama Resmi Sekolah</label><input type="text" id="conf-name" value="${siteConfig.name}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Slogan Website</label><input type="text" id="conf-slogan" value="${siteConfig.slogan}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
@@ -826,10 +834,12 @@
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Sambutan Kepala Sekolah</h4>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama & Gelar</label><input type="text" id="conf-s-name" value="${siteConfig.sambutanName}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
                             <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload Foto Pimpinan</label>
-                                <input type="file" id="conf-s-img-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-slate-50 focus:bg-white text-xs text-slate-500 mb-2" ${siteConfig.sambutanImage ? '' : 'required'}>
-                                <input type="hidden" id="conf-s-img-old" value="${siteConfig.sambutanImage || ''}">
-                                ${siteConfig.sambutanImage ? `<img src="${siteConfig.sambutanImage}" class="h-10 ml-2 rounded object-contain border bg-white p-1">` : ''}
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload / URL Foto Pimpinan</label>
+                                <div class="bg-slate-50 p-2 rounded-2xl border border-slate-200">
+                                    <input type="file" id="conf-s-img-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
+                                    <input type="url" id="conf-s-img-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-white text-xs outline-none">
+                                </div>
+                                ${siteConfig.sambutanImage ? `<img src="${siteConfig.sambutanImage}" class="h-10 mt-2 rounded object-contain border bg-white p-1">` : ''}
                             </div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Teks Sambutan Singkat</label><textarea id="conf-s-text" rows="6" class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none">${siteConfig.sambutanText}</textarea></div>
                         </div>
@@ -872,10 +882,12 @@
                     <h3 class="text-2xl font-black mb-8 border-b border-slate-100 pb-6 text-blue-900 flex items-center gap-3"><i data-lucide="school" class="text-blue-500"></i> Pengaturan Halaman Profil</h3>
                     <form onsubmit="handleSaveProfil(event)" class="space-y-8 max-w-5xl">
                         <div>
-                            <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Upload Foto Banner Profil Raksasa</label>
-                            <input type="file" id="prof-img-file" accept="image/*" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 bg-white text-sm" ${siteConfig.profilImage ? '' : 'required'}>
-                            <input type="hidden" id="prof-img-old" value="${siteConfig.profilImage || ''}">
-                            ${siteConfig.profilImage ? `<p class="text-xs text-slate-500 mt-2">Gambar saat ini sudah tersimpan. Pilih file baru untuk mengganti.</p>` : ''}
+                            <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Upload / URL Foto Banner Profil Raksasa</label>
+                            <div class="bg-slate-50 p-2 rounded-2xl border border-slate-200 mt-2">
+                                <input type="file" id="prof-img-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
+                                <input type="url" id="prof-img-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-white text-xs outline-none">
+                            </div>
+                            ${siteConfig.profilImage ? `<img src="${siteConfig.profilImage}" class="h-20 mt-2 rounded object-cover border bg-white p-1">` : ''}
                         </div>
                         <div>
                             <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Sejarah Singkat Sekolah (Dapat menggunakan enter untuk paragraf baru)</label>
@@ -905,9 +917,12 @@
                                     <input type="text" id="jur-code" placeholder="Singkatan (TKJ)" value="${editItem?.code || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     <input type="text" id="jur-name" placeholder="Nama Lengkap Jurusan" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     
-                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload Foto Jurusan</label>
-                                    <input type="file" id="jur-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
-                                    <input type="hidden" id="jur-image-old" value="${editItem?.image || ''}">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload / URL Foto Jurusan</label>
+                                    <div class="bg-white p-2 rounded-2xl border">
+                                        <input type="file" id="jur-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
+                                        <input type="url" id="jur-image-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                                    </div>
+                                    ${editItem?.image ? `<p class="text-[9px] text-slate-400 mt-1">Terdapat foto tersimpan.</p>` : ''}
 
                                     <textarea id="jur-desc" placeholder="Deskripsi/Keterangan..." required rows="5" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
@@ -945,9 +960,11 @@
                                     <input type="text" id="guru-name" placeholder="Nama Guru" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     <input type="text" id="guru-subject" placeholder="Mengajar (Mapel)" value="${editItem?.subject || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     
-                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload Pas Foto</label>
-                                    <input type="file" id="guru-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
-                                    <input type="hidden" id="guru-image-old" value="${editItem?.image || ''}">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload / URL Pas Foto</label>
+                                    <div class="bg-white p-2 rounded-2xl border">
+                                        <input type="file" id="guru-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
+                                        <input type="url" id="guru-image-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                                    </div>
                                     
                                     <textarea id="guru-quote" placeholder="Motto / Pesan Singkat..." required rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.quote || ''}</textarea>
                                     <div class="flex gap-2">
@@ -984,9 +1001,11 @@
                                 <form onsubmit="handleSaveMitra(event)" class="space-y-4">
                                     <input type="text" id="mitra-name" placeholder="Nama Industri" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     
-                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload Logo Mitra</label>
-                                    <input type="file" id="mitra-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
-                                    <input type="hidden" id="mitra-image-old" value="${editItem?.image || ''}">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload / URL Logo Mitra</label>
+                                    <div class="bg-white p-2 rounded-2xl border">
+                                        <input type="file" id="mitra-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
+                                        <input type="url" id="mitra-image-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                                    </div>
 
                                     <textarea id="mitra-desc" placeholder="Keterangan / Bidang Kerja Sama..." required rows="3" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
@@ -1020,9 +1039,11 @@
                                 <input type="text" id="news-title" value="${editItem?.title || ''}" placeholder="Judul Berita" required class="w-full p-4 border rounded-2xl">
                                 <select id="news-category" class="w-full p-4 border rounded-2xl bg-white text-xs font-bold uppercase"><option value="Kegiatan">Kegiatan</option><option value="Prestasi">Prestasi</option><option value="Pengumuman">Pengumuman</option></select>
                                 
-                                <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload Foto Utama</label>
-                                <input type="file" id="news-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
-                                <input type="hidden" id="news-image-old" value="${editItem?.image || ''}">
+                                <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload / URL Foto Utama</label>
+                                <div class="bg-white p-2 rounded-2xl border">
+                                    <input type="file" id="news-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
+                                    <input type="url" id="news-image-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                                </div>
                                 
                                 <textarea id="news-content" rows="6" placeholder="Konten Berita Lengkap..." required class="w-full p-4 border rounded-2xl">${editItem?.content || ''}</textarea>
                                 <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-xs">${editItem ? 'UPDATE' : 'TERBITKAN'}</button>${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div>
@@ -1044,8 +1065,11 @@
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Tambah Foto Slide</h4>
                             <input type="text" id="gal-caption" placeholder="Judul Foto / Slide" required class="w-full p-4 border rounded-2xl">
                             
-                            <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload Foto Gambar</label>
-                            <input type="file" id="gal-file" accept="image/*" required class="w-full p-3 border rounded-2xl bg-white text-xs">
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload / URL Foto Gambar</label>
+                            <div class="bg-white p-2 rounded-2xl border">
+                                <input type="file" id="gal-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
+                                <input type="url" id="gal-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                            </div>
                             
                             <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs mt-2">SIMPAN KE GALERI</button>
                         </form>
@@ -1058,6 +1082,7 @@
                 const approvedAlumni = alumniList.filter(a => a.status === 'approved');
                 container.innerHTML = `
                     <div class="space-y-12">
+                        <!-- Menunggu Persetujuan -->
                         <div>
                             <h3 class="font-bold mb-6 flex items-center gap-2 text-yellow-600 text-xl border-b pb-4"><i data-lucide="clock"></i> Menunggu Persetujuan (${pendingAlumni.length})</h3>
                             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1080,6 +1105,8 @@
                                 `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Tidak ada pengajuan data alumni yang baru.</div>'}
                             </div>
                         </div>
+
+                        <!-- Alumni Disetujui -->
                         <div>
                             <h3 class="font-bold mb-6 flex items-center gap-2 text-green-600 text-xl border-b pb-4"><i data-lucide="check-circle-2"></i> Alumni Aktif (${approvedAlumni.length})</h3>
                             <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -1151,8 +1178,8 @@
             const orig = btn.innerText; btn.innerText = "MENGUNGGAH & MENYIMPAN..."; btn.disabled = true;
 
             try {
-                const logoUrl = await uploadImage('conf-logo-file', 'conf-logo-old');
-                const sambutanUrl = await uploadImage('conf-s-img-file', 'conf-s-img-old');
+                const logoUrl = await processImage('conf-logo-file', 'conf-logo-url', siteConfig.logoImage);
+                const sambutanUrl = await processImage('conf-s-img-file', 'conf-s-img-url', siteConfig.sambutanImage);
 
                 const d = { 
                     logoImage: logoUrl || siteConfig.logoImage, 
@@ -1179,7 +1206,7 @@
             const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
-                const profUrl = await uploadImage('prof-img-file', 'prof-img-old');
+                const profUrl = await processImage('prof-img-file', 'prof-img-url', siteConfig.profilImage);
                 const d = { 
                     profilImage: profUrl || siteConfig.profilImage, 
                     profilSejarah: escapeHTML(document.getElementById('prof-sejarah').value), 
@@ -1198,11 +1225,11 @@
             const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
-                const imageUrl = await uploadImage('news-image-file', 'news-image-old');
+                const imageUrl = await processImage('news-image-file', 'news-image-url', editItem?.image);
                 const d = { 
                     title: escapeHTML(document.getElementById('news-title').value), 
                     category: document.getElementById('news-category').value, 
-                    image: imageUrl, 
+                    image: imageUrl || 'https://via.placeholder.com/600x400?text=No+Image', 
                     content: escapeHTML(document.getElementById('news-content').value), 
                     timestamp: editItem ? editItem.timestamp : Date.now() 
                 };
@@ -1219,12 +1246,12 @@
             const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
-                const imageUrl = await uploadImage('gal-file', null);
-                if (!imageUrl) throw new Error("File wajib dipilih");
+                const imageUrl = await processImage('gal-file', 'gal-url', null);
+                if (!imageUrl) throw new Error("Gambar wajib dipilih/diisi");
                 const d = { caption: escapeHTML(document.getElementById('gal-caption').value), url: imageUrl, timestamp: Date.now() };
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
-                e.target.reset(); showToast("Foto Berhasil Diunggah!");
-            } catch(e) { console.error(e); showToast("Gagal upload gambar!"); } 
+                e.target.reset(); showToast("Foto Berhasil Disimpan!");
+            } catch(e) { console.error(e); showToast("Gagal menyimpan gambar!"); } 
             finally { btn.innerText = orig; btn.disabled = false; }
         };
 
@@ -1234,8 +1261,8 @@
             const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
-                const imgUrl = await uploadImage('jur-image-file', 'jur-image-old');
-                const d = { code: escapeHTML(document.getElementById('jur-code').value), name: escapeHTML(document.getElementById('jur-name').value), image: imgUrl, desc: escapeHTML(document.getElementById('jur-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
+                const imgUrl = await processImage('jur-image-file', 'jur-image-url', editItem?.image);
+                const d = { code: escapeHTML(document.getElementById('jur-code').value), name: escapeHTML(document.getElementById('jur-name').value), image: imgUrl || 'https://via.placeholder.com/300x300?text=No+Image', desc: escapeHTML(document.getElementById('jur-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
                 if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jurusan', editItem.id), d);
                 else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jurusan'), d);
                 editItem = null; showToast("Jurusan Tersimpan!"); renderAdminDashboard();
@@ -1248,8 +1275,8 @@
             const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
-                const imgUrl = await uploadImage('guru-image-file', 'guru-image-old');
-                const d = { name: escapeHTML(document.getElementById('guru-name').value), subject: escapeHTML(document.getElementById('guru-subject').value), image: imgUrl, quote: escapeHTML(document.getElementById('guru-quote').value), timestamp: editItem ? editItem.timestamp : Date.now() };
+                const imgUrl = await processImage('guru-image-file', 'guru-image-url', editItem?.image);
+                const d = { name: escapeHTML(document.getElementById('guru-name').value), subject: escapeHTML(document.getElementById('guru-subject').value), image: imgUrl || 'https://via.placeholder.com/300x300?text=No+Image', quote: escapeHTML(document.getElementById('guru-quote').value), timestamp: editItem ? editItem.timestamp : Date.now() };
                 if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'guru', editItem.id), d);
                 else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'guru'), d);
                 editItem = null; showToast("Guru Tersimpan!"); renderAdminDashboard();
@@ -1262,8 +1289,8 @@
             const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
-                const imgUrl = await uploadImage('mitra-image-file', 'mitra-image-old');
-                const d = { name: escapeHTML(document.getElementById('mitra-name').value), image: imgUrl, desc: escapeHTML(document.getElementById('mitra-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
+                const imgUrl = await processImage('mitra-image-file', 'mitra-image-url', editItem?.image);
+                const d = { name: escapeHTML(document.getElementById('mitra-name').value), image: imgUrl || 'https://via.placeholder.com/150x150?text=No+Image', desc: escapeHTML(document.getElementById('mitra-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
                 if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'mitra', editItem.id), d);
                 else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mitra'), d);
                 editItem = null; showToast("Mitra Tersimpan!"); renderAdminDashboard();
@@ -1283,7 +1310,7 @@
             lucide.createIcons();
 
             try {
-                const imgUrl = await uploadImage('tracer-image-file', 'tracer-image-old');
+                const imgUrl = await processImage('tracer-image-file', 'tracer-image-url', null);
                 
                 const d = {
                     name: escapeHTML(document.getElementById('tracer-name').value),
@@ -1302,7 +1329,7 @@
                 console.error(err);
                 showToast("Gagal mengirim data."); 
             } finally { 
-                btn.disabled = false; btn.innerHTML = 'Kirim Data'; lucide.createIcons(); 
+                btn.disabled = false; btn.innerHTML = '<i data-lucide="send" size="18"></i> Kirim Data Penelusuran'; lucide.createIcons(); 
             }
         };
 
