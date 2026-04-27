@@ -6,10 +6,6 @@
     <title>SMK GAJAHMADA 1 METRO - Sistem Terintegrasi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.3s ease; background-color: #f8fafc; }
@@ -31,6 +27,12 @@
         .group:hover .dropdown-menu { display: block; }
         
         .glass-header { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); }
+        
+        /* Input File Styling */
+        input[type="file"]::file-selector-button {
+            background-color: #1e3a8a; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.3s;
+        }
+        input[type="file"]::file-selector-button:hover { background-color: #1e40af; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -117,10 +119,12 @@
         </div>
     </div>
 
+    <!-- Firebase Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // === MASUKKAN CONFIG FIREBASE ANDA DISINI ===
         const firebaseConfig = {
@@ -137,6 +141,7 @@
         const app = initializeApp(activeConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app); // Firebase Storage Initiated
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'smk-gm1-prod';
 
         // Security Helpers
@@ -150,8 +155,36 @@
             return Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
         };
 
+        // File Upload Helper
+        const uploadImage = async (fileInputId, oldUrlId) => {
+            const fileInput = document.getElementById(fileInputId);
+            const oldUrlInput = document.getElementById(oldUrlId);
+            
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const storageRef = ref(storage, `uploads/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`);
+                const uploadTask = await uploadBytesResumable(storageRef, file);
+                return await getDownloadURL(uploadTask.ref);
+            }
+            return oldUrlInput ? oldUrlInput.value : '';
+        };
+
         // State Management
         let userRole = sessionStorage.getItem('secured_user_role') || null; 
+        
+        // Daftar Halaman
+        const availablePages = [
+            { id: 'home', title: 'Beranda Utama' },
+            { id: 'profil', title: 'Profil Sekolah' },
+            { id: 'jurusan', title: 'Kompetensi Keahlian' },
+            { id: 'guru', title: 'Tenaga Pendidik (Guru)' },
+            { id: 'mitra', title: 'Hubungan Industri' },
+            { id: 'berita', title: 'Berita & Blog' },
+            { id: 'gallery', title: 'Galeri Dokumentasi' },
+            { id: 'alumni-foto', title: 'Galeri Alumni' },
+            { id: 'alumni-tracer', title: 'Penelusuran Alumni' }
+        ];
+
         let siteConfig = {
             logoImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png",
             name: "SMK Gajahmada 1 Metro",
@@ -167,6 +200,7 @@
             stat2Val: "85+", stat2Label: "Guru & Staff",
             stat3Val: "15", stat3Label: "Laboratorium",
             stat4Val: "40+", stat4Label: "Mitra Industri",
+            profilImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070",
             menuItems: [
                 { id: "m1", title: "Beranda", type: "link", target: "home" },
                 { id: "m2", title: "Profil", type: "dropdown", children: [
@@ -220,7 +254,6 @@
 
         const init = async () => {
             try {
-                // Jangan pakai token canvas jika menggunakan config pribadi
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && !firebaseConfig.apiKey) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
@@ -228,7 +261,6 @@
                 }
             } catch (error) {
                 console.warn("Informasi: Firebase Authentication belum diaktifkan/tidak merespon. Website dimuat dalam mode baca (Read-Only).");
-                // Memastikan UI tetap jalan walaupun gagal auth
                 setupListeners();
             }
         };
@@ -246,17 +278,14 @@
                 updateSiteBranding();
                 renderNavigation();
                 refreshUI();
-            }, (err) => console.log("Baca konfigurasi gagal (pastikan rules Firestore benar):", err));
+            }, (err) => console.log("Baca konfigurasi gagal:", err));
 
             const collections = ['berita', 'gallery', 'jurusan', 'guru', 'mitra', 'alumni'];
             collections.forEach(col => {
                 onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', col), (snap) => {
                     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     if(col === 'berita') beritaList = data;
-                    if(col === 'gallery') {
-                        galleryList = data;
-                        carouselIndex = 0;
-                    }
+                    if(col === 'gallery') { galleryList = data; carouselIndex = 0; }
                     if(col === 'jurusan') jurusanList = data;
                     if(col === 'guru') guruList = data;
                     if(col === 'mitra') mitraList = data;
@@ -348,7 +377,6 @@
             switch(page) {
                 case 'home':
                     content.innerHTML = `
-                        <!-- Carousel Dinamis yang Diperbaiki -->
                         <section class="relative bg-slate-900 overflow-hidden h-[400px] md:h-[600px] group">
                             <div id="carousel-inner" class="h-full relative">
                                 ${galleryList.length > 0 ? galleryList.map((g, i) => `
@@ -372,20 +400,15 @@
                                         </div>
                                     </div>`}
                             </div>
-                            
-                            <!-- Kontrol Panah (Hanya Muncul Jika Lebih Dari 1) -->
                             ${galleryList.length > 1 ? `
                                 <button onclick="moveCarousel('prev')" class="absolute left-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 transition z-20 rounded-r-lg shadow-xl opacity-0 group-hover:opacity-100"><i data-lucide="chevron-left"></i></button>
                                 <button onclick="moveCarousel('next')" class="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 transition z-20 rounded-l-lg shadow-xl opacity-0 group-hover:opacity-100"><i data-lucide="chevron-right"></i></button>
-                                
-                                <!-- Indikator Dots -->
                                 <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
                                     ${galleryList.map((_, i) => `<button onclick="goToSlide(${i})" class="w-3 h-3 rounded-full transition-all duration-300 slide-dot ${i === carouselIndex ? 'bg-white scale-110' : 'bg-white/40 hover:bg-white/70'}"></button>`).join('')}
                                 </div>
                             ` : ''}
                         </section>
 
-                        <!-- Sambutan -->
                         <section class="py-10 bg-white border-b border-slate-100">
                             <div class="max-w-5xl mx-auto px-4">
                                 <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 bg-slate-50 p-6 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
@@ -404,7 +427,6 @@
                             </div>
                         </section>
 
-                        <!-- Statistik -->
                         <section class="py-8 bg-blue-900 text-white relative overflow-hidden">
                             <div class="absolute top-0 left-0 w-full h-full opacity-5" style="background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px;"></div>
                             <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center relative z-10">
@@ -415,7 +437,6 @@
                             </div>
                         </section>
 
-                        <!-- Jurusan Unggulan (Lengkap Home) -->
                         <section class="py-12 bg-white">
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="flex items-center justify-between mb-8">
@@ -443,7 +464,6 @@
                             </div>
                         </section>
 
-                        <!-- Berita Terbaru -->
                         <section class="py-12 bg-slate-50 border-y border-slate-100">
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="flex items-center justify-between mb-8">
@@ -467,7 +487,6 @@
                             </div>
                         </section>
 
-                        <!-- Kemitraan (Lengkap Home) -->
                         <section class="py-10 bg-white border-b border-slate-100">
                             <div class="max-w-7xl mx-auto px-4 text-center">
                                 <h3 class="text-xl font-black text-blue-900 uppercase tracking-tighter mb-8">Mitra Industri Kami</h3>
@@ -479,7 +498,6 @@
                             </div>
                         </section>
 
-                        <!-- Maps & Kontak -->
                         <section class="py-12 bg-slate-50">
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="grid md:grid-cols-5 gap-4 bg-white rounded-[2.5rem] p-4 border border-slate-100 shadow-xl">
@@ -521,7 +539,7 @@
                 <div class="max-w-6xl mx-auto px-4 -mt-16 relative z-10 pb-20">
                     <div class="bg-white rounded-[3rem] shadow-2xl p-10 md:p-16 border border-slate-100">
                         <div class="grid lg:grid-cols-2 gap-16">
-                            <div><h3 class="section-title text-3xl font-black text-blue-900">Sejarah Kami</h3><p class="text-slate-600 leading-relaxed text-justify text-lg">${siteConfig.profilSejarah || 'Data belum diisi.'}</p></div>
+                            <div><h3 class="section-title text-3xl font-black text-blue-900">Sejarah Kami</h3><p class="text-slate-600 leading-relaxed text-justify text-lg whitespace-pre-line">${siteConfig.profilSejarah || 'Data belum diisi.'}</p></div>
                             <div class="space-y-12">
                                 <div class="bg-blue-50 p-10 rounded-[2rem] border-l-[10px] border-blue-600">
                                     <h4 class="font-black text-blue-900 mb-4 text-2xl uppercase tracking-tighter">Visi</h4>
@@ -668,7 +686,14 @@
                                 <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Tahun Kelulusan</label><input type="number" id="tracer-year" required placeholder="Misal: 2022" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></div>
                             </div>
                             <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Tempat Kerja / Universitas Saat Ini</label><input type="text" id="tracer-workplace" required placeholder="Misal: PT Astra / Universitas Lampung" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></div>
-                            <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">URL Foto Terbaru (Rasio 1:1)</label><input type="url" id="tracer-image" required placeholder="Link foto profil" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></div>
+                            
+                            <!-- Foto Upload -->
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Upload Foto Terbaru (Rasio 1:1)</label>
+                                <input type="file" id="tracer-image-file" accept="image/*" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm text-slate-500">
+                                <input type="hidden" id="tracer-image-old" value="">
+                            </div>
+                            
                             <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Kesan & Pesan</label><textarea id="tracer-quote" required placeholder="Ceritakan pengalaman singkat Anda..." rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></textarea></div>
                             <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black hover:bg-blue-700 transition shadow-lg flex justify-center items-center gap-2 mt-4 uppercase tracking-widest text-sm"><i data-lucide="send" size="18"></i> Kirim Data Penelusuran</button>
                         </form>
@@ -777,7 +802,12 @@
                     <form onsubmit="handleSaveConfig(event)" class="grid md:grid-cols-2 gap-12">
                         <div class="space-y-6">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Identitas Dasar</h4>
-                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Link URL Logo Sekolah</label><input type="url" id="conf-logo" value="${siteConfig.logoImage}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload Logo Sekolah</label>
+                                <input type="file" id="conf-logo-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-slate-50 focus:bg-white text-xs text-slate-500 mb-2" ${siteConfig.logoImage ? '' : 'required'}>
+                                <input type="hidden" id="conf-logo-old" value="${siteConfig.logoImage || ''}">
+                                ${siteConfig.logoImage ? `<img src="${siteConfig.logoImage}" class="h-10 ml-2 rounded object-contain border bg-white p-1">` : ''}
+                            </div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama Resmi Sekolah</label><input type="text" id="conf-name" value="${siteConfig.name}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Slogan Website</label><input type="text" id="conf-slogan" value="${siteConfig.slogan}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Alamat (Muncul di Footer & Maps)</label><input type="text" id="conf-address" value="${siteConfig.address || ''}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
@@ -789,7 +819,12 @@
                         <div class="space-y-6">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Sambutan Kepala Sekolah</h4>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama & Gelar</label><input type="text" id="conf-s-name" value="${siteConfig.sambutanName}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
-                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Link Foto Pimpinan</label><input type="url" id="conf-s-img" value="${siteConfig.sambutanImage}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload Foto Pimpinan</label>
+                                <input type="file" id="conf-s-img-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-slate-50 focus:bg-white text-xs text-slate-500 mb-2" ${siteConfig.sambutanImage ? '' : 'required'}>
+                                <input type="hidden" id="conf-s-img-old" value="${siteConfig.sambutanImage || ''}">
+                                ${siteConfig.sambutanImage ? `<img src="${siteConfig.sambutanImage}" class="h-10 ml-2 rounded object-contain border bg-white p-1">` : ''}
+                            </div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Teks Sambutan Singkat</label><textarea id="conf-s-text" rows="6" class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none">${siteConfig.sambutanText}</textarea></div>
                         </div>
                         <div class="md:col-span-2 pt-6"><button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-black text-white font-black py-4 px-12 rounded-2xl shadow-xl transition uppercase tracking-widest text-xs">Simpan Semua Pengaturan</button></div>
@@ -831,8 +866,10 @@
                     <h3 class="text-2xl font-black mb-8 border-b border-slate-100 pb-6 text-blue-900 flex items-center gap-3"><i data-lucide="school" class="text-blue-500"></i> Pengaturan Halaman Profil</h3>
                     <form onsubmit="handleSaveProfil(event)" class="space-y-8 max-w-5xl">
                         <div>
-                            <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">URL Foto Banner Profil Raksasa</label>
-                            <input type="url" id="prof-img" value="${siteConfig.profilImage || ''}" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 bg-slate-50">
+                            <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Upload Foto Banner Profil Raksasa</label>
+                            <input type="file" id="prof-img-file" accept="image/*" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 bg-white text-sm" ${siteConfig.profilImage ? '' : 'required'}>
+                            <input type="hidden" id="prof-img-old" value="${siteConfig.profilImage || ''}">
+                            ${siteConfig.profilImage ? `<p class="text-xs text-slate-500 mt-2">Gambar saat ini sudah tersimpan. Pilih file baru untuk mengganti.</p>` : ''}
                         </div>
                         <div>
                             <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Sejarah Singkat Sekolah (Dapat menggunakan enter untuk paragraf baru)</label>
@@ -860,7 +897,12 @@
                                 <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">${editItem ? 'Edit Berita' : 'Tulis Berita'}</h4>
                                 <input type="text" id="news-title" value="${editItem?.title || ''}" placeholder="Judul Berita" required class="w-full p-4 border rounded-2xl">
                                 <select id="news-category" class="w-full p-4 border rounded-2xl bg-white text-xs font-bold uppercase"><option value="Kegiatan">Kegiatan</option><option value="Prestasi">Prestasi</option><option value="Pengumuman">Pengumuman</option></select>
-                                <input type="url" id="news-image" value="${editItem?.image || ''}" placeholder="URL Foto Utama" required class="w-full p-4 border rounded-2xl">
+                                
+                                <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Upload Foto Utama</label>
+                                <input type="file" id="news-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
+                                <input type="hidden" id="news-image-old" value="${editItem?.image || ''}">
+                                ${editItem?.image ? `<p class="text-[9px] text-slate-400 ml-1">Gambar lama tersedia. Pilih file baru untuk mengganti.</p>` : ''}
+                                
                                 <textarea id="news-content" rows="6" placeholder="Konten Berita Lengkap..." required class="w-full p-4 border rounded-2xl">${editItem?.content || ''}</textarea>
                                 <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-xs">${editItem ? 'UPDATE' : 'TERBITKAN'}</button>${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div>
                             </form>
@@ -880,11 +922,14 @@
                         <form onsubmit="handleSaveGallery(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border h-fit">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Tambah Foto Slide</h4>
                             <input type="text" id="gal-caption" placeholder="Judul Foto / Slide" required class="w-full p-4 border rounded-2xl">
-                            <input type="url" id="gal-url" placeholder="URL Gambar Langsung" required class="w-full p-4 border rounded-2xl">
-                            <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs">SIMPAN KE GALERI</button>
+                            
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Upload Foto</label>
+                            <input type="file" id="gal-file" accept="image/*" required class="w-full p-3 border rounded-2xl bg-white text-xs">
+                            
+                            <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs mt-2">SIMPAN KE GALERI</button>
                         </form>
                         <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
-                            ${galleryList.map(g => `<div class="relative group aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-lg"><img src="${g.url}" class="w-full h-full object-cover"><button onclick="deleteItem('gallery', '${g.id}')" class="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition flex items-center justify-center font-black uppercase text-xs">HAPUS</button></div>`).join('')}
+                            ${galleryList.map(g => `<div class="relative group aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-lg"><img src="${g.url}" class="w-full h-full object-cover"><button onclick="deleteItem('gallery', '${g.id}')" class="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition flex items-center justify-center font-black uppercase text-xs">HAPUS</button></div>`).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada foto.</p>'}
                         </div>
                     </div>`;
             } else if (tab === 'alumni' && userRole === 'admin') {
@@ -939,9 +984,14 @@
                             <div class="bg-slate-50 p-6 rounded-3xl border border-slate-200 sticky top-24 shadow-sm">
                                 <h3 class="font-bold mb-6 flex items-center gap-2 text-blue-900 text-xl"><i data-lucide="book-open"></i> ${editItem ? 'Edit Jurusan' : 'Tambah Jurusan'}</h3>
                                 <form onsubmit="handleSaveJurusan(event)" class="space-y-4">
-                                    <input type="text" id="jur-code" placeholder="TKJ" value="${editItem?.code || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
+                                    <input type="text" id="jur-code" placeholder="Singkatan (TKJ)" value="${editItem?.code || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     <input type="text" id="jur-name" placeholder="Nama Jurusan" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="url" id="jur-image" placeholder="URL Foto" value="${editItem?.image || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
+                                    
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block">Upload Foto Jurusan</label>
+                                    <input type="file" id="jur-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
+                                    <input type="hidden" id="jur-image-old" value="${editItem?.image || ''}">
+                                    ${editItem?.image ? `<p class="text-[9px] text-slate-400 ml-1">Gambar lama tersedia. Pilih file baru untuk mengganti.</p>` : ''}
+
                                     <textarea id="jur-desc" placeholder="Deskripsi..." required rows="5" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
                                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Simpan</button>
@@ -964,7 +1014,7 @@
                                             <button onclick="deleteItem('jurusan', '${j.id}')" class="text-red-600"><i data-lucide="trash-2" size="18"></i></button>
                                         </div>
                                     </div>
-                                `).join('')}
+                                `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada jurusan.</p>'}
                             </div>
                         </div>
                     </div>`;
@@ -977,7 +1027,11 @@
                                 <form onsubmit="handleSaveGuru(event)" class="space-y-4">
                                     <input type="text" id="guru-name" placeholder="Nama Guru" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     <input type="text" id="guru-subject" placeholder="Mengajar" value="${editItem?.subject || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="url" id="guru-image" placeholder="URL Foto" value="${editItem?.image || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
+                                    
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block">Upload Pas Foto</label>
+                                    <input type="file" id="guru-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
+                                    <input type="hidden" id="guru-image-old" value="${editItem?.image || ''}">
+                                    
                                     <textarea id="guru-quote" placeholder="Motto..." required rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.quote || ''}</textarea>
                                     <div class="flex gap-2">
                                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Simpan</button>
@@ -1000,7 +1054,7 @@
                                             <button onclick="deleteItem('guru', '${g.id}')" class="text-red-600"><i data-lucide="trash-2" size="18"></i></button>
                                         </div>
                                     </div>
-                                `).join('')}
+                                `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada data guru.</p>'}
                             </div>
                         </div>
                     </div>`;
@@ -1012,7 +1066,11 @@
                                 <h3 class="font-bold mb-6 flex items-center gap-2 text-blue-900 text-xl"><i data-lucide="briefcase"></i> ${editItem ? 'Edit Mitra' : 'Tambah Mitra'}</h3>
                                 <form onsubmit="handleSaveMitra(event)" class="space-y-4">
                                     <input type="text" id="mitra-name" placeholder="Nama Industri" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="url" id="mitra-image" placeholder="URL Logo" value="${editItem?.image || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
+                                    
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block">Upload Logo Mitra</label>
+                                    <input type="file" id="mitra-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
+                                    <input type="hidden" id="mitra-image-old" value="${editItem?.image || ''}">
+
                                     <textarea id="mitra-desc" placeholder="Keterangan..." required rows="3" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
                                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Simpan</button>
@@ -1032,7 +1090,7 @@
                                             <button onclick="deleteItem('mitra', '${m.id}')" class="text-red-600"><i data-lucide="trash-2" size="16"></i></button>
                                         </div>
                                     </div>
-                                `).join('')}
+                                `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada mitra.</p>'}
                             </div>
                         </div>
                     </div>`;
@@ -1043,10 +1101,15 @@
         // CRUD Logic Functions
         window.handleAddMenu = async (e) => {
             e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
+            
             const type = document.getElementById('menu-type').value;
             const newItem = { id: 'm_'+Date.now(), title: escapeHTML(document.getElementById('menu-title').value), type: type, target: type==='link'?document.getElementById('menu-target').value:'', children: [] };
             const updated = [...(siteConfig.menuItems || []), newItem];
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
+            
+            btn.innerText = orig; btn.disabled = false;
             showToast("Menu Berhasil Ditambahkan!");
         };
 
@@ -1083,71 +1146,127 @@
 
         window.handleSaveConfig = async (e) => {
             e.preventDefault();
-            const d = { 
-                logoImage: document.getElementById('conf-logo').value, 
-                name: escapeHTML(document.getElementById('conf-name').value), 
-                slogan: escapeHTML(document.getElementById('conf-slogan').value), 
-                address: escapeHTML(document.getElementById('conf-address').value),
-                phone: escapeHTML(document.getElementById('conf-phone').value),
-                email: escapeHTML(document.getElementById('conf-email').value),
-                sambutanName: escapeHTML(document.getElementById('conf-s-name').value),
-                sambutanImage: document.getElementById('conf-s-img').value,
-                sambutanText: escapeHTML(document.getElementById('conf-s-text').value)
-            };
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
-            showToast("Berhasil Memperbarui Data Website!");
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerText; btn.innerText = "MENGUNGGAH & MENYIMPAN..."; btn.disabled = true;
+
+            try {
+                const logoUrl = await uploadImage('conf-logo-file', 'conf-logo-old');
+                const sambutanUrl = await uploadImage('conf-s-img-file', 'conf-s-img-old');
+
+                const d = { 
+                    logoImage: logoUrl || siteConfig.logoImage, 
+                    name: escapeHTML(document.getElementById('conf-name').value), 
+                    slogan: escapeHTML(document.getElementById('conf-slogan').value), 
+                    address: escapeHTML(document.getElementById('conf-address').value),
+                    phone: escapeHTML(document.getElementById('conf-phone').value),
+                    email: escapeHTML(document.getElementById('conf-email').value),
+                    sambutanName: escapeHTML(document.getElementById('conf-s-name').value),
+                    sambutanImage: sambutanUrl || siteConfig.sambutanImage,
+                    sambutanText: escapeHTML(document.getElementById('conf-s-text').value)
+                };
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
+                showToast("Berhasil Memperbarui Data Website!");
+            } catch (error) {
+                console.error(error); showToast("Gagal menyimpan data!");
+            } finally { btn.innerText = orig; btn.disabled = false; }
         };
         
         window.handleSaveProfil = async (e) => {
             e.preventDefault();
             if(userRole !== 'admin') return;
-            const d = { 
-                profilImage: document.getElementById('prof-img').value, 
-                profilSejarah: escapeHTML(document.getElementById('prof-sejarah').value), 
-                profilVisi: escapeHTML(document.getElementById('prof-visi').value),
-                profilMisi: escapeHTML(document.getElementById('prof-misi').value)
-            };
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
-            showToast("Berhasil Memperbarui Data Profil!");
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
+
+            try {
+                const profUrl = await uploadImage('prof-img-file', 'prof-img-old');
+                const d = { 
+                    profilImage: profUrl || siteConfig.profilImage, 
+                    profilSejarah: escapeHTML(document.getElementById('prof-sejarah').value), 
+                    profilVisi: escapeHTML(document.getElementById('prof-visi').value),
+                    profilMisi: escapeHTML(document.getElementById('prof-misi').value)
+                };
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
+                showToast("Berhasil Memperbarui Data Profil!");
+            } catch(e) { console.error(e); showToast("Gagal!"); } 
+            finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveNews = async (e) => {
             e.preventDefault();
-            const d = { title: escapeHTML(document.getElementById('news-title').value), category: document.getElementById('news-category').value, image: document.getElementById('news-image').value, content: escapeHTML(document.getElementById('news-content').value), timestamp: editItem ? editItem.timestamp : Date.now() };
-            if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'berita', editItem.id), d);
-            else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'berita'), d);
-            editItem = null; showToast("Berita Tersimpan!"); renderAdminDashboard();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
+
+            try {
+                const imageUrl = await uploadImage('news-image-file', 'news-image-old');
+                const d = { 
+                    title: escapeHTML(document.getElementById('news-title').value), 
+                    category: document.getElementById('news-category').value, 
+                    image: imageUrl, 
+                    content: escapeHTML(document.getElementById('news-content').value), 
+                    timestamp: editItem ? editItem.timestamp : Date.now() 
+                };
+                if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'berita', editItem.id), d);
+                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'berita'), d);
+                editItem = null; showToast("Berita Tersimpan!"); renderAdminDashboard();
+            } catch (err) { console.error(err); showToast("Gagal!"); } 
+            finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveGallery = async (e) => {
             e.preventDefault();
-            const d = { caption: escapeHTML(document.getElementById('gal-caption').value), url: document.getElementById('gal-url').value, timestamp: Date.now() };
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
-            e.target.reset(); showToast("Foto Berhasil Diunggah!");
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
+
+            try {
+                const imageUrl = await uploadImage('gal-file', null); // no old url for gallery, always new file
+                if (!imageUrl) throw new Error("File wajib dipilih");
+                const d = { caption: escapeHTML(document.getElementById('gal-caption').value), url: imageUrl, timestamp: Date.now() };
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
+                e.target.reset(); showToast("Foto Berhasil Diunggah!");
+            } catch(e) { console.error(e); showToast("Gagal upload gambar!"); } 
+            finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveJurusan = async (e) => {
             e.preventDefault();
-            const d = { code: escapeHTML(document.getElementById('jur-code').value), name: escapeHTML(document.getElementById('jur-name').value), image: document.getElementById('jur-image').value, desc: escapeHTML(document.getElementById('jur-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
-            if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jurusan', editItem.id), d);
-            else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jurusan'), d);
-            editItem = null; showToast("Jurusan Tersimpan!"); renderAdminDashboard();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
+
+            try {
+                const imgUrl = await uploadImage('jur-image-file', 'jur-image-old');
+                const d = { code: escapeHTML(document.getElementById('jur-code').value), name: escapeHTML(document.getElementById('jur-name').value), image: imgUrl, desc: escapeHTML(document.getElementById('jur-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
+                if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jurusan', editItem.id), d);
+                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jurusan'), d);
+                editItem = null; showToast("Jurusan Tersimpan!"); renderAdminDashboard();
+            } catch (err) { console.error(err); } finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveGuru = async (e) => {
             e.preventDefault();
-            const d = { name: escapeHTML(document.getElementById('guru-name').value), subject: escapeHTML(document.getElementById('guru-subject').value), image: document.getElementById('guru-image').value, quote: escapeHTML(document.getElementById('guru-quote').value), timestamp: editItem ? editItem.timestamp : Date.now() };
-            if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'guru', editItem.id), d);
-            else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'guru'), d);
-            editItem = null; showToast("Guru Tersimpan!"); renderAdminDashboard();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
+
+            try {
+                const imgUrl = await uploadImage('guru-image-file', 'guru-image-old');
+                const d = { name: escapeHTML(document.getElementById('guru-name').value), subject: escapeHTML(document.getElementById('guru-subject').value), image: imgUrl, quote: escapeHTML(document.getElementById('guru-quote').value), timestamp: editItem ? editItem.timestamp : Date.now() };
+                if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'guru', editItem.id), d);
+                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'guru'), d);
+                editItem = null; showToast("Guru Tersimpan!"); renderAdminDashboard();
+            } catch (err) { console.error(err); } finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveMitra = async (e) => {
             e.preventDefault();
-            const d = { name: escapeHTML(document.getElementById('mitra-name').value), image: document.getElementById('mitra-image').value, desc: escapeHTML(document.getElementById('mitra-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
-            if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'mitra', editItem.id), d);
-            else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mitra'), d);
-            editItem = null; showToast("Mitra Tersimpan!"); renderAdminDashboard();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
+
+            try {
+                const imgUrl = await uploadImage('mitra-image-file', 'mitra-image-old');
+                const d = { name: escapeHTML(document.getElementById('mitra-name').value), image: imgUrl, desc: escapeHTML(document.getElementById('mitra-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
+                if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'mitra', editItem.id), d);
+                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mitra'), d);
+                editItem = null; showToast("Mitra Tersimpan!"); renderAdminDashboard();
+            } catch (err) { console.error(err); } finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleApproveAlumni = async (id) => {
@@ -1159,25 +1278,32 @@
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true;
-            btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Mengirim...';
+            btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Mengunggah...';
             lucide.createIcons();
 
-            const d = {
-                name: escapeHTML(document.getElementById('tracer-name').value),
-                graduationYear: escapeHTML(document.getElementById('tracer-year').value),
-                workplace: escapeHTML(document.getElementById('tracer-workplace').value),
-                image: document.getElementById('tracer-image').value,
-                quote: escapeHTML(document.getElementById('tracer-quote').value),
-                status: 'pending', 
-                timestamp: Date.now()
-            };
-            
             try {
+                // Untuk alumni baru, gambar diupload (tidak ada gambar lama)
+                const imgUrl = await uploadImage('tracer-image-file', 'tracer-image-old');
+                
+                const d = {
+                    name: escapeHTML(document.getElementById('tracer-name').value),
+                    graduationYear: escapeHTML(document.getElementById('tracer-year').value),
+                    workplace: escapeHTML(document.getElementById('tracer-workplace').value),
+                    image: imgUrl || 'https://via.placeholder.com/150?text=No+Image',
+                    quote: escapeHTML(document.getElementById('tracer-quote').value),
+                    status: 'pending', 
+                    timestamp: Date.now()
+                };
+                
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'alumni'), d);
                 showToast("Berhasil! Data akan ditinjau admin."); 
                 e.target.reset();
-            } catch (err) { showToast("Gagal mengirim data."); }
-            finally { btn.disabled = false; btn.innerHTML = 'Kirim Data'; lucide.createIcons(); }
+            } catch (err) { 
+                console.error(err);
+                showToast("Gagal mengirim data."); 
+            } finally { 
+                btn.disabled = false; btn.innerHTML = 'Kirim Data'; lucide.createIcons(); 
+            }
         };
 
         window.deleteItem = async (col, id) => {
