@@ -6,6 +6,11 @@
     <title>SMK GAJAHMADA 1 METRO - Sistem Terintegrasi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js" type="module"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.3s ease; background-color: #f8fafc; }
@@ -26,11 +31,9 @@
         .dropdown-menu { display: none; }
         .group:hover .dropdown-menu { display: block; }
         
-        .glass-header { background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); }
-        
         /* Input File Styling */
         input[type="file"]::file-selector-button {
-            background-color: #1e3a8a; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.3s;
+            background-color: #1e3a8a; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-right: 12px;
         }
         input[type="file"]::file-selector-button:hover { background-color: #1e40af; }
     </style>
@@ -119,14 +122,13 @@
         </div>
     </div>
 
-    <!-- Firebase Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
-        // === MASUKKAN CONFIG FIREBASE ANDA DISINI ===
+        // === KONFIGURASI FIREBASE ANDA ===
         const firebaseConfig = {
           apiKey: "AIzaSyDYwSaA2Jlk311AenolGQO_kIQy9Ywtx-8",
           authDomain: "smkgajahmada1-metro.firebaseapp.com",
@@ -137,12 +139,11 @@
           measurementId: "G-EVBEPBL922"
         };
 
-        const activeConfig = firebaseConfig.apiKey ? firebaseConfig : JSON.parse(__firebase_config);
-        const app = initializeApp(activeConfig);
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app); // Firebase Storage Initiated
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'smk-gm1-prod';
+        const storage = getStorage(app);
+        const appId = 'smk-gm1-prod'; // ID unik untuk jalur penyimpanan data
 
         // Security Helpers
         const escapeHTML = (str) => {
@@ -158,7 +159,7 @@
         // File Upload Helper
         const uploadImage = async (fileInputId, oldUrlId) => {
             const fileInput = document.getElementById(fileInputId);
-            const oldUrlInput = document.getElementById(oldUrlId);
+            const oldUrlInput = oldUrlId ? document.getElementById(oldUrlId) : null;
             
             if (fileInput && fileInput.files.length > 0) {
                 const file = fileInput.files[0];
@@ -172,26 +173,27 @@
         // State Management
         let userRole = sessionStorage.getItem('secured_user_role') || null; 
         
-        // Daftar Halaman
+        // Daftar Halaman Tersedia (Untuk Target Menu)
         const availablePages = [
             { id: 'home', title: 'Beranda Utama' },
             { id: 'profil', title: 'Profil Sekolah' },
             { id: 'jurusan', title: 'Kompetensi Keahlian' },
-            { id: 'guru', title: 'Tenaga Pendidik (Guru)' },
+            { id: 'guru', title: 'Tenaga Pendidik' },
             { id: 'mitra', title: 'Hubungan Industri' },
-            { id: 'berita', title: 'Berita & Blog' },
+            { id: 'berita', title: 'Berita & Kegiatan' },
             { id: 'gallery', title: 'Galeri Dokumentasi' },
             { id: 'alumni-foto', title: 'Galeri Alumni' },
-            { id: 'alumni-tracer', title: 'Penelusuran Alumni' }
+            { id: 'alumni-tracer', title: 'Form Penelusuran Alumni' }
         ];
 
+        // Data Default (Akan diganti otomatis jika sudah ada data di Firebase)
         let siteConfig = {
             logoImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png",
             name: "SMK Gajahmada 1 Metro",
             slogan: "Membentuk Lulusan Unggul, Disiplin, Kreatif, dan Berakhlak Mulia",
-            sambutanName: "Kepala Sekolah",
+            sambutanName: "Pimpinan Sekolah",
             sambutanRole: "Kepala Sekolah",
-            sambutanText: "Selamat datang di website resmi SMK Gajahmada 1 Metro. Silakan masuk ke Dashboard Admin untuk memperbarui profil sekolah.",
+            sambutanText: "Selamat datang di website resmi SMK Gajahmada 1 Metro. Silakan masuk ke Dashboard Admin untuk mulai mengatur website ini.",
             sambutanImage: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400",
             address: "Jl. Gajah Mada No.1, Metro, Lampung",
             phone: "(0725) 123456",
@@ -210,10 +212,6 @@
                 { id: "m3", title: "Akademik", type: "dropdown", children: [
                     { id: "s3", title: "Kompetensi Keahlian", target: "jurusan" },
                     { id: "s4", title: "Hubungan Industri", target: "mitra" }
-                ]},
-                { id: "m4", title: "Alumni", type: "dropdown", children: [
-                    { id: "s5", title: "Galeri Alumni", target: "alumni-foto" },
-                    { id: "s6", title: "Tracer Study", target: "alumni-tracer" }
                 ]},
                 { id: "m5", title: "Informasi", type: "dropdown", children: [
                     { id: "s7", title: "Berita Terbaru", target: "berita" },
@@ -249,24 +247,23 @@
 
         document.getElementById('current-year').innerText = new Date().getFullYear();
 
-        // System Guards
+        // System Init
         let isSetup = false;
 
         const init = async () => {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && !firebaseConfig.apiKey) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Karena pakai DB Pribadi, paksakan penggunaan Anonymous Auth (Abaikan token preview)
+                await signInAnonymously(auth);
             } catch (error) {
-                console.warn("Informasi: Firebase Authentication belum diaktifkan/tidak merespon. Website dimuat dalam mode baca (Read-Only).");
+                console.warn("Informasi: Firebase Anonymous Auth belum diaktifkan di Firebase Console Anda.", error);
+                showToast("Peringatan: Website dalam mode Read-Only. Aktifkan Anonymous Sign-In di Firebase!");
+            } finally {
                 setupListeners();
             }
         };
 
         onAuthStateChanged(auth, (user) => {
-            setupListeners();
+            if (user) setupListeners();
         });
 
         const setupListeners = () => {
@@ -278,7 +275,7 @@
                 updateSiteBranding();
                 renderNavigation();
                 refreshUI();
-            }, (err) => console.log("Baca konfigurasi gagal:", err));
+            }, (err) => console.log("Gagal memuat konfigurasi (Cek Rules Firestore):", err));
 
             const collections = ['berita', 'gallery', 'jurusan', 'guru', 'mitra', 'alumni'];
             collections.forEach(col => {
@@ -291,7 +288,7 @@
                     if(col === 'mitra') mitraList = data;
                     if(col === 'alumni') alumniList = data;
                     refreshUI();
-                }, (err) => console.log(`Baca ${col} gagal:`, err));
+                }, (err) => console.log(`Gagal memuat ${col}:`, err));
             });
         };
 
@@ -377,6 +374,7 @@
             switch(page) {
                 case 'home':
                     content.innerHTML = `
+                        <!-- Carousel Dinamis yang Diperbaiki -->
                         <section class="relative bg-slate-900 overflow-hidden h-[400px] md:h-[600px] group">
                             <div id="carousel-inner" class="h-full relative">
                                 ${galleryList.length > 0 ? galleryList.map((g, i) => `
@@ -395,11 +393,13 @@
                                         <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070" class="w-full h-full object-cover opacity-60">
                                         <div class="absolute inset-0 flex flex-col items-center justify-center text-white px-10 text-center">
                                             <h2 class="text-4xl md:text-6xl font-black mb-6 uppercase tracking-tighter">Selamat Datang</h2>
-                                            <p class="text-lg mb-10 max-w-xl">Database masih kosong. Masuk ke Dashboard untuk mengisi foto slide.</p>
+                                            <p class="text-lg mb-10 max-w-xl">Database sudah terhubung. Masuk ke Dashboard untuk mengisi data website.</p>
                                             <button onclick="navigate('admin')" class="bg-yellow-400 text-blue-900 font-black px-10 py-4 rounded-xl text-xs uppercase tracking-widest shadow-2xl">BUKA DASHBOARD</button>
                                         </div>
                                     </div>`}
                             </div>
+                            
+                            <!-- Kontrol Panah -->
                             ${galleryList.length > 1 ? `
                                 <button onclick="moveCarousel('prev')" class="absolute left-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 transition z-20 rounded-r-lg shadow-xl opacity-0 group-hover:opacity-100"><i data-lucide="chevron-left"></i></button>
                                 <button onclick="moveCarousel('next')" class="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 transition z-20 rounded-l-lg shadow-xl opacity-0 group-hover:opacity-100"><i data-lucide="chevron-right"></i></button>
@@ -409,6 +409,7 @@
                             ` : ''}
                         </section>
 
+                        <!-- Sambutan -->
                         <section class="py-10 bg-white border-b border-slate-100">
                             <div class="max-w-5xl mx-auto px-4">
                                 <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 bg-slate-50 p-6 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
@@ -427,6 +428,7 @@
                             </div>
                         </section>
 
+                        <!-- Statistik -->
                         <section class="py-8 bg-blue-900 text-white relative overflow-hidden">
                             <div class="absolute top-0 left-0 w-full h-full opacity-5" style="background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px;"></div>
                             <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center relative z-10">
@@ -437,6 +439,7 @@
                             </div>
                         </section>
 
+                        <!-- Jurusan Unggulan -->
                         <section class="py-12 bg-white">
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="flex items-center justify-between mb-8">
@@ -464,6 +467,7 @@
                             </div>
                         </section>
 
+                        <!-- Berita Terbaru -->
                         <section class="py-12 bg-slate-50 border-y border-slate-100">
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="flex items-center justify-between mb-8">
@@ -487,6 +491,7 @@
                             </div>
                         </section>
 
+                        <!-- Kemitraan -->
                         <section class="py-10 bg-white border-b border-slate-100">
                             <div class="max-w-7xl mx-auto px-4 text-center">
                                 <h3 class="text-xl font-black text-blue-900 uppercase tracking-tighter mb-8">Mitra Industri Kami</h3>
@@ -498,6 +503,7 @@
                             </div>
                         </section>
 
+                        <!-- Maps & Kontak -->
                         <section class="py-12 bg-slate-50">
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="grid md:grid-cols-5 gap-4 bg-white rounded-[2.5rem] p-4 border border-slate-100 shadow-xl">
@@ -889,94 +895,6 @@
                             <button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-black text-white font-black py-4 px-12 rounded-2xl shadow-xl transition uppercase tracking-widest text-xs">Simpan Data Profil</button>
                         </div>
                     </form>`;
-            } else if (tab === 'berita') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-10">
-                        <div class="lg:col-span-1">
-                            <form onsubmit="handleSaveNews(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border">
-                                <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">${editItem ? 'Edit Berita' : 'Tulis Berita'}</h4>
-                                <input type="text" id="news-title" value="${editItem?.title || ''}" placeholder="Judul Berita" required class="w-full p-4 border rounded-2xl">
-                                <select id="news-category" class="w-full p-4 border rounded-2xl bg-white text-xs font-bold uppercase"><option value="Kegiatan">Kegiatan</option><option value="Prestasi">Prestasi</option><option value="Pengumuman">Pengumuman</option></select>
-                                
-                                <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Upload Foto Utama</label>
-                                <input type="file" id="news-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
-                                <input type="hidden" id="news-image-old" value="${editItem?.image || ''}">
-                                ${editItem?.image ? `<p class="text-[9px] text-slate-400 ml-1">Gambar lama tersedia. Pilih file baru untuk mengganti.</p>` : ''}
-                                
-                                <textarea id="news-content" rows="6" placeholder="Konten Berita Lengkap..." required class="w-full p-4 border rounded-2xl">${editItem?.content || ''}</textarea>
-                                <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-xs">${editItem ? 'UPDATE' : 'TERBITKAN'}</button>${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div>
-                            </form>
-                        </div>
-                        <div class="lg:col-span-2 overflow-x-auto">
-                            <table class="w-full text-left border rounded-3xl overflow-hidden shadow-sm bg-white text-sm">
-                                <thead class="bg-blue-900 text-white uppercase text-[10px] tracking-widest"><tr class="divide-x"><th class="p-5">Daftar Berita Aktif</th><th class="p-5 text-right">Aksi</th></tr></thead>
-                                <tbody class="divide-y text-slate-600 font-bold">
-                                    ${beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `<tr class="hover:bg-slate-50 transition"><td class="p-5 truncate max-w-[300px]">${n.title}</td><td class="p-5 text-right flex justify-end gap-6"><button onclick="setEditItem('berita', '${n.id}')" class="text-blue-600"><i data-lucide="edit-2" size="18"></i></button><button onclick="deleteItem('berita', '${n.id}')" class="text-red-500"><i data-lucide="trash-2" size="18"></i></button></td></tr>`).join('') || '<tr><td colspan="2" class="p-10 text-center italic text-slate-400">Belum ada berita.</td></tr>'}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>`;
-            } else if (tab === 'galeri') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-10">
-                        <form onsubmit="handleSaveGallery(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border h-fit">
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Tambah Foto Slide</h4>
-                            <input type="text" id="gal-caption" placeholder="Judul Foto / Slide" required class="w-full p-4 border rounded-2xl">
-                            
-                            <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Upload Foto</label>
-                            <input type="file" id="gal-file" accept="image/*" required class="w-full p-3 border rounded-2xl bg-white text-xs">
-                            
-                            <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs mt-2">SIMPAN KE GALERI</button>
-                        </form>
-                        <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
-                            ${galleryList.map(g => `<div class="relative group aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-lg"><img src="${g.url}" class="w-full h-full object-cover"><button onclick="deleteItem('gallery', '${g.id}')" class="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition flex items-center justify-center font-black uppercase text-xs">HAPUS</button></div>`).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada foto.</p>'}
-                        </div>
-                    </div>`;
-            } else if (tab === 'alumni' && userRole === 'admin') {
-                const pendingAlumni = alumniList.filter(a => a.status === 'pending');
-                const approvedAlumni = alumniList.filter(a => a.status === 'approved');
-                container.innerHTML = `
-                    <div class="space-y-12">
-                        <!-- Menunggu Persetujuan -->
-                        <div>
-                            <h3 class="font-bold mb-6 flex items-center gap-2 text-yellow-600 text-xl border-b pb-4"><i data-lucide="clock"></i> Menunggu Persetujuan (${pendingAlumni.length})</h3>
-                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                ${pendingAlumni.map(a => `
-                                    <div class="bg-yellow-50 rounded-2xl border border-yellow-200 p-6 shadow-sm">
-                                        <div class="flex items-center gap-4 mb-4">
-                                            <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm">
-                                            <div>
-                                                <h4 class="font-bold text-slate-800">${a.name}</h4>
-                                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Lulusan ${a.graduationYear}</p>
-                                            </div>
-                                        </div>
-                                        <p class="text-sm text-slate-600 mb-2"><i data-lucide="briefcase" class="inline w-3 h-3 text-slate-400 mr-1"></i> ${a.workplace}</p>
-                                        <p class="text-xs text-slate-500 italic bg-white p-3 rounded-lg border border-yellow-100 line-clamp-3 mb-4">"${a.quote}"</p>
-                                        <div class="flex gap-2">
-                                            <button onclick="handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-xl text-sm hover:bg-green-600 transition flex justify-center items-center gap-1"><i data-lucide="check" size="14"></i> Setujui</button>
-                                            <button onclick="deleteItem('alumni', '${a.id}')" class="flex-1 bg-red-100 text-red-600 font-bold py-2 rounded-xl text-sm hover:bg-red-200 transition flex justify-center items-center gap-1"><i data-lucide="x" size="14"></i> Tolak</button>
-                                        </div>
-                                    </div>
-                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Tidak ada pengajuan data alumni yang baru.</div>'}
-                            </div>
-                        </div>
-
-                        <!-- Alumni Disetujui -->
-                        <div>
-                            <h3 class="font-bold mb-6 flex items-center gap-2 text-green-600 text-xl border-b pb-4"><i data-lucide="check-circle-2"></i> Alumni Aktif (${approvedAlumni.length})</h3>
-                            <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                ${approvedAlumni.map(a => `
-                                    <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col items-center text-center shadow-sm relative group">
-                                        <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-100 mb-3">
-                                        <h4 class="font-bold text-slate-800 text-sm mb-1">${a.name}</h4>
-                                        <p class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-bold mb-3">${a.graduationYear} - ${a.workplace}</p>
-                                        <button onclick="deleteItem('alumni', '${a.id}')" class="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition opacity-0 group-hover:opacity-100" title="Hapus Data"><i data-lucide="trash-2" size="14"></i></button>
-                                    </div>
-                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Belum ada data alumni yang disetujui.</div>'}
-                            </div>
-                        </div>
-                    </div>
-                `;
             } else if (tab === 'jurusan' && userRole === 'admin') {
                 container.innerHTML = `
                     <div class="grid lg:grid-cols-3 gap-10">
@@ -985,16 +903,15 @@
                                 <h3 class="font-bold mb-6 flex items-center gap-2 text-blue-900 text-xl"><i data-lucide="book-open"></i> ${editItem ? 'Edit Jurusan' : 'Tambah Jurusan'}</h3>
                                 <form onsubmit="handleSaveJurusan(event)" class="space-y-4">
                                     <input type="text" id="jur-code" placeholder="Singkatan (TKJ)" value="${editItem?.code || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="text" id="jur-name" placeholder="Nama Jurusan" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
+                                    <input type="text" id="jur-name" placeholder="Nama Lengkap Jurusan" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     
-                                    <label class="text-[10px] font-black text-slate-400 uppercase block">Upload Foto Jurusan</label>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload Foto Jurusan</label>
                                     <input type="file" id="jur-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
                                     <input type="hidden" id="jur-image-old" value="${editItem?.image || ''}">
-                                    ${editItem?.image ? `<p class="text-[9px] text-slate-400 ml-1">Gambar lama tersedia. Pilih file baru untuk mengganti.</p>` : ''}
 
-                                    <textarea id="jur-desc" placeholder="Deskripsi..." required rows="5" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
+                                    <textarea id="jur-desc" placeholder="Deskripsi/Keterangan..." required rows="5" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
-                                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Simpan</button>
+                                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
                                         ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl">Batal</button>` : ''}
                                     </div>
                                 </form>
@@ -1026,15 +943,15 @@
                                 <h3 class="font-bold mb-6 flex items-center gap-2 text-blue-900 text-xl"><i data-lucide="users"></i> ${editItem ? 'Edit Guru' : 'Tambah Guru'}</h3>
                                 <form onsubmit="handleSaveGuru(event)" class="space-y-4">
                                     <input type="text" id="guru-name" placeholder="Nama Guru" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="text" id="guru-subject" placeholder="Mengajar" value="${editItem?.subject || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
+                                    <input type="text" id="guru-subject" placeholder="Mengajar (Mapel)" value="${editItem?.subject || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     
-                                    <label class="text-[10px] font-black text-slate-400 uppercase block">Upload Pas Foto</label>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload Pas Foto</label>
                                     <input type="file" id="guru-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
                                     <input type="hidden" id="guru-image-old" value="${editItem?.image || ''}">
                                     
-                                    <textarea id="guru-quote" placeholder="Motto..." required rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.quote || ''}</textarea>
+                                    <textarea id="guru-quote" placeholder="Motto / Pesan Singkat..." required rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.quote || ''}</textarea>
                                     <div class="flex gap-2">
-                                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Simpan</button>
+                                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
                                         ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl">Batal</button>` : ''}
                                     </div>
                                 </form>
@@ -1067,13 +984,13 @@
                                 <form onsubmit="handleSaveMitra(event)" class="space-y-4">
                                     <input type="text" id="mitra-name" placeholder="Nama Industri" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     
-                                    <label class="text-[10px] font-black text-slate-400 uppercase block">Upload Logo Mitra</label>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload Logo Mitra</label>
                                     <input type="file" id="mitra-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
                                     <input type="hidden" id="mitra-image-old" value="${editItem?.image || ''}">
 
-                                    <textarea id="mitra-desc" placeholder="Keterangan..." required rows="3" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
+                                    <textarea id="mitra-desc" placeholder="Keterangan / Bidang Kerja Sama..." required rows="3" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
-                                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">Simpan</button>
+                                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
                                         ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl">Batal</button>` : ''}
                                     </div>
                                 </form>
@@ -1094,6 +1011,90 @@
                             </div>
                         </div>
                     </div>`;
+            } else if (tab === 'berita') {
+                container.innerHTML = `
+                    <div class="grid lg:grid-cols-3 gap-10">
+                        <div class="lg:col-span-1">
+                            <form onsubmit="handleSaveNews(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border">
+                                <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">${editItem ? 'Edit Berita' : 'Tulis Berita'}</h4>
+                                <input type="text" id="news-title" value="${editItem?.title || ''}" placeholder="Judul Berita" required class="w-full p-4 border rounded-2xl">
+                                <select id="news-category" class="w-full p-4 border rounded-2xl bg-white text-xs font-bold uppercase"><option value="Kegiatan">Kegiatan</option><option value="Prestasi">Prestasi</option><option value="Pengumuman">Pengumuman</option></select>
+                                
+                                <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload Foto Utama</label>
+                                <input type="file" id="news-image-file" accept="image/*" class="w-full p-3 border rounded-2xl bg-white text-xs" ${editItem?.image ? '' : 'required'}>
+                                <input type="hidden" id="news-image-old" value="${editItem?.image || ''}">
+                                
+                                <textarea id="news-content" rows="6" placeholder="Konten Berita Lengkap..." required class="w-full p-4 border rounded-2xl">${editItem?.content || ''}</textarea>
+                                <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-xs">${editItem ? 'UPDATE' : 'TERBITKAN'}</button>${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2 overflow-x-auto">
+                            <table class="w-full text-left border rounded-3xl overflow-hidden shadow-sm bg-white text-sm">
+                                <thead class="bg-blue-900 text-white uppercase text-[10px] tracking-widest"><tr class="divide-x"><th class="p-5">Daftar Berita Aktif</th><th class="p-5 text-right">Aksi</th></tr></thead>
+                                <tbody class="divide-y text-slate-600 font-bold">
+                                    ${beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `<tr class="hover:bg-slate-50 transition"><td class="p-5 truncate max-w-[300px]">${n.title}</td><td class="p-5 text-right flex justify-end gap-6"><button onclick="setEditItem('berita', '${n.id}')" class="text-blue-600"><i data-lucide="edit-2" size="18"></i></button><button onclick="deleteItem('berita', '${n.id}')" class="text-red-500"><i data-lucide="trash-2" size="18"></i></button></td></tr>`).join('') || '<tr><td colspan="2" class="p-10 text-center italic text-slate-400">Belum ada berita.</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+            } else if (tab === 'galeri') {
+                container.innerHTML = `
+                    <div class="grid lg:grid-cols-3 gap-10">
+                        <form onsubmit="handleSaveGallery(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border h-fit">
+                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Tambah Foto Slide</h4>
+                            <input type="text" id="gal-caption" placeholder="Judul Foto / Slide" required class="w-full p-4 border rounded-2xl">
+                            
+                            <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload Foto Gambar</label>
+                            <input type="file" id="gal-file" accept="image/*" required class="w-full p-3 border rounded-2xl bg-white text-xs">
+                            
+                            <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs mt-2">SIMPAN KE GALERI</button>
+                        </form>
+                        <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
+                            ${galleryList.map(g => `<div class="relative group aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-lg"><img src="${g.url}" class="w-full h-full object-cover"><button onclick="deleteItem('gallery', '${g.id}')" class="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition flex items-center justify-center font-black uppercase text-xs">HAPUS</button></div>`).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada foto.</p>'}
+                        </div>
+                    </div>`;
+            } else if (tab === 'alumni' && userRole === 'admin') {
+                const pendingAlumni = alumniList.filter(a => a.status === 'pending');
+                const approvedAlumni = alumniList.filter(a => a.status === 'approved');
+                container.innerHTML = `
+                    <div class="space-y-12">
+                        <div>
+                            <h3 class="font-bold mb-6 flex items-center gap-2 text-yellow-600 text-xl border-b pb-4"><i data-lucide="clock"></i> Menunggu Persetujuan (${pendingAlumni.length})</h3>
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${pendingAlumni.map(a => `
+                                    <div class="bg-yellow-50 rounded-2xl border border-yellow-200 p-6 shadow-sm">
+                                        <div class="flex items-center gap-4 mb-4">
+                                            <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm">
+                                            <div>
+                                                <h4 class="font-bold text-slate-800">${a.name}</h4>
+                                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Lulusan ${a.graduationYear}</p>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-slate-600 mb-2"><i data-lucide="briefcase" class="inline w-3 h-3 text-slate-400 mr-1"></i> ${a.workplace}</p>
+                                        <p class="text-xs text-slate-500 italic bg-white p-3 rounded-lg border border-yellow-100 line-clamp-3 mb-4">"${a.quote}"</p>
+                                        <div class="flex gap-2">
+                                            <button onclick="handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-xl text-sm hover:bg-green-600 transition flex justify-center items-center gap-1"><i data-lucide="check" size="14"></i> Setujui</button>
+                                            <button onclick="deleteItem('alumni', '${a.id}')" class="flex-1 bg-red-100 text-red-600 font-bold py-2 rounded-xl text-sm hover:bg-red-200 transition flex justify-center items-center gap-1"><i data-lucide="x" size="14"></i> Tolak</button>
+                                        </div>
+                                    </div>
+                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Tidak ada pengajuan data alumni yang baru.</div>'}
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold mb-6 flex items-center gap-2 text-green-600 text-xl border-b pb-4"><i data-lucide="check-circle-2"></i> Alumni Aktif (${approvedAlumni.length})</h3>
+                            <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                ${approvedAlumni.map(a => `
+                                    <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col items-center text-center shadow-sm relative group">
+                                        <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-100 mb-3">
+                                        <h4 class="font-bold text-slate-800 text-sm mb-1">${a.name}</h4>
+                                        <p class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-bold mb-3">${a.graduationYear} - ${a.workplace}</p>
+                                        <button onclick="deleteItem('alumni', '${a.id}')" class="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition opacity-0 group-hover:opacity-100" title="Hapus Data"><i data-lucide="trash-2" size="14"></i></button>
+                                    </div>
+                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Belum ada data alumni yang disetujui.</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
             lucide.createIcons();
         };
@@ -1218,7 +1219,7 @@
             const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
-                const imageUrl = await uploadImage('gal-file', null); // no old url for gallery, always new file
+                const imageUrl = await uploadImage('gal-file', null);
                 if (!imageUrl) throw new Error("File wajib dipilih");
                 const d = { caption: escapeHTML(document.getElementById('gal-caption').value), url: imageUrl, timestamp: Date.now() };
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
@@ -1230,7 +1231,7 @@
         window.handleSaveJurusan = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
                 const imgUrl = await uploadImage('jur-image-file', 'jur-image-old');
@@ -1244,7 +1245,7 @@
         window.handleSaveGuru = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
                 const imgUrl = await uploadImage('guru-image-file', 'guru-image-old');
@@ -1258,7 +1259,7 @@
         window.handleSaveMitra = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
                 const imgUrl = await uploadImage('mitra-image-file', 'mitra-image-old');
@@ -1282,7 +1283,6 @@
             lucide.createIcons();
 
             try {
-                // Untuk alumni baru, gambar diupload (tidak ada gambar lama)
                 const imgUrl = await uploadImage('tracer-image-file', 'tracer-image-old');
                 
                 const d = {
@@ -1336,7 +1336,6 @@
             carouselIndex = index;
             items[carouselIndex].classList.add('active');
             
-            // Update dots
             document.querySelectorAll('.slide-dot').forEach((dot, i) => {
                 if(i === carouselIndex) {
                     dot.classList.remove('bg-white/40', 'hover:bg-white/70');
