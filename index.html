@@ -378,7 +378,6 @@
             switch(page) {
                 case 'home':
                     content.innerHTML = `
-                        <!-- Carousel -->
                         <section class="relative bg-slate-900 overflow-hidden h-[400px] md:h-[600px] group">
                             <div id="carousel-inner" class="h-full relative">
                                 ${galleryList.length > 0 ? galleryList.map((g, i) => `
@@ -402,8 +401,6 @@
                                         </div>
                                     </div>`}
                             </div>
-                            
-                            <!-- Kontrol Panah -->
                             ${galleryList.length > 1 ? `
                                 <button onclick="moveCarousel('prev')" class="absolute left-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 transition z-20 rounded-r-lg shadow-xl opacity-0 group-hover:opacity-100"><i data-lucide="chevron-left"></i></button>
                                 <button onclick="moveCarousel('next')" class="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 transition z-20 rounded-l-lg shadow-xl opacity-0 group-hover:opacity-100"><i data-lucide="chevron-right"></i></button>
@@ -413,7 +410,6 @@
                             ` : ''}
                         </section>
 
-                        <!-- Sambutan -->
                         <section class="py-10 bg-white border-b border-slate-100">
                             <div class="max-w-5xl mx-auto px-4">
                                 <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 bg-slate-50 p-6 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
@@ -432,7 +428,6 @@
                             </div>
                         </section>
 
-                        <!-- Statistik -->
                         <section class="py-8 bg-blue-900 text-white relative overflow-hidden">
                             <div class="absolute top-0 left-0 w-full h-full opacity-5" style="background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px;"></div>
                             <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center relative z-10">
@@ -443,7 +438,6 @@
                             </div>
                         </section>
 
-                        <!-- Jurusan Unggulan -->
                         <section class="py-12 bg-white">
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="flex items-center justify-between mb-8">
@@ -471,7 +465,6 @@
                             </div>
                         </section>
 
-                        <!-- Berita Terbaru -->
                         <section class="py-12 bg-slate-50 border-y border-slate-100">
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="flex items-center justify-between mb-8">
@@ -495,7 +488,6 @@
                             </div>
                         </section>
 
-                        <!-- Kemitraan -->
                         <section class="py-10 bg-white border-b border-slate-100">
                             <div class="max-w-7xl mx-auto px-4 text-center">
                                 <h3 class="text-xl font-black text-blue-900 uppercase tracking-tighter mb-8">Mitra Industri Kami</h3>
@@ -507,7 +499,6 @@
                             </div>
                         </section>
 
-                        <!-- Maps & Kontak -->
                         <section class="py-12 bg-slate-50">
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="grid md:grid-cols-5 gap-4 bg-white rounded-[2.5rem] p-4 border border-slate-100 shadow-xl">
@@ -539,7 +530,6 @@
             lucide.createIcons();
         };
 
-        // UI Modules
         const renderProfil = () => {
             document.getElementById('content').innerHTML = `
                 <div class="relative h-[300px] bg-blue-900 overflow-hidden">
@@ -697,12 +687,15 @@
                             </div>
                             <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Tempat Kerja / Universitas Saat Ini</label><input type="text" id="tracer-workplace" required placeholder="Misal: PT Astra / Universitas Lampung" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></div>
                             
-                            <!-- Foto Upload / URL -->
                             <div>
                                 <label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Upload / URL Foto Terbaru (Rasio 1:1)</label>
-                                <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
-                                    <input type="file" id="tracer-image-file" accept="image/*" class="w-full text-sm text-slate-500 mb-2">
-                                    <input type="url" id="tracer-image-url" placeholder="Atau masukkan URL foto..." class="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 bg-white text-sm">
+                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                    <input type="file" id="tracer-image-file" accept="image/*" class="w-full text-sm text-slate-500 mb-3">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
+                                        <input type="url" id="tracer-image-url" placeholder="Atau tempel URL foto di sini..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm transition">
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-2 italic">*Pilih file dari perangkat ATAU tempel URL gambar.</p>
                                 </div>
                             </div>
                             
@@ -739,7 +732,7 @@
             `;
         };
 
-        // Admin Auth & Tabs
+        // Admin Auth
         window.adminLogin = async (e) => {
             e.preventDefault();
             const u = document.getElementById('login-user').value.toLowerCase();
@@ -814,14 +807,29 @@
                     <form onsubmit="handleSaveConfig(event)" class="grid md:grid-cols-2 gap-12">
                         <div class="space-y-6">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Identitas Dasar</h4>
+                            
+                            <!-- Logo -->
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload / URL Logo Sekolah</label>
-                                <div class="bg-slate-50 p-2 rounded-2xl border border-slate-200">
-                                    <input type="file" id="conf-logo-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
-                                    <input type="url" id="conf-logo-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-white text-xs outline-none">
+                                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                                    ${siteConfig.logoImage ? `
+                                        <div class="mb-3 flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
+                                            <img src="${siteConfig.logoImage}" class="h-10 w-10 object-contain rounded-lg border border-slate-200 p-1">
+                                            <div class="flex-1 overflow-hidden">
+                                                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Logo Saat Ini</p>
+                                                <p class="text-[9px] text-slate-400 truncate">${siteConfig.logoImage}</p>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    <input type="file" id="conf-logo-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
+                                        <input type="url" id="conf-logo-url" placeholder="Atau tempel URL gambar di sini..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                    </div>
+                                    <p class="text-[9px] text-slate-400 mt-2 ml-1 italic">*Pilih file ATAU tempel URL. Biarkan kosong jika tidak ingin mengubah logo.</p>
                                 </div>
-                                ${siteConfig.logoImage ? `<img src="${siteConfig.logoImage}" class="h-10 mt-2 rounded object-contain border bg-white p-1">` : ''}
                             </div>
+                            
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama Resmi Sekolah</label><input type="text" id="conf-name" value="${siteConfig.name}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Slogan Website</label><input type="text" id="conf-slogan" value="${siteConfig.slogan}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Alamat (Muncul di Footer & Maps)</label><input type="text" id="conf-address" value="${siteConfig.address || ''}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
@@ -833,14 +841,29 @@
                         <div class="space-y-6">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Sambutan Kepala Sekolah</h4>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama & Gelar</label><input type="text" id="conf-s-name" value="${siteConfig.sambutanName}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
+                            
+                            <!-- Foto Sambutan -->
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload / URL Foto Pimpinan</label>
-                                <div class="bg-slate-50 p-2 rounded-2xl border border-slate-200">
-                                    <input type="file" id="conf-s-img-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
-                                    <input type="url" id="conf-s-img-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-white text-xs outline-none">
+                                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                                    ${siteConfig.sambutanImage ? `
+                                        <div class="mb-3 flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
+                                            <img src="${siteConfig.sambutanImage}" class="h-12 w-12 object-cover rounded-lg border border-slate-200">
+                                            <div class="flex-1 overflow-hidden">
+                                                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
+                                                <p class="text-[9px] text-slate-400 truncate">${siteConfig.sambutanImage}</p>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    <input type="file" id="conf-s-img-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
+                                        <input type="url" id="conf-s-img-url" placeholder="Atau tempel URL gambar di sini..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                    </div>
+                                    <p class="text-[9px] text-slate-400 mt-2 ml-1 italic">*Pilih file ATAU tempel URL. Biarkan kosong jika tidak ingin mengubah foto.</p>
                                 </div>
-                                ${siteConfig.sambutanImage ? `<img src="${siteConfig.sambutanImage}" class="h-10 mt-2 rounded object-contain border bg-white p-1">` : ''}
                             </div>
+                            
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Teks Sambutan Singkat</label><textarea id="conf-s-text" rows="6" class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none">${siteConfig.sambutanText}</textarea></div>
                         </div>
                         <div class="md:col-span-2 pt-6"><button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-black text-white font-black py-4 px-12 rounded-2xl shadow-xl transition uppercase tracking-widest text-xs">Simpan Semua Pengaturan</button></div>
@@ -881,14 +904,29 @@
                 container.innerHTML = `
                     <h3 class="text-2xl font-black mb-8 border-b border-slate-100 pb-6 text-blue-900 flex items-center gap-3"><i data-lucide="school" class="text-blue-500"></i> Pengaturan Halaman Profil</h3>
                     <form onsubmit="handleSaveProfil(event)" class="space-y-8 max-w-5xl">
+                        
+                        <!-- Profil Image -->
                         <div>
                             <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Upload / URL Foto Banner Profil Raksasa</label>
-                            <div class="bg-slate-50 p-2 rounded-2xl border border-slate-200 mt-2">
-                                <input type="file" id="prof-img-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
-                                <input type="url" id="prof-img-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-white text-xs outline-none">
+                            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 mt-2">
+                                ${siteConfig.profilImage ? `
+                                    <div class="mb-3 flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
+                                        <img src="${siteConfig.profilImage}" class="h-12 w-12 object-cover rounded-lg border border-slate-200">
+                                        <div class="flex-1 overflow-hidden">
+                                            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
+                                            <p class="text-[9px] text-slate-400 truncate">${siteConfig.profilImage}</p>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                <input type="file" id="prof-img-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
+                                    <input type="url" id="prof-img-url" placeholder="Atau tempel URL gambar di sini..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                </div>
+                                <p class="text-[9px] text-slate-400 mt-2 ml-1 italic">*Pilih file ATAU tempel URL. Biarkan kosong jika tidak ingin mengubah foto.</p>
                             </div>
-                            ${siteConfig.profilImage ? `<img src="${siteConfig.profilImage}" class="h-20 mt-2 rounded object-cover border bg-white p-1">` : ''}
                         </div>
+
                         <div>
                             <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Sejarah Singkat Sekolah (Dapat menggunakan enter untuk paragraf baru)</label>
                             <textarea id="prof-sejarah" rows="6" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 bg-slate-50">${siteConfig.profilSejarah || ''}</textarea>
@@ -918,16 +956,27 @@
                                     <input type="text" id="jur-name" placeholder="Nama Lengkap Jurusan" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     
                                     <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload / URL Foto Jurusan</label>
-                                    <div class="bg-white p-2 rounded-2xl border">
-                                        <input type="file" id="jur-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
-                                        <input type="url" id="jur-image-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                                    <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
+                                        ${editItem?.image ? `
+                                            <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
+                                                <img src="${editItem.image}" class="h-10 w-10 object-cover rounded-lg border border-slate-200">
+                                                <div class="flex-1 overflow-hidden">
+                                                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
+                                                    <p class="text-[9px] text-slate-400 truncate">${editItem.image}</p>
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        <input type="file" id="jur-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
+                                            <input type="url" id="jur-image-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                        </div>
                                     </div>
-                                    ${editItem?.image ? `<p class="text-[9px] text-slate-400 mt-1">Terdapat foto tersimpan.</p>` : ''}
 
                                     <textarea id="jur-desc" placeholder="Deskripsi/Keterangan..." required rows="5" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
                                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
-                                        ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl">Batal</button>` : ''}
+                                        ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl font-bold">Batal</button>` : ''}
                                     </div>
                                 </form>
                             </div>
@@ -961,15 +1010,27 @@
                                     <input type="text" id="guru-subject" placeholder="Mengajar (Mapel)" value="${editItem?.subject || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     
                                     <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload / URL Pas Foto</label>
-                                    <div class="bg-white p-2 rounded-2xl border">
-                                        <input type="file" id="guru-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
-                                        <input type="url" id="guru-image-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                                    <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
+                                        ${editItem?.image ? `
+                                            <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
+                                                <img src="${editItem.image}" class="h-10 w-10 object-cover rounded-lg border border-slate-200">
+                                                <div class="flex-1 overflow-hidden">
+                                                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
+                                                    <p class="text-[9px] text-slate-400 truncate">${editItem.image}</p>
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        <input type="file" id="guru-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
+                                            <input type="url" id="guru-image-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                        </div>
                                     </div>
                                     
                                     <textarea id="guru-quote" placeholder="Motto / Pesan Singkat..." required rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.quote || ''}</textarea>
                                     <div class="flex gap-2">
                                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
-                                        ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl">Batal</button>` : ''}
+                                        ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl font-bold">Batal</button>` : ''}
                                     </div>
                                 </form>
                             </div>
@@ -1002,15 +1063,27 @@
                                     <input type="text" id="mitra-name" placeholder="Nama Industri" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     
                                     <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload / URL Logo Mitra</label>
-                                    <div class="bg-white p-2 rounded-2xl border">
-                                        <input type="file" id="mitra-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
-                                        <input type="url" id="mitra-image-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                                    <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
+                                        ${editItem?.image ? `
+                                            <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
+                                                <img src="${editItem.image}" class="h-10 w-10 object-contain rounded-lg border border-slate-200 p-1">
+                                                <div class="flex-1 overflow-hidden">
+                                                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Logo Saat Ini</p>
+                                                    <p class="text-[9px] text-slate-400 truncate">${editItem.image}</p>
+                                                </div>
+                                            </div>
+                                        ` : ''}
+                                        <input type="file" id="mitra-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
+                                            <input type="url" id="mitra-image-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                        </div>
                                     </div>
 
                                     <textarea id="mitra-desc" placeholder="Keterangan / Bidang Kerja Sama..." required rows="3" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
                                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
-                                        ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl">Batal</button>` : ''}
+                                        ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl font-bold">Batal</button>` : ''}
                                     </div>
                                 </form>
                             </div>
@@ -1037,12 +1110,28 @@
                             <form onsubmit="handleSaveNews(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border">
                                 <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">${editItem ? 'Edit Berita' : 'Tulis Berita'}</h4>
                                 <input type="text" id="news-title" value="${editItem?.title || ''}" placeholder="Judul Berita" required class="w-full p-4 border rounded-2xl">
-                                <select id="news-category" class="w-full p-4 border rounded-2xl bg-white text-xs font-bold uppercase"><option value="Kegiatan">Kegiatan</option><option value="Prestasi">Prestasi</option><option value="Pengumuman">Pengumuman</option></select>
+                                <select id="news-category" class="w-full p-4 border rounded-2xl bg-white text-xs font-bold uppercase">
+                                    <option value="Kegiatan" ${editItem?.category==='Kegiatan'?'selected':''}>Kegiatan</option>
+                                    <option value="Prestasi" ${editItem?.category==='Prestasi'?'selected':''}>Prestasi</option>
+                                    <option value="Pengumuman" ${editItem?.category==='Pengumuman'?'selected':''}>Pengumuman</option>
+                                </select>
                                 
                                 <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload / URL Foto Utama</label>
-                                <div class="bg-white p-2 rounded-2xl border">
-                                    <input type="file" id="news-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
-                                    <input type="url" id="news-image-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                                <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
+                                    ${editItem?.image ? `
+                                        <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
+                                            <img src="${editItem.image}" class="h-12 w-12 object-cover rounded-lg border border-slate-200">
+                                            <div class="flex-1 overflow-hidden">
+                                                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
+                                                <p class="text-[9px] text-slate-400 truncate">${editItem.image}</p>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                    <input type="file" id="news-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
+                                        <input type="url" id="news-image-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                    </div>
                                 </div>
                                 
                                 <textarea id="news-content" rows="6" placeholder="Konten Berita Lengkap..." required class="w-full p-4 border rounded-2xl">${editItem?.content || ''}</textarea>
@@ -1062,66 +1151,47 @@
                 container.innerHTML = `
                     <div class="grid lg:grid-cols-3 gap-10">
                         <form onsubmit="handleSaveGallery(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border h-fit">
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Tambah Foto Slide</h4>
-                            <input type="text" id="gal-caption" placeholder="Judul Foto / Slide" required class="w-full p-4 border rounded-2xl">
+                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">${editItem ? 'Edit Slide' : 'Tambah Foto Slide'}</h4>
+                            <input type="text" id="gal-caption" placeholder="Judul Foto / Slide" value="${editItem?.caption || ''}" required class="w-full p-4 border rounded-2xl">
                             
                             <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload / URL Foto Gambar</label>
-                            <div class="bg-white p-2 rounded-2xl border">
-                                <input type="file" id="gal-file" accept="image/*" class="w-full text-xs text-slate-500 mb-2">
-                                <input type="url" id="gal-url" placeholder="Atau masukkan URL..." class="w-full p-2 border rounded-xl bg-slate-50 text-xs outline-none">
+                            <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
+                                ${editItem?.url ? `
+                                    <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
+                                        <img src="${editItem.url}" class="h-12 w-12 object-cover rounded-lg border border-slate-200">
+                                        <div class="flex-1 overflow-hidden">
+                                            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
+                                            <p class="text-[9px] text-slate-400 truncate">${editItem.url}</p>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                <input type="file" id="gal-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
+                                    <input type="url" id="gal-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                </div>
                             </div>
                             
-                            <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs mt-2">SIMPAN KE GALERI</button>
+                            <div class="flex gap-2">
+                                <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs mt-2">${editItem ? 'UPDATE' : 'SIMPAN'} KE GALERI</button>
+                                ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 text-slate-800 font-black py-4 px-6 rounded-2xl shadow-lg uppercase text-xs mt-2">BATAL</button>` : ''}
+                            </div>
                         </form>
                         <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
-                            ${galleryList.map(g => `<div class="relative group aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-lg"><img src="${g.url}" class="w-full h-full object-cover"><button onclick="deleteItem('gallery', '${g.id}')" class="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition flex items-center justify-center font-black uppercase text-xs">HAPUS</button></div>`).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada foto.</p>'}
+                            ${galleryList.map(g => `
+                                <div class="relative group aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-lg">
+                                    <img src="${g.url}" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-blue-900/80 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition duration-300">
+                                        <button onclick="setEditItem('gallery', '${g.id}')" class="bg-white p-3 rounded-xl text-blue-600 hover:scale-110 transition shadow-lg"><i data-lucide="edit" size="18"></i></button>
+                                        <button onclick="deleteItem('gallery', '${g.id}')" class="bg-white p-3 rounded-xl text-red-600 hover:scale-110 transition shadow-lg"><i data-lucide="trash-2" size="18"></i></button>
+                                    </div>
+                                    <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent pt-8 pointer-events-none">
+                                        <p class="text-white text-[10px] font-bold truncate leading-relaxed text-center">${g.caption}</p>
+                                    </div>
+                                </div>
+                            `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada foto.</p>'}
                         </div>
                     </div>`;
-            } else if (tab === 'alumni' && userRole === 'admin') {
-                const pendingAlumni = alumniList.filter(a => a.status === 'pending');
-                const approvedAlumni = alumniList.filter(a => a.status === 'approved');
-                container.innerHTML = `
-                    <div class="space-y-12">
-                        <!-- Menunggu Persetujuan -->
-                        <div>
-                            <h3 class="font-bold mb-6 flex items-center gap-2 text-yellow-600 text-xl border-b pb-4"><i data-lucide="clock"></i> Menunggu Persetujuan (${pendingAlumni.length})</h3>
-                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                ${pendingAlumni.map(a => `
-                                    <div class="bg-yellow-50 rounded-2xl border border-yellow-200 p-6 shadow-sm">
-                                        <div class="flex items-center gap-4 mb-4">
-                                            <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm">
-                                            <div>
-                                                <h4 class="font-bold text-slate-800">${a.name}</h4>
-                                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Lulusan ${a.graduationYear}</p>
-                                            </div>
-                                        </div>
-                                        <p class="text-sm text-slate-600 mb-2"><i data-lucide="briefcase" class="inline w-3 h-3 text-slate-400 mr-1"></i> ${a.workplace}</p>
-                                        <p class="text-xs text-slate-500 italic bg-white p-3 rounded-lg border border-yellow-100 line-clamp-3 mb-4">"${a.quote}"</p>
-                                        <div class="flex gap-2">
-                                            <button onclick="handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-xl text-sm hover:bg-green-600 transition flex justify-center items-center gap-1"><i data-lucide="check" size="14"></i> Setujui</button>
-                                            <button onclick="deleteItem('alumni', '${a.id}')" class="flex-1 bg-red-100 text-red-600 font-bold py-2 rounded-xl text-sm hover:bg-red-200 transition flex justify-center items-center gap-1"><i data-lucide="x" size="14"></i> Tolak</button>
-                                        </div>
-                                    </div>
-                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Tidak ada pengajuan data alumni yang baru.</div>'}
-                            </div>
-                        </div>
-
-                        <!-- Alumni Disetujui -->
-                        <div>
-                            <h3 class="font-bold mb-6 flex items-center gap-2 text-green-600 text-xl border-b pb-4"><i data-lucide="check-circle-2"></i> Alumni Aktif (${approvedAlumni.length})</h3>
-                            <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                ${approvedAlumni.map(a => `
-                                    <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col items-center text-center shadow-sm relative group">
-                                        <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-100 mb-3">
-                                        <h4 class="font-bold text-slate-800 text-sm mb-1">${a.name}</h4>
-                                        <p class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-bold mb-3">${a.graduationYear} - ${a.workplace}</p>
-                                        <button onclick="deleteItem('alumni', '${a.id}')" class="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition opacity-0 group-hover:opacity-100" title="Hapus Data"><i data-lucide="trash-2" size="14"></i></button>
-                                    </div>
-                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Belum ada data alumni yang disetujui.</div>'}
-                            </div>
-                        </div>
-                    </div>
-                `;
             }
             lucide.createIcons();
         };
@@ -1246,12 +1316,17 @@
             const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
 
             try {
-                const imageUrl = await processImage('gal-file', 'gal-url', null);
-                if (!imageUrl) throw new Error("Gambar wajib dipilih/diisi");
-                const d = { caption: escapeHTML(document.getElementById('gal-caption').value), url: imageUrl, timestamp: Date.now() };
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
-                e.target.reset(); showToast("Foto Berhasil Disimpan!");
-            } catch(e) { console.error(e); showToast("Gagal menyimpan gambar!"); } 
+                const imageUrl = await processImage('gal-file', 'gal-url', editItem?.url);
+                if (!imageUrl) throw new Error("Gambar wajib dipilih/diisi URL");
+                const d = { caption: escapeHTML(document.getElementById('gal-caption').value), url: imageUrl, timestamp: editItem ? editItem.timestamp : Date.now() };
+                
+                if(editItem) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', editItem.id), d);
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
+                }
+                e.target.reset(); editItem = null; showToast("Foto Berhasil Disimpan!"); renderAdminDashboard();
+            } catch(e) { console.error(e); showToast(e.message || "Gagal menyimpan gambar!"); } 
             finally { btn.innerText = orig; btn.disabled = false; }
         };
 
