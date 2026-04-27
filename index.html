@@ -10,7 +10,6 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js" type="module"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.3s ease; background-color: #f8fafc; }
@@ -30,12 +29,6 @@
 
         .dropdown-menu { display: none; }
         .group:hover .dropdown-menu { display: block; }
-        
-        /* Input File Styling */
-        input[type="file"]::file-selector-button {
-            background-color: #1e3a8a; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-right: 12px; font-size: 11px;
-        }
-        input[type="file"]::file-selector-button:hover { background-color: #1e40af; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -122,11 +115,56 @@
         </div>
     </div>
 
+    <!-- Firebase Error Modal -->
+    <div id="error-modal" class="hidden fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-8 relative shadow-2xl">
+            <button onclick="document.getElementById('error-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition"><i data-lucide="x" size="24"></i></button>
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 mx-auto">
+                <i data-lucide="shield-alert" size="32"></i>
+            </div>
+            <h3 class="text-2xl font-black text-center text-slate-800 mb-2 uppercase">Akses Database Ditolak!</h3>
+            <p class="text-slate-600 text-sm mb-6 leading-relaxed text-center">Firebase memblokir Anda untuk menyimpan/membaca data. Ini sering terjadi karena <b>Security Rules</b> belum diatur dengan benar.</p>
+            
+            <div class="bg-slate-50 border border-slate-200 p-5 rounded-2xl text-xs space-y-4 font-medium text-slate-700">
+                <p class="flex items-start gap-2"><span class="bg-blue-600 text-white w-5 h-5 flex items-center justify-center rounded-full shrink-0">1</span> <span>Buka <b>Firebase Console</b> > <b>Authentication</b> > tab <b>Sign-in method</b> > Aktifkan <b>Anonymous</b>.</span></p>
+                <div class="flex items-start gap-2">
+                    <span class="bg-blue-600 text-white w-5 h-5 flex items-center justify-center rounded-full shrink-0">2</span> 
+                    <div class="flex-1">
+                        Buka <b>Firestore Database</b> > tab <b>Rules</b>. Ganti semua teks menjadi:
+                        <code class="block mt-2 bg-slate-800 text-green-400 p-3 rounded-xl overflow-x-auto whitespace-pre">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</code>
+                    </div>
+                </div>
+            </div>
+            <button onclick="document.getElementById('error-modal').classList.add('hidden')" class="w-full mt-6 bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-black transition uppercase tracking-widest text-xs">TUTUP PESAN INI</button>
+        </div>
+    </div>
+
+    <!-- Confirm Custom Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-8 text-center shadow-2xl">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <i data-lucide="alert-triangle" size="32"></i>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Hapus Data?</h3>
+            <p class="text-slate-500 text-sm mb-6">Data ini akan dihapus secara permanen dan tidak dapat dikembalikan.</p>
+            <div class="flex gap-3">
+                <button onclick="closeConfirm()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition">Batal</button>
+                <button id="confirm-btn" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 transition">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // === KONFIGURASI FIREBASE ANDA ===
         const firebaseConfig = {
@@ -142,7 +180,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
         const appId = 'smk-gm1-prod'; 
 
         // Security Helpers
@@ -156,27 +193,37 @@
             return Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
         };
 
-        // File & URL Handler Helper
-        const processImage = async (fileInputId, urlInputId, oldUrl) => {
-            const fileInput = document.getElementById(fileInputId);
-            const urlInput = document.getElementById(urlInputId);
-            
-            // 1. Prioritaskan jika ada file yang dipilih untuk diunggah
-            if (fileInput && fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                const storageRef = ref(storage, `uploads/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`);
-                const uploadTask = await uploadBytesResumable(storageRef, file);
-                return await getDownloadURL(uploadTask.ref);
+        const handleFirebaseError = (err) => {
+            console.error("Firebase Error Encountered:", err);
+            if (err.code === 'permission-denied' || (err.message && err.message.toLowerCase().includes('permission')) || (err.message && err.message.toLowerCase().includes('unauthorized'))) {
+                document.getElementById('error-modal').classList.remove('hidden');
+                lucide.createIcons();
+            } else {
+                showToast("Terjadi kesalahan: " + err.message);
             }
-            
-            // 2. Jika tidak ada file, periksa apakah ada URL yang dimasukkan manual
-            if (urlInput && urlInput.value.trim() !== '') {
-                return urlInput.value.trim();
-            }
-
-            // 3. Kembalikan URL lama jika tidak ada perubahan
-            return oldUrl || '';
         };
+
+        // Custom Confirm Logic
+        let confirmAction = null;
+        window.requestDelete = (col, id) => {
+            confirmAction = async () => {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
+                    showToast("Data Berhasil Dihapus!");
+                } catch (err) { handleFirebaseError(err); }
+                closeConfirm();
+            };
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        };
+
+        window.closeConfirm = () => {
+            confirmAction = null;
+            document.getElementById('confirm-modal').classList.add('hidden');
+        };
+        
+        document.getElementById('confirm-btn').addEventListener('click', () => {
+            if(confirmAction) confirmAction();
+        });
 
         // State Management
         let userRole = sessionStorage.getItem('secured_user_role') || null; 
@@ -212,12 +259,12 @@
             menuItems: [
                 { id: "m1", title: "Beranda", type: "link", target: "home" },
                 { id: "m2", title: "Profil", type: "dropdown", children: [
-                    { id: "s1", title: "Profil Sekolah", target: "profil" },
-                    { id: "s2", title: "Tenaga Pendidik", target: "guru" }
+                    { id: "s1", title: "Profil Sekolah", target: "profil", type: "link" },
+                    { id: "s2", title: "Tenaga Pendidik", target: "guru", type: "link" }
                 ]},
                 { id: "m3", title: "Akademik", type: "dropdown", children: [
-                    { id: "s3", title: "Kompetensi Keahlian", target: "jurusan" },
-                    { id: "s4", title: "Hubungan Industri", target: "mitra" }
+                    { id: "s3", title: "Kompetensi Keahlian", target: "jurusan", type: "link" },
+                    { id: "s4", title: "Hubungan Industri", target: "mitra", type: "link" }
                 ]},
                 { id: "m5", title: "Informasi", type: "dropdown", children: [
                     { id: "s7", title: "Berita Terbaru", target: "berita" },
@@ -253,15 +300,13 @@
 
         document.getElementById('current-year').innerText = new Date().getFullYear();
 
-        // System Init
         let isSetup = false;
 
         const init = async () => {
             try {
                 await signInAnonymously(auth);
             } catch (error) {
-                console.warn("Informasi: Firebase Anonymous Auth belum diaktifkan.", error);
-                showToast("Mode Read-Only. Aktifkan Anonymous Sign-In di Firebase!");
+                console.warn("Info: Firebase Anonymous Auth belum diaktifkan.", error);
             } finally {
                 setupListeners();
             }
@@ -280,7 +325,7 @@
                 updateSiteBranding();
                 renderNavigation();
                 refreshUI();
-            }, (err) => console.log("Gagal memuat konfigurasi (Cek Rules Firestore):", err));
+            }, (err) => handleFirebaseError(err));
 
             const collections = ['berita', 'gallery', 'jurusan', 'guru', 'mitra', 'alumni'];
             collections.forEach(col => {
@@ -293,7 +338,7 @@
                     if(col === 'mitra') mitraList = data;
                     if(col === 'alumni') alumniList = data;
                     refreshUI();
-                }, (err) => console.log(`Gagal memuat ${col}:`, err));
+                }, (err) => handleFirebaseError(err));
             });
         };
 
@@ -313,18 +358,30 @@
             let mobHTML = '';
 
             (siteConfig.menuItems || []).forEach(m => {
-                if (m.type === 'link') {
-                    deskHTML += `<button onclick="navigate('${m.target}')" class="nav-link text-[13px] font-bold text-slate-700 hover:text-blue-700 px-4 py-6 transition uppercase tracking-tight" id="nav-${m.target}">${m.title}</button>`;
-                    mobHTML += `<button onclick="navigate('${m.target}')" class="block w-full text-left font-bold text-slate-700 py-3 border-b border-slate-100 hover:text-blue-700 uppercase" id="mob-nav-${m.target}">${m.title}</button>`;
+                const isExt = m.type === 'external' || (m.target && m.target.startsWith('http'));
+                
+                if (m.type === 'link' || m.type === 'external') {
+                    if (isExt) {
+                        deskHTML += `<a href="${m.target}" target="_blank" class="nav-link text-[13px] font-bold text-slate-700 hover:text-blue-700 px-4 py-6 transition uppercase tracking-tight flex items-center gap-1">${m.title} <i data-lucide="external-link" size="12"></i></a>`;
+                        mobHTML += `<a href="${m.target}" target="_blank" class="block w-full text-left font-bold text-slate-700 py-3 border-b border-slate-100 hover:text-blue-700 uppercase flex items-center justify-between pr-4">${m.title} <i data-lucide="external-link" size="14"></i></a>`;
+                    } else {
+                        deskHTML += `<button onclick="navigate('${m.target}')" class="nav-link text-[13px] font-bold text-slate-700 hover:text-blue-700 px-4 py-6 transition uppercase tracking-tight" id="nav-${m.target}">${m.title}</button>`;
+                        mobHTML += `<button onclick="navigate('${m.target}')" class="block w-full text-left font-bold text-slate-700 py-3 border-b border-slate-100 hover:text-blue-700 uppercase" id="mob-nav-${m.target}">${m.title}</button>`;
+                    }
                 } else {
                     deskHTML += `
                         <div class="relative group h-full flex items-center">
                             <button class="nav-link text-[13px] font-bold text-slate-700 group-hover:text-blue-700 flex items-center gap-1.5 px-4 py-6 transition uppercase tracking-tight">${m.title} <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-hover:text-blue-700 transition"></i></button>
                             <div class="absolute left-1/2 -translate-x-1/2 top-full dropdown-menu z-50">
                                 <div class="bg-white shadow-2xl rounded-b-xl border-x border-b border-slate-100 py-2 min-w-[200px] mt-0">
-                                    ${(m.children || []).map(sub => `
-                                        <button onclick="navigate('${sub.target}')" class="block w-full text-left px-5 py-3 text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-700 transition uppercase tracking-tight" id="nav-${sub.target}">${sub.title}</button>
-                                    `).join('')}
+                                    ${(m.children || []).map(sub => {
+                                        const subIsExt = sub.type === 'external' || (sub.target && sub.target.startsWith('http'));
+                                        if (subIsExt) {
+                                            return `<a href="${sub.target}" target="_blank" class="block w-full text-left px-5 py-3 text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-700 transition uppercase tracking-tight flex items-center justify-between">${sub.title} <i data-lucide="external-link" size="12"></i></a>`;
+                                        } else {
+                                            return `<button onclick="navigate('${sub.target}')" class="block w-full text-left px-5 py-3 text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-700 transition uppercase tracking-tight" id="nav-${sub.target}">${sub.title}</button>`;
+                                        }
+                                    }).join('')}
                                 </div>
                             </div>
                         </div>`;
@@ -334,9 +391,14 @@
                                 ${m.title} <i data-lucide="chevron-down" size="16"></i>
                             </button>
                             <div id="mob-drop-${m.id}" class="hidden flex-col pl-4 bg-slate-50 border-b border-slate-100">
-                                ${(m.children || []).map(sub => `
-                                    <button onclick="navigate('${sub.target}')" class="block w-full text-left py-3 text-[12px] font-bold text-slate-600 hover:text-blue-700 border-b border-slate-100 last:border-0 uppercase tracking-tight">- ${sub.title}</button>
-                                `).join('')}
+                                ${(m.children || []).map(sub => {
+                                    const subIsExt = sub.type === 'external' || (sub.target && sub.target.startsWith('http'));
+                                    if (subIsExt) {
+                                        return `<a href="${sub.target}" target="_blank" class="block w-full text-left py-3 text-[12px] font-bold text-slate-600 hover:text-blue-700 border-b border-slate-100 last:border-0 uppercase tracking-tight flex items-center justify-between pr-4">- ${sub.title} <i data-lucide="external-link" size="12"></i></a>`;
+                                    } else {
+                                        return `<button onclick="navigate('${sub.target}')" class="block w-full text-left py-3 text-[12px] font-bold text-slate-600 hover:text-blue-700 border-b border-slate-100 last:border-0 uppercase tracking-tight">- ${sub.title}</button>`;
+                                    }
+                                }).join('')}
                             </div>
                         </div>`;
                 }
@@ -388,7 +450,7 @@
                                             <div class="max-w-2xl text-white text-left animate-fade-in-up">
                                                 <h2 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight uppercase tracking-tighter drop-shadow-xl">${g.caption}</h2>
                                                 <p class="text-xs md:text-sm text-slate-200 mb-8 max-w-lg leading-relaxed line-clamp-3">Pendidikan berkualitas dengan fasilitas memadai untuk mencetak generasi cerdas, berkarakter industri, dan berakhlak mulia.</p>
-                                                <button onclick="navigate('profil')" class="border-2 border-white hover:bg-white hover:text-slate-900 font-bold px-8 py-3 rounded-full text-xs uppercase transition tracking-widest shadow-lg">Jelajahi Profil</button>
+                                                ${g.btnText && g.btnText.trim() !== '' ? (g.btnType === 'external' ? `<a href="${g.btnTarget}" target="_blank" class="inline-block border-2 border-white hover:bg-white hover:text-slate-900 font-bold px-8 py-3 rounded-full text-xs uppercase transition tracking-widest shadow-lg">${g.btnText}</a>` : `<button onclick="navigate('${g.btnTarget}')" class="border-2 border-white hover:bg-white hover:text-slate-900 font-bold px-8 py-3 rounded-full text-xs uppercase transition tracking-widest shadow-lg">${g.btnText}</button>`) : ''}
                                             </div>
                                         </div>
                                     </div>`).join('') : `
@@ -688,15 +750,8 @@
                             <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Tempat Kerja / Universitas Saat Ini</label><input type="text" id="tracer-workplace" required placeholder="Misal: PT Astra / Universitas Lampung" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></div>
                             
                             <div>
-                                <label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Upload / URL Foto Terbaru (Rasio 1:1)</label>
-                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                                    <input type="file" id="tracer-image-file" accept="image/*" class="w-full text-sm text-slate-500 mb-3">
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
-                                        <input type="url" id="tracer-image-url" placeholder="Atau tempel URL foto di sini..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm transition">
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-2 italic">*Pilih file dari perangkat ATAU tempel URL gambar.</p>
-                                </div>
+                                <label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">URL Foto Terbaru (Rasio 1:1)</label>
+                                <input type="url" id="tracer-image" required placeholder="Link foto profil" class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition">
                             </div>
                             
                             <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Kesan & Pesan</label><textarea id="tracer-quote" required placeholder="Ceritakan pengalaman singkat Anda..." rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></textarea></div>
@@ -780,6 +835,8 @@
             const container = document.getElementById('admin-tab-content');
             if (!container) return;
             
+            const optionsHTML = availablePages.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
+
             document.querySelectorAll('.admin-tab').forEach(b => {
                 b.classList.remove('active', 'shadow-lg', 'bg-blue-900', 'text-white');
                 b.classList.add('text-slate-500');
@@ -807,29 +864,7 @@
                     <form onsubmit="handleSaveConfig(event)" class="grid md:grid-cols-2 gap-12">
                         <div class="space-y-6">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Identitas Dasar</h4>
-                            
-                            <!-- Logo -->
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload / URL Logo Sekolah</label>
-                                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                                    ${siteConfig.logoImage ? `
-                                        <div class="mb-3 flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
-                                            <img src="${siteConfig.logoImage}" class="h-10 w-10 object-contain rounded-lg border border-slate-200 p-1">
-                                            <div class="flex-1 overflow-hidden">
-                                                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Logo Saat Ini</p>
-                                                <p class="text-[9px] text-slate-400 truncate">${siteConfig.logoImage}</p>
-                                            </div>
-                                        </div>
-                                    ` : ''}
-                                    <input type="file" id="conf-logo-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
-                                        <input type="url" id="conf-logo-url" placeholder="Atau tempel URL gambar di sini..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                    </div>
-                                    <p class="text-[9px] text-slate-400 mt-2 ml-1 italic">*Pilih file ATAU tempel URL. Biarkan kosong jika tidak ingin mengubah logo.</p>
-                                </div>
-                            </div>
-                            
+                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Link URL Logo Sekolah</label><input type="url" id="conf-logo" value="${siteConfig.logoImage}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama Resmi Sekolah</label><input type="text" id="conf-name" value="${siteConfig.name}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Slogan Website</label><input type="text" id="conf-slogan" value="${siteConfig.slogan}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Alamat (Muncul di Footer & Maps)</label><input type="text" id="conf-address" value="${siteConfig.address || ''}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
@@ -841,62 +876,66 @@
                         <div class="space-y-6">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Sambutan Kepala Sekolah</h4>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama & Gelar</label><input type="text" id="conf-s-name" value="${siteConfig.sambutanName}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
-                            
-                            <!-- Foto Sambutan -->
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Upload / URL Foto Pimpinan</label>
-                                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                                    ${siteConfig.sambutanImage ? `
-                                        <div class="mb-3 flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
-                                            <img src="${siteConfig.sambutanImage}" class="h-12 w-12 object-cover rounded-lg border border-slate-200">
-                                            <div class="flex-1 overflow-hidden">
-                                                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
-                                                <p class="text-[9px] text-slate-400 truncate">${siteConfig.sambutanImage}</p>
-                                            </div>
-                                        </div>
-                                    ` : ''}
-                                    <input type="file" id="conf-s-img-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
-                                        <input type="url" id="conf-s-img-url" placeholder="Atau tempel URL gambar di sini..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                    </div>
-                                    <p class="text-[9px] text-slate-400 mt-2 ml-1 italic">*Pilih file ATAU tempel URL. Biarkan kosong jika tidak ingin mengubah foto.</p>
-                                </div>
-                            </div>
-                            
+                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Link Foto Pimpinan</label><input type="url" id="conf-s-img" value="${siteConfig.sambutanImage}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Teks Sambutan Singkat</label><textarea id="conf-s-text" rows="6" class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none">${siteConfig.sambutanText}</textarea></div>
                         </div>
                         <div class="md:col-span-2 pt-6"><button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-black text-white font-black py-4 px-12 rounded-2xl shadow-xl transition uppercase tracking-widest text-xs">Simpan Semua Pengaturan</button></div>
                     </form>`;
             } else if (tab === 'menu' && userRole === 'admin') {
-                const optionsHTML = availablePages.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
                 container.innerHTML = `
                     <div class="grid lg:grid-cols-2 gap-12">
                         <div class="space-y-6">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Tambah Menu Utama</h4>
                             <form onsubmit="handleAddMenu(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border">
-                                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Judul Menu</label><input type="text" id="menu-title" required placeholder="Contoh: Tentang Kami" class="w-full p-4 border rounded-2xl"></div>
-                                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Jenis Menu</label><select id="menu-type" onchange="document.getElementById('target-box').style.display = this.value==='link'?'block':'none'" class="w-full p-4 border rounded-2xl bg-white"><option value="link">Tautan Langsung</option><option value="dropdown">Menu Dropdown</option></select></div>
-                                <div id="target-box"><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Tujuan Halaman</label><select id="menu-target" class="w-full p-4 border rounded-2xl bg-white">${optionsHTML}</select></div>
+                                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Judul Menu</label><input type="text" id="menu-title" required placeholder="Contoh: PPDB" class="w-full p-4 border rounded-2xl"></div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Jenis Menu</label>
+                                    <select id="menu-type" onchange="document.getElementById('target-box-internal').style.display = this.value==='link'?'block':'none'; document.getElementById('target-box-external').style.display = this.value==='external'?'block':'none';" class="w-full p-4 border rounded-2xl bg-white">
+                                        <option value="link">Halaman Internal (Dalam Web)</option>
+                                        <option value="external">Tautan URL / Web Luar</option>
+                                        <option value="dropdown">Menu Dropdown (Bercabang)</option>
+                                    </select>
+                                </div>
+                                <div id="target-box-internal"><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Tujuan Halaman Internal</label><select id="menu-target-internal" class="w-full p-4 border rounded-2xl bg-white">${optionsHTML}</select></div>
+                                <div id="target-box-external" style="display:none;"><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">URL Tautan Eksternal</label><input type="url" id="menu-target-external" placeholder="https://" class="w-full p-4 border rounded-2xl bg-white"></div>
+                                
                                 <button type="submit" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg mt-2 uppercase text-xs tracking-widest">TAMBAH MENU</button>
                             </form>
                         </div>
                         <div class="space-y-6">
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Struktur Navigasi</h4>
+                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Struktur Navigasi Aktif</h4>
                             <div class="space-y-4" id="menu-list-admin">
-                                ${(siteConfig.menuItems || []).map(m => `
+                                ${(siteConfig.menuItems || []).map(m => {
+                                    const isExt = m.type === 'external' || (m.target && m.target.startsWith('http'));
+                                    return `
                                     <div class="bg-white border p-6 rounded-3xl shadow-sm">
                                         <div class="flex justify-between items-center mb-4">
-                                            <h5 class="font-bold text-blue-900 uppercase text-sm">${m.title}</h5>
-                                            <button onclick="handleDeleteMenu('${m.id}')" class="text-red-500 hover:text-red-700 transition"><i data-lucide="trash-2" size="18"></i></button>
+                                            <h5 class="font-bold text-blue-900 uppercase text-sm flex items-center gap-2">${m.title} ${isExt ? '<i data-lucide="external-link" size="14" class="text-blue-400"></i>' : ''}</h5>
+                                            <button type="button" onclick="handleDeleteMenu('${m.id}')" class="text-red-500 hover:text-red-700 transition"><i data-lucide="trash-2" size="18"></i></button>
                                         </div>
                                         ${m.type === 'dropdown' ? `
                                             <div class="pl-6 border-l-2 border-slate-100 space-y-2 mb-4">
-                                                ${(m.children || []).map(s => `<div class="flex justify-between text-xs font-bold text-slate-500 bg-slate-50 p-2 rounded-lg"><span>${s.title} (/${s.target})</span><button onclick="handleDeleteSubMenu('${m.id}','${s.id}')" class="text-red-400"><i data-lucide="x" size="14"></i></button></div>`).join('')}
+                                                ${(m.children || []).map(s => {
+                                                    const subIsExt = s.type === 'external' || (s.target && s.target.startsWith('http'));
+                                                    return `<div class="flex justify-between items-center text-xs font-bold text-slate-500 bg-slate-50 p-2 rounded-lg">
+                                                        <span class="truncate pr-2">${s.title} (${subIsExt ? s.target : '/'+s.target})</span>
+                                                        <button type="button" onclick="handleDeleteSubMenu('${m.id}','${s.id}')" class="text-red-400 shrink-0"><i data-lucide="x" size="14"></i></button>
+                                                    </div>`;
+                                                }).join('')}
                                             </div>
-                                            <form onsubmit="handleAddSubMenu(event, '${m.id}')" class="flex gap-2"><input type="text" id="sub-title-${m.id}" placeholder="Sub-menu" required class="flex-1 p-2 border rounded-xl text-xs"><select id="sub-target-${m.id}" class="p-2 border rounded-xl text-xs bg-white">${optionsHTML}</select><button type="submit" class="bg-blue-100 text-blue-900 px-3 rounded-xl"><i data-lucide="plus" size="14"></i></button></form>
+                                            <form onsubmit="handleAddSubMenu(event, '${m.id}')" class="flex gap-2 flex-wrap sm:flex-nowrap bg-slate-50 p-2 rounded-xl border border-slate-100">
+                                                <input type="text" id="sub-title-${m.id}" placeholder="Nama Sub-menu" required class="flex-1 p-2 border rounded-lg text-xs min-w-[100px] outline-none">
+                                                <select id="sub-type-${m.id}" onchange="document.getElementById('sub-target-int-${m.id}').style.display = this.value==='link'?'block':'none'; document.getElementById('sub-target-ext-${m.id}').style.display = this.value==='external'?'block':'none';" class="p-2 border rounded-lg text-xs bg-white w-24 outline-none">
+                                                    <option value="link">Internal</option>
+                                                    <option value="external">URL</option>
+                                                </select>
+                                                <select id="sub-target-int-${m.id}" class="p-2 border rounded-lg text-xs bg-white w-28 outline-none">${optionsHTML}</select>
+                                                <input type="url" id="sub-target-ext-${m.id}" placeholder="https://" class="p-2 border rounded-lg text-xs w-28 outline-none" style="display:none;">
+                                                <button type="submit" class="bg-blue-100 text-blue-900 px-3 py-2 rounded-lg shrink-0 hover:bg-blue-600 hover:text-white transition"><i data-lucide="plus" size="14"></i></button>
+                                            </form>
                                         ` : ''}
-                                    </div>`).join('')}
+                                    </div>`;
+                                }).join('')}
                             </div>
                         </div>
                     </div>`;
@@ -904,29 +943,10 @@
                 container.innerHTML = `
                     <h3 class="text-2xl font-black mb-8 border-b border-slate-100 pb-6 text-blue-900 flex items-center gap-3"><i data-lucide="school" class="text-blue-500"></i> Pengaturan Halaman Profil</h3>
                     <form onsubmit="handleSaveProfil(event)" class="space-y-8 max-w-5xl">
-                        
-                        <!-- Profil Image -->
                         <div>
-                            <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Upload / URL Foto Banner Profil Raksasa</label>
-                            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 mt-2">
-                                ${siteConfig.profilImage ? `
-                                    <div class="mb-3 flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
-                                        <img src="${siteConfig.profilImage}" class="h-12 w-12 object-cover rounded-lg border border-slate-200">
-                                        <div class="flex-1 overflow-hidden">
-                                            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
-                                            <p class="text-[9px] text-slate-400 truncate">${siteConfig.profilImage}</p>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                <input type="file" id="prof-img-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
-                                    <input type="url" id="prof-img-url" placeholder="Atau tempel URL gambar di sini..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                </div>
-                                <p class="text-[9px] text-slate-400 mt-2 ml-1 italic">*Pilih file ATAU tempel URL. Biarkan kosong jika tidak ingin mengubah foto.</p>
-                            </div>
+                            <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">URL Foto Banner Profil Raksasa</label>
+                            <input type="url" id="prof-img" value="${siteConfig.profilImage || ''}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition">
                         </div>
-
                         <div>
                             <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Sejarah Singkat Sekolah (Dapat menggunakan enter untuk paragraf baru)</label>
                             <textarea id="prof-sejarah" rows="6" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 bg-slate-50">${siteConfig.profilSejarah || ''}</textarea>
@@ -954,25 +974,7 @@
                                 <form onsubmit="handleSaveJurusan(event)" class="space-y-4">
                                     <input type="text" id="jur-code" placeholder="Singkatan (TKJ)" value="${editItem?.code || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     <input type="text" id="jur-name" placeholder="Nama Lengkap Jurusan" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    
-                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload / URL Foto Jurusan</label>
-                                    <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
-                                        ${editItem?.image ? `
-                                            <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
-                                                <img src="${editItem.image}" class="h-10 w-10 object-cover rounded-lg border border-slate-200">
-                                                <div class="flex-1 overflow-hidden">
-                                                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
-                                                    <p class="text-[9px] text-slate-400 truncate">${editItem.image}</p>
-                                                </div>
-                                            </div>
-                                        ` : ''}
-                                        <input type="file" id="jur-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
-                                        <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
-                                            <input type="url" id="jur-image-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                        </div>
-                                    </div>
-
+                                    <input type="url" id="jur-image" placeholder="URL Foto Jurusan" value="${editItem?.image || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     <textarea id="jur-desc" placeholder="Deskripsi/Keterangan..." required rows="5" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
                                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
@@ -992,7 +994,7 @@
                                         </div>
                                         <div class="flex ml-auto gap-2">
                                             <button onclick="setEditItem('jurusan', '${j.id}')" class="text-blue-600"><i data-lucide="edit" size="18"></i></button>
-                                            <button onclick="deleteItem('jurusan', '${j.id}')" class="text-red-600"><i data-lucide="trash-2" size="18"></i></button>
+                                            <button onclick="requestDelete('jurusan', '${j.id}')" class="text-red-600"><i data-lucide="trash-2" size="18"></i></button>
                                         </div>
                                     </div>
                                 `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada jurusan.</p>'}
@@ -1008,25 +1010,7 @@
                                 <form onsubmit="handleSaveGuru(event)" class="space-y-4">
                                     <input type="text" id="guru-name" placeholder="Nama Guru" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     <input type="text" id="guru-subject" placeholder="Mengajar (Mapel)" value="${editItem?.subject || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    
-                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload / URL Pas Foto</label>
-                                    <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
-                                        ${editItem?.image ? `
-                                            <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
-                                                <img src="${editItem.image}" class="h-10 w-10 object-cover rounded-lg border border-slate-200">
-                                                <div class="flex-1 overflow-hidden">
-                                                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
-                                                    <p class="text-[9px] text-slate-400 truncate">${editItem.image}</p>
-                                                </div>
-                                            </div>
-                                        ` : ''}
-                                        <input type="file" id="guru-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
-                                        <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
-                                            <input type="url" id="guru-image-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                        </div>
-                                    </div>
-                                    
+                                    <input type="url" id="guru-image" placeholder="URL Pas Foto" value="${editItem?.image || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     <textarea id="guru-quote" placeholder="Motto / Pesan Singkat..." required rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.quote || ''}</textarea>
                                     <div class="flex gap-2">
                                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
@@ -1046,7 +1030,7 @@
                                         </div>
                                         <div class="flex ml-auto gap-2">
                                             <button onclick="setEditItem('guru', '${g.id}')" class="text-blue-600"><i data-lucide="edit" size="18"></i></button>
-                                            <button onclick="deleteItem('guru', '${g.id}')" class="text-red-600"><i data-lucide="trash-2" size="18"></i></button>
+                                            <button onclick="requestDelete('guru', '${g.id}')" class="text-red-600"><i data-lucide="trash-2" size="18"></i></button>
                                         </div>
                                     </div>
                                 `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada data guru.</p>'}
@@ -1061,25 +1045,7 @@
                                 <h3 class="font-bold mb-6 flex items-center gap-2 text-blue-900 text-xl"><i data-lucide="briefcase"></i> ${editItem ? 'Edit Mitra' : 'Tambah Mitra'}</h3>
                                 <form onsubmit="handleSaveMitra(event)" class="space-y-4">
                                     <input type="text" id="mitra-name" placeholder="Nama Industri" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    
-                                    <label class="text-[10px] font-black text-slate-400 uppercase block mt-2">Upload / URL Logo Mitra</label>
-                                    <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
-                                        ${editItem?.image ? `
-                                            <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
-                                                <img src="${editItem.image}" class="h-10 w-10 object-contain rounded-lg border border-slate-200 p-1">
-                                                <div class="flex-1 overflow-hidden">
-                                                    <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Logo Saat Ini</p>
-                                                    <p class="text-[9px] text-slate-400 truncate">${editItem.image}</p>
-                                                </div>
-                                            </div>
-                                        ` : ''}
-                                        <input type="file" id="mitra-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
-                                        <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
-                                            <input type="url" id="mitra-image-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                        </div>
-                                    </div>
-
+                                    <input type="url" id="mitra-image" placeholder="URL Logo Mitra" value="${editItem?.image || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
                                     <textarea id="mitra-desc" placeholder="Keterangan / Bidang Kerja Sama..." required rows="3" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
                                     <div class="flex gap-2">
                                         <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
@@ -1096,7 +1062,7 @@
                                         <h4 class="font-bold text-[11px] text-blue-900">${m.name}</h4>
                                         <div class="flex gap-4 mt-4">
                                             <button onclick="setEditItem('mitra', '${m.id}')" class="text-blue-600"><i data-lucide="edit" size="16"></i></button>
-                                            <button onclick="deleteItem('mitra', '${m.id}')" class="text-red-600"><i data-lucide="trash-2" size="16"></i></button>
+                                            <button onclick="requestDelete('mitra', '${m.id}')" class="text-red-600"><i data-lucide="trash-2" size="16"></i></button>
                                         </div>
                                     </div>
                                 `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada mitra.</p>'}
@@ -1110,30 +1076,8 @@
                             <form onsubmit="handleSaveNews(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border">
                                 <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">${editItem ? 'Edit Berita' : 'Tulis Berita'}</h4>
                                 <input type="text" id="news-title" value="${editItem?.title || ''}" placeholder="Judul Berita" required class="w-full p-4 border rounded-2xl">
-                                <select id="news-category" class="w-full p-4 border rounded-2xl bg-white text-xs font-bold uppercase">
-                                    <option value="Kegiatan" ${editItem?.category==='Kegiatan'?'selected':''}>Kegiatan</option>
-                                    <option value="Prestasi" ${editItem?.category==='Prestasi'?'selected':''}>Prestasi</option>
-                                    <option value="Pengumuman" ${editItem?.category==='Pengumuman'?'selected':''}>Pengumuman</option>
-                                </select>
-                                
-                                <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload / URL Foto Utama</label>
-                                <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
-                                    ${editItem?.image ? `
-                                        <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
-                                            <img src="${editItem.image}" class="h-12 w-12 object-cover rounded-lg border border-slate-200">
-                                            <div class="flex-1 overflow-hidden">
-                                                <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
-                                                <p class="text-[9px] text-slate-400 truncate">${editItem.image}</p>
-                                            </div>
-                                        </div>
-                                    ` : ''}
-                                    <input type="file" id="news-image-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
-                                        <input type="url" id="news-image-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                    </div>
-                                </div>
-                                
+                                <select id="news-category" class="w-full p-4 border rounded-2xl bg-white text-xs font-bold uppercase"><option value="Kegiatan" ${editItem?.category==='Kegiatan'?'selected':''}>Kegiatan</option><option value="Prestasi" ${editItem?.category==='Prestasi'?'selected':''}>Prestasi</option><option value="Pengumuman" ${editItem?.category==='Pengumuman'?'selected':''}>Pengumuman</option></select>
+                                <input type="url" id="news-image" value="${editItem?.image || ''}" placeholder="URL Foto Utama" required class="w-full p-4 border rounded-2xl">
                                 <textarea id="news-content" rows="6" placeholder="Konten Berita Lengkap..." required class="w-full p-4 border rounded-2xl">${editItem?.content || ''}</textarea>
                                 <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-xs">${editItem ? 'UPDATE' : 'TERBITKAN'}</button>${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div>
                             </form>
@@ -1142,38 +1086,37 @@
                             <table class="w-full text-left border rounded-3xl overflow-hidden shadow-sm bg-white text-sm">
                                 <thead class="bg-blue-900 text-white uppercase text-[10px] tracking-widest"><tr class="divide-x"><th class="p-5">Daftar Berita Aktif</th><th class="p-5 text-right">Aksi</th></tr></thead>
                                 <tbody class="divide-y text-slate-600 font-bold">
-                                    ${beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `<tr class="hover:bg-slate-50 transition"><td class="p-5 truncate max-w-[300px]">${n.title}</td><td class="p-5 text-right flex justify-end gap-6"><button onclick="setEditItem('berita', '${n.id}')" class="text-blue-600"><i data-lucide="edit-2" size="18"></i></button><button onclick="deleteItem('berita', '${n.id}')" class="text-red-500"><i data-lucide="trash-2" size="18"></i></button></td></tr>`).join('') || '<tr><td colspan="2" class="p-10 text-center italic text-slate-400">Belum ada berita.</td></tr>'}
+                                    ${beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `<tr class="hover:bg-slate-50 transition"><td class="p-5 truncate max-w-[300px]">${n.title}</td><td class="p-5 text-right flex justify-end gap-6"><button onclick="setEditItem('berita', '${n.id}')" class="text-blue-600"><i data-lucide="edit-2" size="18"></i></button><button onclick="requestDelete('berita', '${n.id}')" class="text-red-500"><i data-lucide="trash-2" size="18"></i></button></td></tr>`).join('') || '<tr><td colspan="2" class="p-10 text-center italic text-slate-400">Belum ada berita.</td></tr>'}
                                 </tbody>
                             </table>
                         </div>
                     </div>`;
             } else if (tab === 'galeri') {
+                const galOptionsHTML = availablePages.map(p => `<option value="${p.id}" ${editItem?.btnTarget===p.id?'selected':''}>${p.title}</option>`).join('');
                 container.innerHTML = `
                     <div class="grid lg:grid-cols-3 gap-10">
                         <form onsubmit="handleSaveGallery(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border h-fit">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">${editItem ? 'Edit Slide' : 'Tambah Foto Slide'}</h4>
                             <input type="text" id="gal-caption" placeholder="Judul Foto / Slide" value="${editItem?.caption || ''}" required class="w-full p-4 border rounded-2xl">
+                            <input type="url" id="gal-url" placeholder="URL Gambar Langsung" value="${editItem?.url || ''}" required class="w-full p-4 border rounded-2xl">
                             
-                            <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1 mt-2">Upload / URL Foto Gambar</label>
-                            <div class="bg-white p-3 rounded-2xl border border-slate-200 mb-2">
-                                ${editItem?.url ? `
-                                    <div class="mb-3 flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100 shadow-sm">
-                                        <img src="${editItem.url}" class="h-12 w-12 object-cover rounded-lg border border-slate-200">
-                                        <div class="flex-1 overflow-hidden">
-                                            <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Foto Saat Ini</p>
-                                            <p class="text-[9px] text-slate-400 truncate">${editItem.url}</p>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                <input type="file" id="gal-file" accept="image/*" class="w-full text-xs text-slate-500 mb-3">
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="link" class="text-slate-400" size="14"></i></div>
-                                    <input type="url" id="gal-url" placeholder="Atau tempel URL gambar..." class="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-blue-500 transition">
-                                </div>
+                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-2 pt-4 mb-4">Pengaturan Tombol (Opsional)</h4>
+                            <input type="text" id="gal-btn-text" placeholder="Teks Tombol (Kosong = Tanpa Tombol)" value="${editItem?.btnText || ''}" class="w-full p-4 border rounded-2xl mb-2">
+                            <select id="gal-btn-type" onchange="document.getElementById('gal-target-box-int').style.display = this.value==='link'?'block':'none'; document.getElementById('gal-target-box-ext').style.display = this.value==='external'?'block':'none';" class="w-full p-4 border rounded-2xl bg-white mb-2">
+                                <option value="link" ${editItem?.btnType==='link'?'selected':''}>Ke Halaman Internal Web</option>
+                                <option value="external" ${editItem?.btnType==='external'?'selected':''}>Ke Link / URL Luar</option>
+                            </select>
+                            <div id="gal-target-box-int" style="display: ${editItem?.btnType === 'external' ? 'none' : 'block'};">
+                                <select id="gal-btn-target-int" class="w-full p-4 border rounded-2xl bg-white">
+                                    ${galOptionsHTML}
+                                </select>
                             </div>
-                            
-                            <div class="flex gap-2">
-                                <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs mt-2">${editItem ? 'UPDATE' : 'SIMPAN'} KE GALERI</button>
+                            <div id="gal-target-box-ext" style="display: ${editItem?.btnType === 'external' ? 'block' : 'none'};">
+                                <input type="url" id="gal-btn-target-ext" placeholder="Masukkan Tautan (https://...)" value="${editItem?.btnType === 'external' ? (editItem?.btnTarget || '') : ''}" class="w-full p-4 border rounded-2xl bg-white">
+                            </div>
+
+                            <div class="flex gap-2 mt-4">
+                                <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs mt-2">${editItem ? 'UPDATE' : 'SIMPAN'} SLIDE</button>
                                 ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 text-slate-800 font-black py-4 px-6 rounded-2xl shadow-lg uppercase text-xs mt-2">BATAL</button>` : ''}
                             </div>
                         </form>
@@ -1183,7 +1126,7 @@
                                     <img src="${g.url}" class="w-full h-full object-cover">
                                     <div class="absolute inset-0 bg-blue-900/80 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition duration-300">
                                         <button onclick="setEditItem('gallery', '${g.id}')" class="bg-white p-3 rounded-xl text-blue-600 hover:scale-110 transition shadow-lg"><i data-lucide="edit" size="18"></i></button>
-                                        <button onclick="deleteItem('gallery', '${g.id}')" class="bg-white p-3 rounded-xl text-red-600 hover:scale-110 transition shadow-lg"><i data-lucide="trash-2" size="18"></i></button>
+                                        <button onclick="requestDelete('gallery', '${g.id}')" class="bg-white p-3 rounded-xl text-red-600 hover:scale-110 transition shadow-lg"><i data-lucide="trash-2" size="18"></i></button>
                                     </div>
                                     <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent pt-8 pointer-events-none">
                                         <p class="text-white text-[10px] font-bold truncate leading-relaxed text-center">${g.caption}</p>
@@ -1192,6 +1135,51 @@
                             `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada foto.</p>'}
                         </div>
                     </div>`;
+            } else if (tab === 'alumni' && userRole === 'admin') {
+                const pendingAlumni = alumniList.filter(a => a.status === 'pending');
+                const approvedAlumni = alumniList.filter(a => a.status === 'approved');
+                container.innerHTML = `
+                    <div class="space-y-12">
+                        <!-- Menunggu Persetujuan -->
+                        <div>
+                            <h3 class="font-bold mb-6 flex items-center gap-2 text-yellow-600 text-xl border-b pb-4"><i data-lucide="clock"></i> Menunggu Persetujuan (${pendingAlumni.length})</h3>
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                ${pendingAlumni.map(a => `
+                                    <div class="bg-yellow-50 rounded-2xl border border-yellow-200 p-6 shadow-sm">
+                                        <div class="flex items-center gap-4 mb-4">
+                                            <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm">
+                                            <div>
+                                                <h4 class="font-bold text-slate-800">${a.name}</h4>
+                                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Lulusan ${a.graduationYear}</p>
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-slate-600 mb-2"><i data-lucide="briefcase" class="inline w-3 h-3 text-slate-400 mr-1"></i> ${a.workplace}</p>
+                                        <p class="text-xs text-slate-500 italic bg-white p-3 rounded-lg border border-yellow-100 line-clamp-3 mb-4">"${a.quote}"</p>
+                                        <div class="flex gap-2">
+                                            <button onclick="handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-xl text-sm hover:bg-green-600 transition flex justify-center items-center gap-1"><i data-lucide="check" size="14"></i> Setujui</button>
+                                            <button onclick="requestDelete('alumni', '${a.id}')" class="flex-1 bg-red-100 text-red-600 font-bold py-2 rounded-xl text-sm hover:bg-red-200 transition flex justify-center items-center gap-1"><i data-lucide="x" size="14"></i> Tolak</button>
+                                        </div>
+                                    </div>
+                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Tidak ada pengajuan data alumni yang baru.</div>'}
+                            </div>
+                        </div>
+
+                        <!-- Alumni Disetujui -->
+                        <div>
+                            <h3 class="font-bold mb-6 flex items-center gap-2 text-green-600 text-xl border-b pb-4"><i data-lucide="check-circle-2"></i> Alumni Aktif (${approvedAlumni.length})</h3>
+                            <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                ${approvedAlumni.map(a => `
+                                    <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col items-center text-center shadow-sm relative group">
+                                        <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-100 mb-3">
+                                        <h4 class="font-bold text-slate-800 text-sm mb-1">${a.name}</h4>
+                                        <p class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-bold mb-3">${a.graduationYear} - ${a.workplace}</p>
+                                        <button onclick="requestDelete('alumni', '${a.id}')" class="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition opacity-0 group-hover:opacity-100" title="Hapus Data"><i data-lucide="trash-2" size="14"></i></button>
+                                    </div>
+                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Belum ada data alumni yang disetujui.</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
             lucide.createIcons();
         };
@@ -1202,70 +1190,94 @@
             const btn = e.target.querySelector('button[type="submit"]');
             const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
             
-            const type = document.getElementById('menu-type').value;
-            const newItem = { id: 'm_'+Date.now(), title: escapeHTML(document.getElementById('menu-title').value), type: type, target: type==='link'?document.getElementById('menu-target').value:'', children: [] };
-            const updated = [...(siteConfig.menuItems || []), newItem];
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
-            
-            btn.innerText = orig; btn.disabled = false;
-            showToast("Menu Berhasil Ditambahkan!");
+            try {
+                const type = document.getElementById('menu-type').value;
+                const targetInt = document.getElementById('menu-target-internal');
+                const targetExt = document.getElementById('menu-target-external');
+                const target = type === 'link' ? targetInt.value : (type === 'external' ? escapeHTML(targetExt.value) : '');
+                
+                const newItem = { id: 'm_'+Date.now(), title: escapeHTML(document.getElementById('menu-title').value), type: type, target: target, children: [] };
+                const updated = [...(siteConfig.menuItems || []), newItem];
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
+                showToast("Menu Berhasil Ditambahkan!");
+                e.target.reset(); 
+                document.getElementById('target-box-internal').style.display = 'block';
+                document.getElementById('target-box-external').style.display = 'none';
+            } catch (err) { handleFirebaseError(err); } 
+            finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleDeleteMenu = async (mid) => {
-            if(!confirm("Hapus menu ini beserta turunannya?")) return;
-            const updated = (siteConfig.menuItems || []).filter(m => m.id !== mid);
-            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
-            showToast("Menu Dihapus!");
+            confirmAction = async () => {
+                try {
+                    const updated = (siteConfig.menuItems || []).filter(m => m.id !== mid);
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
+                    showToast("Menu Dihapus!");
+                } catch(err) { handleFirebaseError(err); }
+                closeConfirm();
+            };
+            document.getElementById('confirm-modal').classList.remove('hidden');
         };
 
         window.handleAddSubMenu = async (e, pid) => {
             e.preventDefault();
-            const title = escapeHTML(document.getElementById(`sub-title-${pid}`).value);
-            const target = document.getElementById(`sub-target-${pid}`).value;
-            const newMenus = JSON.parse(JSON.stringify(siteConfig.menuItems));
-            const parent = newMenus.find(m => m.id === pid);
-            if(parent) {
-                if(!parent.children) parent.children = [];
-                parent.children.push({ id: 's_'+Date.now(), title, target });
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
-                showToast("Sub-menu ditambahkan!");
-            }
+            const btn = e.target.querySelector('button[type="submit"]');
+            const orig = btn.innerHTML; btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2" size="14"></i>'; btn.disabled = true;
+            lucide.createIcons();
+            try {
+                const title = escapeHTML(document.getElementById(`sub-title-${pid}`).value);
+                const subType = document.getElementById(`sub-type-${pid}`).value;
+                const target = subType === 'link' ? document.getElementById(`sub-target-int-${pid}`).value : escapeHTML(document.getElementById(`sub-target-ext-${pid}`).value);
+                
+                const newMenus = JSON.parse(JSON.stringify(siteConfig.menuItems));
+                const parent = newMenus.find(m => m.id === pid);
+                if(parent) {
+                    if(!parent.children) parent.children = [];
+                    parent.children.push({ id: 's_'+Date.now(), title, target, type: subType });
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
+                    showToast("Sub-menu ditambahkan!");
+                }
+            } catch(err) { handleFirebaseError(err); } 
+            finally { btn.innerHTML = orig; btn.disabled = false; lucide.createIcons(); }
         };
 
         window.handleDeleteSubMenu = async (pid, sid) => {
-            const newMenus = JSON.parse(JSON.stringify(siteConfig.menuItems));
-            const parent = newMenus.find(m => m.id === pid);
-            if(parent) {
-                parent.children = parent.children.filter(s => s.id !== sid);
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
-                showToast("Sub-menu dihapus!");
-            }
+            confirmAction = async () => {
+                try {
+                    const newMenus = JSON.parse(JSON.stringify(siteConfig.menuItems));
+                    const parent = newMenus.find(m => m.id === pid);
+                    if(parent) {
+                        parent.children = parent.children.filter(s => s.id !== sid);
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
+                        showToast("Sub-menu dihapus!");
+                    }
+                } catch(err) { handleFirebaseError(err); }
+                closeConfirm();
+            };
+            document.getElementById('confirm-modal').classList.remove('hidden');
         };
 
         window.handleSaveConfig = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENGUNGGAH & MENYIMPAN..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
 
             try {
-                const logoUrl = await processImage('conf-logo-file', 'conf-logo-url', siteConfig.logoImage);
-                const sambutanUrl = await processImage('conf-s-img-file', 'conf-s-img-url', siteConfig.sambutanImage);
-
                 const d = { 
-                    logoImage: logoUrl || siteConfig.logoImage, 
+                    logoImage: escapeHTML(document.getElementById('conf-logo').value), 
                     name: escapeHTML(document.getElementById('conf-name').value), 
                     slogan: escapeHTML(document.getElementById('conf-slogan').value), 
                     address: escapeHTML(document.getElementById('conf-address').value),
                     phone: escapeHTML(document.getElementById('conf-phone').value),
                     email: escapeHTML(document.getElementById('conf-email').value),
                     sambutanName: escapeHTML(document.getElementById('conf-s-name').value),
-                    sambutanImage: sambutanUrl || siteConfig.sambutanImage,
+                    sambutanImage: escapeHTML(document.getElementById('conf-s-img').value),
                     sambutanText: escapeHTML(document.getElementById('conf-s-text').value)
                 };
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
                 showToast("Berhasil Memperbarui Data Website!");
             } catch (error) {
-                console.error(error); showToast("Gagal menyimpan data!");
+                handleFirebaseError(error);
             } finally { btn.innerText = orig; btn.disabled = false; }
         };
         
@@ -1273,52 +1285,60 @@
             e.preventDefault();
             if(userRole !== 'admin') return;
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
 
             try {
-                const profUrl = await processImage('prof-img-file', 'prof-img-url', siteConfig.profilImage);
                 const d = { 
-                    profilImage: profUrl || siteConfig.profilImage, 
+                    profilImage: escapeHTML(document.getElementById('prof-img').value), 
                     profilSejarah: escapeHTML(document.getElementById('prof-sejarah').value), 
                     profilVisi: escapeHTML(document.getElementById('prof-visi').value),
                     profilMisi: escapeHTML(document.getElementById('prof-misi').value)
                 };
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
                 showToast("Berhasil Memperbarui Data Profil!");
-            } catch(e) { console.error(e); showToast("Gagal!"); } 
+            } catch(err) { handleFirebaseError(err); } 
             finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveNews = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
 
             try {
-                const imageUrl = await processImage('news-image-file', 'news-image-url', editItem?.image);
                 const d = { 
                     title: escapeHTML(document.getElementById('news-title').value), 
                     category: document.getElementById('news-category').value, 
-                    image: imageUrl || 'https://via.placeholder.com/600x400?text=No+Image', 
+                    image: escapeHTML(document.getElementById('news-image').value), 
                     content: escapeHTML(document.getElementById('news-content').value), 
                     timestamp: editItem ? editItem.timestamp : Date.now() 
                 };
                 if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'berita', editItem.id), d);
                 else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'berita'), d);
                 editItem = null; showToast("Berita Tersimpan!"); renderAdminDashboard();
-            } catch (err) { console.error(err); showToast("Gagal!"); } 
+            } catch (err) { handleFirebaseError(err); } 
             finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveGallery = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
 
             try {
-                const imageUrl = await processImage('gal-file', 'gal-url', editItem?.url);
-                if (!imageUrl) throw new Error("Gambar wajib dipilih/diisi URL");
-                const d = { caption: escapeHTML(document.getElementById('gal-caption').value), url: imageUrl, timestamp: editItem ? editItem.timestamp : Date.now() };
+                const btnType = document.getElementById('gal-btn-type').value;
+                const targetInt = document.getElementById('gal-btn-target-int').value;
+                const targetExt = document.getElementById('gal-btn-target-ext').value;
+                const btnTarget = btnType === 'link' ? targetInt : targetExt;
+
+                const d = { 
+                    caption: escapeHTML(document.getElementById('gal-caption').value), 
+                    url: escapeHTML(document.getElementById('gal-url').value),
+                    btnText: escapeHTML(document.getElementById('gal-btn-text').value),
+                    btnType: btnType,
+                    btnTarget: escapeHTML(btnTarget),
+                    timestamp: editItem ? editItem.timestamp : Date.now() 
+                };
                 
                 if(editItem) {
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', editItem.id), d);
@@ -1326,72 +1346,69 @@
                     await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
                 }
                 e.target.reset(); editItem = null; showToast("Foto Berhasil Disimpan!"); renderAdminDashboard();
-            } catch(e) { console.error(e); showToast(e.message || "Gagal menyimpan gambar!"); } 
+            } catch(err) { handleFirebaseError(err); } 
             finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveJurusan = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
 
             try {
-                const imgUrl = await processImage('jur-image-file', 'jur-image-url', editItem?.image);
-                const d = { code: escapeHTML(document.getElementById('jur-code').value), name: escapeHTML(document.getElementById('jur-name').value), image: imgUrl || 'https://via.placeholder.com/300x300?text=No+Image', desc: escapeHTML(document.getElementById('jur-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
+                const d = { code: escapeHTML(document.getElementById('jur-code').value), name: escapeHTML(document.getElementById('jur-name').value), image: escapeHTML(document.getElementById('jur-image').value), desc: escapeHTML(document.getElementById('jur-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
                 if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jurusan', editItem.id), d);
                 else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jurusan'), d);
                 editItem = null; showToast("Jurusan Tersimpan!"); renderAdminDashboard();
-            } catch (err) { console.error(err); } finally { btn.innerText = orig; btn.disabled = false; }
+            } catch (err) { handleFirebaseError(err); } finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveGuru = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
 
             try {
-                const imgUrl = await processImage('guru-image-file', 'guru-image-url', editItem?.image);
-                const d = { name: escapeHTML(document.getElementById('guru-name').value), subject: escapeHTML(document.getElementById('guru-subject').value), image: imgUrl || 'https://via.placeholder.com/300x300?text=No+Image', quote: escapeHTML(document.getElementById('guru-quote').value), timestamp: editItem ? editItem.timestamp : Date.now() };
+                const d = { name: escapeHTML(document.getElementById('guru-name').value), subject: escapeHTML(document.getElementById('guru-subject').value), image: escapeHTML(document.getElementById('guru-image').value), quote: escapeHTML(document.getElementById('guru-quote').value), timestamp: editItem ? editItem.timestamp : Date.now() };
                 if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'guru', editItem.id), d);
                 else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'guru'), d);
                 editItem = null; showToast("Guru Tersimpan!"); renderAdminDashboard();
-            } catch (err) { console.error(err); } finally { btn.innerText = orig; btn.disabled = false; }
+            } catch (err) { handleFirebaseError(err); } finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleSaveMitra = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENGUNGGAH..."; btn.disabled = true;
+            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
 
             try {
-                const imgUrl = await processImage('mitra-image-file', 'mitra-image-url', editItem?.image);
-                const d = { name: escapeHTML(document.getElementById('mitra-name').value), image: imgUrl || 'https://via.placeholder.com/150x150?text=No+Image', desc: escapeHTML(document.getElementById('mitra-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
+                const d = { name: escapeHTML(document.getElementById('mitra-name').value), image: escapeHTML(document.getElementById('mitra-image').value), desc: escapeHTML(document.getElementById('mitra-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
                 if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'mitra', editItem.id), d);
                 else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mitra'), d);
                 editItem = null; showToast("Mitra Tersimpan!"); renderAdminDashboard();
-            } catch (err) { console.error(err); } finally { btn.innerText = orig; btn.disabled = false; }
+            } catch (err) { handleFirebaseError(err); } finally { btn.innerText = orig; btn.disabled = false; }
         };
 
         window.handleApproveAlumni = async (id) => {
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'alumni', id), { status: 'approved' });
-            showToast("Alumni Disetujui!"); renderAdminDashboard();
+            try {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'alumni', id), { status: 'approved' });
+                showToast("Alumni Disetujui!"); renderAdminDashboard();
+            } catch (err) { handleFirebaseError(err); }
         };
 
         window.handleSubmitAlumniTracer = async (e) => {
             e.preventDefault();
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true;
-            btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Mengunggah...';
+            btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Menyimpan...';
             lucide.createIcons();
 
             try {
-                const imgUrl = await processImage('tracer-image-file', 'tracer-image-url', null);
-                
                 const d = {
                     name: escapeHTML(document.getElementById('tracer-name').value),
                     graduationYear: escapeHTML(document.getElementById('tracer-year').value),
                     workplace: escapeHTML(document.getElementById('tracer-workplace').value),
-                    image: imgUrl || 'https://via.placeholder.com/150?text=No+Image',
+                    image: escapeHTML(document.getElementById('tracer-image').value),
                     quote: escapeHTML(document.getElementById('tracer-quote').value),
                     status: 'pending', 
                     timestamp: Date.now()
@@ -1401,17 +1418,9 @@
                 showToast("Berhasil! Data akan ditinjau admin."); 
                 e.target.reset();
             } catch (err) { 
-                console.error(err);
-                showToast("Gagal mengirim data."); 
+                handleFirebaseError(err);
             } finally { 
                 btn.disabled = false; btn.innerHTML = '<i data-lucide="send" size="18"></i> Kirim Data Penelusuran'; lucide.createIcons(); 
-            }
-        };
-
-        window.deleteItem = async (col, id) => {
-            if(confirm("Hapus data ini secara permanen?")) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
-                showToast("Data Berhasil Dihapus!");
             }
         };
 
