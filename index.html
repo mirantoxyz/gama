@@ -27,11 +27,25 @@
         .section-title { position: relative; padding-bottom: 0.75rem; margin-bottom: 1.5rem; }
         .section-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 50px; height: 3px; background: #fbbf24; border-radius: 2px; }
 
-        .dropdown-menu { display: none; }
-        .group:hover .dropdown-menu { display: block; }
+        /* Input File Styling */
+        input[type="file"]::file-selector-button {
+            background-color: #1e3a8a; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-right: 12px; font-size: 11px;
+        }
+        input[type="file"]::file-selector-button:hover { background-color: #1e40af; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
+
+    <!-- Layar Pemuatan (Loading Screen) -->
+    <div id="initial-loader" class="fixed inset-0 z-[9999] bg-blue-900 flex flex-col items-center justify-center transition-opacity duration-700">
+        <div class="relative w-24 h-24 mb-6">
+            <div class="absolute inset-0 border-4 border-white/20 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-yellow-400 rounded-full border-t-transparent animate-spin"></div>
+            <img id="loading-logo-display" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png" class="absolute inset-0 w-12 h-12 m-auto object-contain animate-pulse" alt="Logo">
+        </div>
+        <h2 class="text-white text-xl font-black tracking-widest uppercase animate-pulse">SMK Gajahmada 1</h2>
+        <p class="text-blue-200 text-[10px] mt-2 tracking-widest uppercase">Mempersiapkan Sistem Terintegrasi...</p>
+    </div>
 
     <!-- Header & Navigation -->
     <header class="bg-white border-t-[5px] border-slate-900 border-b border-slate-200 shadow-sm sticky top-0 z-50">
@@ -161,6 +175,14 @@ service cloud.firestore {
         </div>
     </div>
 
+    <!-- Lightbox Image Modal -->
+    <div id="image-lightbox" class="hidden fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 transition-opacity duration-300 opacity-0" onclick="closeLightbox()">
+        <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white/70 hover:text-white hover:bg-white/20 p-2 rounded-full transition"><i data-lucide="x" size="24"></i></button>
+        <div class="w-full h-full flex items-center justify-center overflow-auto py-12">
+            <img id="lightbox-img" src="" class="max-w-full max-h-full object-contain scale-95 transition-transform duration-300 cursor-zoom-in rounded-lg shadow-2xl" onclick="toggleZoom(event)" title="Klik untuk memperbesar/memperkecil">
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -208,8 +230,25 @@ service cloud.firestore {
         window.requestDelete = (col, id) => {
             confirmAction = async () => {
                 try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
-                    showToast("Data Berhasil Dihapus!");
+                    // Cek jika ini adalah menu/submenu (disimpan di objek site_config)
+                    if (col === 'menuItem') {
+                        const updated = (siteConfig.menuItems || []).filter(m => m.id !== id);
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
+                        showToast("Menu Dihapus!");
+                    } else if (col === 'subMenuItem') {
+                        const [pid, sid] = id.split('|');
+                        const newMenus = JSON.parse(JSON.stringify(siteConfig.menuItems));
+                        const parent = newMenus.find(m => m.id === pid);
+                        if(parent) {
+                            parent.children = parent.children.filter(s => s.id !== sid);
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
+                            showToast("Sub-menu dihapus!");
+                        }
+                    } else {
+                        // Koleksi biasa
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
+                        showToast("Data Berhasil Dihapus!");
+                    }
                 } catch (err) { handleFirebaseError(err); }
                 closeConfirm();
             };
@@ -246,11 +285,11 @@ service cloud.firestore {
             slogan: "Membentuk Lulusan Unggul, Disiplin, Kreatif, dan Berakhlak Mulia",
             sambutanName: "Pimpinan Sekolah",
             sambutanRole: "Kepala Sekolah",
-            sambutanText: "Selamat datang di website resmi SMK Gajahmada 1 Metro. Silakan masuk ke Dashboard Admin untuk mulai mengatur website ini.",
+            sambutanText: "Selamat datang di website resmi SMK Gajahmada 1 Metro.",
             sambutanImage: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400",
-            address: "JL. JENDRAL SUDIRMAN, Metro, Lampung",
-            phone: "+6281272382831",
-            email: "smkkpgajahmadametro@gmail.com",
+            address: "Jl. Gajah Mada No.1, Metro, Lampung",
+            phone: "(0725) 123456",
+            email: "info@smkgajahmada1metro.sch.id",
             stat1Val: "440", stat1Label: "Siswa Aktif",
             stat2Val: "31", stat2Label: "Guru & Staff",
             stat3Val: "5", stat3Label: "Laboratorium",
@@ -269,6 +308,10 @@ service cloud.firestore {
                 { id: "m5", title: "Informasi", type: "dropdown", children: [
                     { id: "s7", title: "Berita Terbaru", target: "berita" },
                     { id: "s8", title: "Galeri Foto", target: "gallery" }
+                ]},
+                { id: "m6", title: "Alumni", type: "dropdown", children: [
+                    { id: "s9", title: "Galeri Alumni", target: "alumni-foto", type: "link" },
+                    { id: "s10", title: "Tracer Alumni", target: "alumni-tracer", type: "link" }
                 ]}
             ]
         };
@@ -289,15 +332,90 @@ service cloud.firestore {
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
         };
 
+        // URL Routing System
         window.navigate = (page, id = null) => {
             if (id) currentDataId = id;
             document.getElementById('mobile-menu').classList.add('hidden');
+            
+            try {
+                // Hanya perbarui URL jika bukan dijalankan di lingkungan Blob/File (sandbox lokal)
+                if (!window.location.protocol.startsWith('blob') && !window.location.protocol.startsWith('file')) {
+                    let url = new URL(window.location.href);
+                    url.searchParams.delete('p');
+                    url.searchParams.delete('berita');
+                    
+                    if (page === 'home') {
+                        window.history.pushState({page, id}, '', url.pathname);
+                    } else if (page === 'berita-detail' && id) {
+                        url.searchParams.set('berita', id);
+                        window.history.pushState({page, id}, '', url.toString());
+                    } else {
+                        url.searchParams.set('p', page);
+                        window.history.pushState({page, id}, '', url.toString());
+                    }
+                }
+            } catch (err) {
+                console.warn("URL routing bar dilewati karena batasan keamanan lingkungan (Sandbox).");
+            }
+
             renderPage(page);
             window.scrollTo(0,0);
         };
 
+        // Membaca URL saat pengunjung menekan tombol Back/Forward di Browser
+        window.addEventListener('popstate', (e) => {
+            checkUrlAndRoute();
+        });
+
+        // Membaca URL saat website pertama kali dibuka (untuk link yang di-share)
+        window.checkUrlAndRoute = () => {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('berita')) {
+                    currentDataId = params.get('berita');
+                    renderPage('berita-detail');
+                } else if (params.has('p')) {
+                    renderPage(params.get('p'));
+                } else {
+                    renderPage('home');
+                }
+            } catch (err) {
+                renderPage('home');
+            }
+        };
+
         window.toggleMobileMenu = () => document.getElementById('mobile-menu').classList.toggle('hidden');
         window.toggleMobDropdown = (id) => document.getElementById(id).classList.toggle('hidden');
+
+        // Lightbox & Zoom Functions
+        window.openLightbox = (url) => {
+            const lightbox = document.getElementById('image-lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.src = url;
+            img.classList.remove('scale-150', 'cursor-zoom-out');
+            img.classList.add('scale-95', 'cursor-zoom-in');
+            lightbox.classList.remove('hidden');
+            setTimeout(() => lightbox.classList.remove('opacity-0'), 10);
+            lucide.createIcons();
+        };
+
+        window.closeLightbox = () => {
+            const lightbox = document.getElementById('image-lightbox');
+            lightbox.classList.add('opacity-0');
+            setTimeout(() => lightbox.classList.add('hidden'), 300);
+        };
+
+        window.toggleZoom = (e) => {
+            e.stopPropagation(); // Mencegah lightbox tertutup saat gambar diklik
+            const img = document.getElementById('lightbox-img');
+            if (img.classList.contains('scale-95')) {
+                img.classList.remove('scale-95', 'cursor-zoom-in');
+                img.classList.add('scale-150', 'cursor-zoom-out');
+            } else {
+                img.classList.remove('scale-150', 'cursor-zoom-out');
+                img.classList.add('scale-95', 'cursor-zoom-in');
+            }
+        };
 
         document.getElementById('current-year').innerText = new Date().getFullYear();
 
@@ -344,7 +462,12 @@ service cloud.firestore {
         };
 
         const updateSiteBranding = () => {
-            document.getElementById('site-logo-display').src = siteConfig.logoImage;
+            const logoMain = document.getElementById('site-logo-display');
+            if (logoMain) logoMain.src = siteConfig.logoImage;
+            
+            const logoLoading = document.getElementById('loading-logo-display');
+            if (logoLoading) logoLoading.src = siteConfig.logoImage;
+
             document.getElementById('site-name-display').innerText = siteConfig.name;
             document.getElementById('site-slogan-display').innerText = siteConfig.slogan;
             document.getElementById('footer-site-name').innerText = siteConfig.name;
@@ -373,8 +496,8 @@ service cloud.firestore {
                     deskHTML += `
                         <div class="relative group h-full flex items-center">
                             <button class="nav-link text-[13px] font-bold text-slate-700 group-hover:text-blue-700 flex items-center gap-1.5 px-4 py-6 transition uppercase tracking-tight">${m.title} <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-hover:text-blue-700 transition"></i></button>
-                            <div class="absolute left-1/2 -translate-x-1/2 top-full dropdown-menu z-50">
-                                <div class="bg-white shadow-2xl rounded-b-xl border-x border-b border-slate-100 py-2 min-w-[200px] mt-0">
+                            <div class="absolute left-0 top-full hidden group-hover:block w-56 pt-2 z-50">
+                                <div class="bg-white shadow-2xl rounded-2xl border border-slate-100 py-2 mt-0">
                                     ${(m.children || []).map(sub => {
                                         const subIsExt = sub.type === 'external' || (sub.target && sub.target.startsWith('http'));
                                         if (subIsExt) {
@@ -512,14 +635,15 @@ service cloud.firestore {
                                 </div>
                                 <div class="grid md:grid-cols-3 gap-6">
                                     ${jurusanList.slice(0, 3).map(j => `
-                                        <div class="bg-slate-50 rounded-3xl border border-slate-100 overflow-hidden group cursor-pointer hover:shadow-xl transition-all duration-300" onclick="navigate('jurusan')">
-                                            <div class="h-48 overflow-hidden relative">
+                                        <div class="bg-slate-50 rounded-3xl border border-slate-100 overflow-hidden group hover:shadow-xl transition-all duration-300">
+                                            <div class="h-48 overflow-hidden relative cursor-pointer" onclick="openLightbox('${j.image}')" title="Klik foto untuk memperbesar">
                                                 <img src="${j.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                                                <div class="absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent opacity-90"></div>
-                                                <span class="absolute bottom-4 left-4 bg-yellow-400 text-blue-900 font-black px-3 py-1 rounded-full text-xs uppercase shadow-sm">${j.code}</span>
+                                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition duration-300 backdrop-blur-sm z-20"><i data-lucide="zoom-in" size="24"></i></div>
+                                                <div class="absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent opacity-90 pointer-events-none"></div>
+                                                <span class="absolute bottom-4 left-4 bg-yellow-400 text-blue-900 font-black px-3 py-1 rounded-full text-xs uppercase shadow-sm z-10 pointer-events-none">${j.code}</span>
                                             </div>
-                                            <div class="p-6">
-                                                <h4 class="font-bold text-lg text-blue-900 mb-2">${j.name}</h4>
+                                            <div class="p-6 cursor-pointer" onclick="navigate('jurusan')">
+                                                <h4 class="font-bold text-lg text-blue-900 mb-2 group-hover:text-blue-600 transition">${j.name}</h4>
                                                 <p class="text-slate-500 text-xs line-clamp-3 leading-relaxed">${j.desc}</p>
                                             </div>
                                         </div>
@@ -566,7 +690,7 @@ service cloud.firestore {
                             <div class="max-w-7xl mx-auto px-4">
                                 <div class="grid md:grid-cols-5 gap-4 bg-white rounded-[2.5rem] p-4 border border-slate-100 shadow-xl">
                                     <div class="md:col-span-3 h-[300px] rounded-[2rem] overflow-hidden grayscale-[30%] hover:grayscale-0 transition duration-500 shadow-inner relative">
-                                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15893.308726514686!2d105.3060046!3d-5.1114512!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e40bfd65058728d%3A0xe5a3c9b7e7e8346b!2sMetro%2C%20Kota%20Metro%2C%20Lampung!5e0!3m2!1sid!2sid!4v1714120000000!5m2!1sid!2sid" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                                        <iframe src="https://maps.google.com/maps?q=-5.134376503433169,105.28336464668283&hl=id&z=16&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
                                     </div>
                                     <div class="md:col-span-2 p-8 flex flex-col justify-center space-y-8">
                                         <h4 class="text-2xl font-black text-blue-900 uppercase tracking-tighter border-b border-slate-100 pb-4">Kunjungi Kampus</h4>
@@ -582,6 +706,7 @@ service cloud.firestore {
                     break;
                 case 'admin': renderAdminDashboard(); break;
                 case 'berita': renderBeritaList(); break;
+                case 'berita-detail': renderBeritaDetail(currentDataId); break;
                 case 'profil': renderProfil(); break;
                 case 'jurusan': renderJurusan(); break;
                 case 'guru': renderGuru(); break;
@@ -628,10 +753,11 @@ service cloud.firestore {
                     <div class="grid md:grid-cols-3 gap-10">
                         ${jurusanList.map(j => `
                             <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-lg overflow-hidden group hover:shadow-2xl transition duration-500">
-                                <div class="h-60 relative overflow-hidden">
+                                <div class="h-60 relative overflow-hidden cursor-pointer" onclick="openLightbox('${j.image}')" title="Klik foto untuk memperbesar">
                                     <img src="${j.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-blue-900/90 to-transparent"></div>
-                                    <div class="absolute bottom-6 left-6"><span class="bg-yellow-400 text-blue-900 font-black px-4 py-1.5 rounded-full text-xs uppercase shadow-lg">${j.code}</span></div>
+                                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition duration-300 backdrop-blur-sm z-20"><i data-lucide="zoom-in" size="32"></i></div>
+                                    <div class="absolute inset-0 bg-gradient-to-t from-blue-900/90 to-transparent pointer-events-none"></div>
+                                    <div class="absolute bottom-6 left-6 z-10 pointer-events-none"><span class="bg-yellow-400 text-blue-900 font-black px-4 py-1.5 rounded-full text-xs uppercase shadow-lg">${j.code}</span></div>
                                 </div>
                                 <div class="p-8"><h4 class="text-xl font-bold text-blue-900 mb-4">${j.name}</h4><p class="text-slate-500 text-sm leading-relaxed">${j.desc}</p></div>
                             </div>`).join('') || '<p class="col-span-3 text-center text-slate-400 italic">Data jurusan kosong.</p>'}
@@ -778,11 +904,49 @@ service cloud.firestore {
                                     <span class="absolute top-4 left-4 bg-yellow-400 text-blue-900 text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md">${n.category}</span>
                                 </div>
                                 <div class="p-8 flex-1 flex flex-col">
-                                    <div class="text-xs text-slate-400 font-bold mb-3 flex items-center gap-2"><i data-lucide="clock" size="14"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</div>
+                                    <div class="text-xs text-slate-400 font-bold mb-3 flex items-center gap-2"><i data-lucide="clock" size="14"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
                                     <h4 class="font-bold text-xl mb-4 text-blue-900 group-hover:text-blue-600 transition line-clamp-2 leading-snug">${n.title}</h4>
                                     <p class="text-slate-500 text-sm line-clamp-3 leading-relaxed flex-1">${n.content}</p>
                                 </div>
                             </div>`).join('') || '<p class="col-span-full text-center py-32 text-slate-400 italic bg-white rounded-3xl border border-dashed">Belum ada konten berita saat ini.</p>'}
+                    </div>
+                </div>
+            `;
+        };
+
+        const renderBeritaDetail = (id) => {
+            const n = beritaList.find(b => b.id === id);
+            if (!n) {
+                // Jika data sedang dimuat dari Firebase (karena langsung buka dari link URL)
+                if (beritaList.length === 0) {
+                    document.getElementById('content').innerHTML = `<div class="py-32 text-center text-blue-900 flex flex-col items-center justify-center"><i data-lucide="loader-2" class="animate-spin mb-4" size="32"></i>Memuat Konten Berita...</div>`;
+                    lucide.createIcons();
+                } else {
+                    document.getElementById('content').innerHTML = `<div class="py-32 text-center text-slate-400">Berita tidak ditemukan atau telah dihapus.</div>`;
+                }
+                return;
+            }
+            
+            document.getElementById('content').innerHTML = `
+                <div class="max-w-4xl mx-auto py-12 px-4">
+                    <button onclick="navigate('berita')" class="text-blue-600 font-bold text-sm mb-8 flex items-center gap-2 hover:underline"><i data-lucide="arrow-left" size="16"></i> Kembali ke Daftar Berita</button>
+                    
+                    <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+                        <div class="h-[300px] md:h-[500px] w-full relative group overflow-hidden bg-slate-900 cursor-pointer" onclick="openLightbox('${n.image}')" title="Klik foto untuk memperbesar">
+                            <img src="${n.image}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-700">
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition duration-300 backdrop-blur-sm"><i data-lucide="zoom-in" size="32"></i></div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/40 to-transparent pointer-events-none"></div>
+                            <div class="absolute bottom-8 left-8 right-8 md:bottom-12 md:left-12 md:right-12 pointer-events-none">
+                                <span class="bg-yellow-400 text-blue-900 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 inline-block shadow-md">${n.category}</span>
+                                <h2 class="text-3xl md:text-5xl font-black text-white leading-tight drop-shadow-xl">${n.title}</h2>
+                                <p class="text-blue-200 text-sm mt-4 flex items-center gap-2"><i data-lucide="calendar" size="14"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            </div>
+                        </div>
+                        <div class="p-8 md:p-12">
+                            <div class="prose max-w-none text-slate-700 leading-loose text-lg whitespace-pre-line text-justify">
+                                ${n.content}
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -794,6 +958,7 @@ service cloud.firestore {
             const u = document.getElementById('login-user').value.toLowerCase();
             const p = await hashStr(document.getElementById('login-pass').value);
             if (u === 'admin' && p === SECURE_HASH.admin) { userRole = 'admin'; sessionStorage.setItem('secured_user_role', 'admin'); navigate('admin'); showToast("Akses Admin Terverifikasi"); }
+            else if (u === 'gama' && p === SECURE_HASH.gama) { userRole = 'admin'; sessionStorage.setItem('secured_user_role', 'admin'); navigate('admin'); showToast("Akses Admin Gama Terverifikasi"); }
             else if (u === 'guru' && p === SECURE_HASH.guru) { userRole = 'guru'; sessionStorage.setItem('secured_user_role', 'guru'); navigate('admin'); showToast("Akses Guru Terverifikasi"); }
             else showToast("Username atau Password Salah!");
         };
@@ -865,7 +1030,13 @@ service cloud.firestore {
                     <form onsubmit="handleSaveConfig(event)" class="grid md:grid-cols-2 gap-12">
                         <div class="space-y-6">
                             <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Identitas Dasar</h4>
-                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Link URL Logo Sekolah</label><input type="url" id="conf-logo" value="${siteConfig.logoImage}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Link URL Logo Sekolah</label>
+                                <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition shadow-sm">
+                                    <img src="${siteConfig.logoImage}" class="h-10 w-10 object-contain bg-white rounded-xl border border-slate-200 p-1 shrink-0 shadow-sm">
+                                    <input type="url" id="conf-logo" value="${siteConfig.logoImage}" required class="w-full p-2 bg-transparent border-none outline-none text-sm text-slate-700" placeholder="https://...">
+                                </div>
+                            </div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama Resmi Sekolah</label><input type="text" id="conf-name" value="${siteConfig.name}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Slogan Website</label><input type="text" id="conf-slogan" value="${siteConfig.slogan}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Alamat (Muncul di Footer & Maps)</label><input type="text" id="conf-address" value="${siteConfig.address || ''}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
@@ -880,9 +1051,37 @@ service cloud.firestore {
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Link Foto Pimpinan</label><input type="url" id="conf-s-img" value="${siteConfig.sambutanImage}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
                             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Teks Sambutan Singkat</label><textarea id="conf-s-text" rows="6" class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none">${siteConfig.sambutanText}</textarea></div>
                         </div>
+                        
+                        <div class="md:col-span-2 border-t border-slate-100 pt-6 mt-4">
+                            <h4 class="font-black text-blue-900 uppercase tracking-widest mb-6">Angka Statistik Sekolah</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-2 block">Statistik 1</label>
+                                    <input type="text" id="conf-s1-val" value="${siteConfig.stat1Val}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-blue-900 mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Angka">
+                                    <input type="text" id="conf-s1-lab" value="${siteConfig.stat1Label}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center text-xs text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Keterangan">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-2 block">Statistik 2</label>
+                                    <input type="text" id="conf-s2-val" value="${siteConfig.stat2Val}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-blue-900 mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Angka">
+                                    <input type="text" id="conf-s2-lab" value="${siteConfig.stat2Label}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center text-xs text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Keterangan">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-2 block">Statistik 3</label>
+                                    <input type="text" id="conf-s3-val" value="${siteConfig.stat3Val}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-blue-900 mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Angka">
+                                    <input type="text" id="conf-s3-lab" value="${siteConfig.stat3Label}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center text-xs text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Keterangan">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-2 block">Statistik 4</label>
+                                    <input type="text" id="conf-s4-val" value="${siteConfig.stat4Val}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-blue-900 mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Angka">
+                                    <input type="text" id="conf-s4-lab" value="${siteConfig.stat4Label}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center text-xs text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Keterangan">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="md:col-span-2 pt-6"><button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-black text-white font-black py-4 px-12 rounded-2xl shadow-xl transition uppercase tracking-widest text-xs">Simpan Semua Pengaturan</button></div>
                     </form>`;
             } else if (tab === 'menu' && userRole === 'admin') {
+                const optionsHTML = availablePages.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
                 container.innerHTML = `
                     <div class="grid lg:grid-cols-2 gap-12">
                         <div class="space-y-6">
@@ -912,7 +1111,7 @@ service cloud.firestore {
                                     <div class="bg-white border p-6 rounded-3xl shadow-sm">
                                         <div class="flex justify-between items-center mb-4">
                                             <h5 class="font-bold text-blue-900 uppercase text-sm flex items-center gap-2">${m.title} ${isExt ? '<i data-lucide="external-link" size="14" class="text-blue-400"></i>' : ''}</h5>
-                                            <button type="button" onclick="handleDeleteMenu('${m.id}')" class="text-red-500 hover:text-red-700 transition"><i data-lucide="trash-2" size="18"></i></button>
+                                            <button type="button" onclick="requestDelete('menuItem', '${m.id}')" class="text-red-500 hover:text-red-700 transition"><i data-lucide="trash-2" size="18"></i></button>
                                         </div>
                                         ${m.type === 'dropdown' ? `
                                             <div class="pl-6 border-l-2 border-slate-100 space-y-2 mb-4">
@@ -920,7 +1119,7 @@ service cloud.firestore {
                                                     const subIsExt = s.type === 'external' || (s.target && s.target.startsWith('http'));
                                                     return `<div class="flex justify-between items-center text-xs font-bold text-slate-500 bg-slate-50 p-2 rounded-lg">
                                                         <span class="truncate pr-2">${s.title} (${subIsExt ? s.target : '/'+s.target})</span>
-                                                        <button type="button" onclick="handleDeleteSubMenu('${m.id}','${s.id}')" class="text-red-400 shrink-0"><i data-lucide="x" size="14"></i></button>
+                                                        <button type="button" onclick="requestDelete('subMenuItem', '${m.id}|${s.id}')" class="text-red-400 shrink-0"><i data-lucide="x" size="14"></i></button>
                                                     </div>`;
                                                 }).join('')}
                                             </div>
@@ -1087,7 +1286,7 @@ service cloud.firestore {
                             <table class="w-full text-left border rounded-3xl overflow-hidden shadow-sm bg-white text-sm">
                                 <thead class="bg-blue-900 text-white uppercase text-[10px] tracking-widest"><tr class="divide-x"><th class="p-5">Daftar Berita Aktif</th><th class="p-5 text-right">Aksi</th></tr></thead>
                                 <tbody class="divide-y text-slate-600 font-bold">
-                                    ${beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `<tr class="hover:bg-slate-50 transition"><td class="p-5 truncate max-w-[300px]">${n.title}</td><td class="p-5 text-right flex justify-end gap-6"><button onclick="setEditItem('berita', '${n.id}')" class="text-blue-600"><i data-lucide="edit-2" size="18"></i></button><button onclick="requestDelete('berita', '${n.id}')" class="text-red-500"><i data-lucide="trash-2" size="18"></i></button></td></tr>`).join('') || '<tr><td colspan="2" class="p-10 text-center italic text-slate-400">Belum ada berita.</td></tr>'}
+                                    ${beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `<tr class="hover:bg-slate-50 transition"><td class="p-5 truncate max-w-[300px]">${n.title}</td><td class="p-5 text-right flex justify-end gap-6"><button onclick="setEditItem('berita', '${n.id}')" class="text-blue-600"><i data-lucide="edit-2" size="18"></i></button><button type="button" onclick="requestDelete('berita', '${n.id}')" class="text-red-500"><i data-lucide="trash-2" size="18"></i></button></td></tr>`).join('') || '<tr><td colspan="2" class="p-10 text-center italic text-slate-400">Belum ada berita.</td></tr>'}
                                 </tbody>
                             </table>
                         </div>
@@ -1273,7 +1472,15 @@ service cloud.firestore {
                     email: escapeHTML(document.getElementById('conf-email').value),
                     sambutanName: escapeHTML(document.getElementById('conf-s-name').value),
                     sambutanImage: escapeHTML(document.getElementById('conf-s-img').value),
-                    sambutanText: escapeHTML(document.getElementById('conf-s-text').value)
+                    sambutanText: escapeHTML(document.getElementById('conf-s-text').value),
+                    stat1Val: escapeHTML(document.getElementById('conf-s1-val').value),
+                    stat1Label: escapeHTML(document.getElementById('conf-s1-lab').value),
+                    stat2Val: escapeHTML(document.getElementById('conf-s2-val').value),
+                    stat2Label: escapeHTML(document.getElementById('conf-s2-lab').value),
+                    stat3Val: escapeHTML(document.getElementById('conf-s3-val').value),
+                    stat3Label: escapeHTML(document.getElementById('conf-s3-lab').value),
+                    stat4Val: escapeHTML(document.getElementById('conf-s4-val').value),
+                    stat4Label: escapeHTML(document.getElementById('conf-s4-lab').value)
                 };
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
                 showToast("Berhasil Memperbarui Data Website!");
@@ -1472,10 +1679,19 @@ service cloud.firestore {
             window.cTimer = setInterval(() => moveCarousel('next'), 6000);
         };
 
+        const hideLoader = () => {
+            const loader = document.getElementById('initial-loader');
+            if (loader) {
+                loader.classList.add('opacity-0');
+                setTimeout(() => loader.remove(), 700); // Menghapus elemen dari HTML setelah transisi pudar selesai
+            }
+        };
+
         // Initialize App
         window.onload = () => {
             init();
-            navigate('home');
+            checkUrlAndRoute(); // Memeriksa apakah ada link parameter yang dibawa (misal: /?berita=123)
+            setTimeout(hideLoader, 1200); // Menahan loading screen selama 1.2 detik agar data sempat dimuat
         };
     </script>
 </body>
