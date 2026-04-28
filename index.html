@@ -31,6 +31,11 @@
         .thin-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .thin-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .thin-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        input[type="file"]::file-selector-button {
+            background-color: #1e3a8a; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-right: 12px; font-size: 11px;
+        }
+        input[type="file"]::file-selector-button:hover { background-color: #1e40af; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -377,22 +382,44 @@
         };
 
         window.renderHome = () => {
+            // FIX TERBARU YOUTUBE: Menggunakan Basic Embed tanpa API JS untuk mencegah Error 153
             const getEmbed = (url) => {
                 if (!url) return null; let id = '';
                 try {
                     if (url.includes('v=')) id = url.split('v=')[1].split('&')[0];
                     else if (url.includes('youtu.be/')) id = url.split('youtu.be/')[1].split('?')[0];
                     else if (url.includes('embed/')) id = url.split('embed/')[1].split('?')[0];
-                    return id ? `https://www.youtube.com/embed/${id}?autoplay=0&rel=0&enablejsapi=1` : null;
+                    return id ? `https://www.youtube.com/embed/${id}?rel=0` : null;
                 } catch(e) { return null; }
             };
 
-            const vUrls = [window.siteConfig.videoUrl1, window.siteConfig.videoUrl2, window.siteConfig.videoUrl3];
-            const vHtml = vUrls.map((url, i) => {
-                const em = getEmbed(url);
-                if (!em) return `<div class="aspect-video bg-slate-800 flex items-center justify-center text-slate-500 rounded-2xl border border-slate-700 italic"><p class="text-xs">Video ${i+1} Kosong</p></div>`;
-                return `<div class="aspect-video rounded-2xl overflow-hidden shadow-lg border-4 border-white bg-black relative"><iframe src="${em}" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
-            }).join('');
+            // Memeriksa dan menyaring link video yang valid
+            const validVideoUrls = [window.siteConfig.videoUrl1, window.siteConfig.videoUrl2, window.siteConfig.videoUrl3].filter(url => url && url.trim() !== '');
+            let videoHTML = '';
+            
+            // JIKA ADA VIDEO: Tampilkan grid dan judulnya
+            if (validVideoUrls.length > 0) {
+                const gridItems = validVideoUrls.map((url) => {
+                    const em = getEmbed(url);
+                    if (!em) return '';
+                    return `<div class="aspect-video rounded-[2rem] overflow-hidden shadow-xl border-[6px] border-white bg-slate-900 relative"><iframe src="${em}" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+                }).join('');
+                
+                if (gridItems !== '') {
+                    videoHTML = `
+                        <div class="mt-12 pt-10 border-t border-slate-200">
+                            <div class="text-center mb-8">
+                                <div class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded-full shadow-lg">
+                                    <i data-lucide="play-circle" size="18" class="text-yellow-400"></i> Video Profil Institusi
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-${Math.min(validVideoUrls.length, 3)} gap-6">
+                                ${gridItems}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
 
             document.getElementById('content').innerHTML = `
                 <!-- Slider Utama -->
@@ -411,11 +438,13 @@
                 <!-- Sambutan Pimpinan & Video -->
                 <section class="py-10 md:py-16 bg-white border-b border-slate-100 relative overflow-hidden">
                     <div class="max-w-6xl mx-auto px-4 relative z-10">
-                        <div class="flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/80 backdrop-blur-xl p-8 md:p-12 rounded-[3rem] border border-slate-100 shadow-xl mb-12">
+                        <div class="flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/80 backdrop-blur-xl p-8 md:p-12 rounded-[3rem] border border-slate-100 shadow-xl ${videoHTML === '' ? '' : 'mb-0'}">
                             <div class="shrink-0 relative group"><div class="absolute inset-0 bg-blue-600 rounded-[2rem] translate-x-4 translate-y-4"></div><img src="${window.siteConfig.sambutanImage}" class="relative z-10 w-40 h-56 md:w-56 md:h-72 rounded-[2rem] object-cover border-[6px] border-white shadow-xl"><div class="absolute -bottom-5 -left-5 bg-yellow-400 text-white p-4 rounded-2xl shadow-lg z-20 transform -rotate-6"><i data-lucide="quote" size="28" class="fill-current"></i></div></div>
                             <div class="text-center md:text-left flex-1 pt-2"><div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase mb-4"><span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span> Sambutan</div><h2 class="text-3xl md:text-4xl font-black text-blue-900 mb-6 leading-tight">Suara <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">${window.siteConfig.sambutanRole}</span></h2><p class="text-slate-600 text-base md:text-lg leading-relaxed italic mb-8">"${window.siteConfig.sambutanText}"</p><div class="inline-block bg-slate-50 px-6 py-4 rounded-2xl border shadow-sm"><p class="font-black text-blue-900 text-lg">${window.siteConfig.sambutanName}</p><p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">${window.siteConfig.sambutanRole}</p></div></div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">${vHtml}</div>
+                        
+                        <!-- Area Video (Otomatis Hilang Jika URL Kosong) -->
+                        ${videoHTML}
                     </div>
                 </section>
 
