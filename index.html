@@ -48,7 +48,8 @@
         <div class="relative w-24 h-24 mb-6">
             <div class="absolute inset-0 border-4 border-white/20 rounded-full"></div>
             <div class="absolute inset-0 border-4 border-yellow-400 rounded-full border-t-transparent animate-spin"></div>
-            <img id="loading-logo-display" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png" class="absolute inset-0 w-12 h-12 m-auto object-contain animate-pulse" alt="Logo">
+            <img id="loading-logo-display" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png" class="absolute inset-0 w-12 h-12 m-auto object-contain animate-pulse" alt="Logo" onerror="this.classList.add('hidden'); document.getElementById('loading-fallback').classList.remove('hidden');">
+            <div id="loading-fallback" class="absolute inset-0 hidden flex items-center justify-center animate-pulse text-white/50"><i data-lucide="graduation-cap" size="32"></i></div>
         </div>
         <h2 class="text-white text-xl font-black tracking-widest uppercase animate-pulse">SMK Gajahmada 1</h2>
         <p class="text-blue-200 text-[10px] mt-2 tracking-widest uppercase">Menyiapkan Sistem Informasi...</p>
@@ -59,7 +60,8 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex items-center justify-between min-h-[80px]">
                 <div class="flex items-center gap-4 py-2 cursor-pointer shrink-0" onclick="navigate('home')">
-                    <img id="site-logo-display" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png" alt="Logo" class="w-12 h-12 md:w-16 md:h-16 object-contain" />
+                    <img id="site-logo-display" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png" alt="Logo" class="w-12 h-12 md:w-16 md:h-16 object-contain" onerror="this.classList.add('hidden'); document.getElementById('header-fallback').classList.remove('hidden');" />
+                    <div id="header-fallback" class="hidden w-12 h-12 md:w-16 md:h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shrink-0 border border-blue-100"><i data-lucide="school" size="24"></i></div>
                     <div class="hidden sm:block">
                         <h1 id="site-name-display" class="text-lg md:text-xl font-extrabold text-blue-900 leading-tight uppercase tracking-tighter">SMK Gajahmada 1 Metro</h1>
                         <p id="site-slogan-display" class="text-[10px] text-blue-600 font-semibold italic">Membentuk Lulusan Unggul, Disiplin, Kreatif, dan Berakhlak Mulia</p>
@@ -148,6 +150,21 @@
         </div>
     </div>
 
+    <!-- Announcement Pop-up Modal -->
+    <div id="promo-popup" class="hidden fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-500 opacity-0">
+        <div class="bg-white rounded-[2rem] max-w-lg w-full relative shadow-2xl transform scale-95 transition-transform duration-500 overflow-hidden" id="promo-popup-content">
+            <button onclick="window.closePopup()" class="absolute top-4 right-4 z-20 bg-black/40 hover:bg-black/80 text-white p-2 rounded-full transition backdrop-blur-md shadow-lg border border-white/20">
+                <i data-lucide="x" size="20"></i>
+            </button>
+            <a href="#" id="promo-popup-link" target="_blank" class="block w-full cursor-default relative group">
+                <img id="promo-popup-img" src="" class="w-full h-auto max-h-[75vh] object-cover group-hover:scale-105 transition-transform duration-700" alt="Pengumuman Terbaru">
+                <div id="promo-popup-overlay" class="hidden absolute inset-0 bg-blue-900/20 group-hover:flex items-center justify-center transition-all">
+                    <span class="bg-yellow-400 text-blue-900 font-black px-6 py-3 rounded-xl shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-all">LIHAT DETAIL &rarr;</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
     <!-- Image Lightbox -->
     <div id="image-lightbox" class="hidden fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 transition-opacity duration-300 opacity-0" onclick="window.closeLightbox()">
         <button onclick="window.closeLightbox()" class="absolute top-6 right-6 text-white/70 hover:text-white p-2 rounded-full transition"><i data-lucide="x" size="24"></i></button>
@@ -207,6 +224,7 @@
             stat2Val: "31", stat2Label: "Guru & Staff",
             stat3Val: "5", stat3Label: "Laboratorium",
             stat4Val: "40+", stat4Label: "Mitra Industri",
+            popupEnabled: "false", popupImage: "", popupLink: "",
             profilImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070",
             profilSejarah: "SMK Gajahmada 1 Metro didirikan untuk mencetak generasi bangsa yang unggul...",
             profilVisi: "Menjadi SMK Unggulan yang menghasilkan lulusan kompeten dan berkarakter...",
@@ -250,6 +268,44 @@
         window.showToast = (m) => {
             const t = document.getElementById('toast'); document.getElementById('toast-message').innerText = m;
             t.classList.remove('translate-y-20', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
+        };
+
+        window.closePopup = () => {
+            const pop = document.getElementById('promo-popup');
+            const cont = document.getElementById('promo-popup-content');
+            pop.classList.add('opacity-0');
+            cont.classList.remove('scale-100'); cont.classList.add('scale-95');
+            setTimeout(() => { pop.classList.add('hidden'); }, 500);
+            sessionStorage.setItem('popup_seen', 'true');
+        };
+
+        window.checkPopup = () => {
+            if (window.siteConfig.popupEnabled === 'true' && window.siteConfig.popupImage) {
+                if (!sessionStorage.getItem('popup_seen')) {
+                    const pop = document.getElementById('promo-popup');
+                    const cont = document.getElementById('promo-popup-content');
+                    const img = document.getElementById('promo-popup-img');
+                    const link = document.getElementById('promo-popup-link');
+                    const overlay = document.getElementById('promo-popup-overlay');
+                    
+                    img.src = window.siteConfig.popupImage;
+                    if (window.siteConfig.popupLink && window.siteConfig.popupLink.trim() !== '') {
+                        link.href = window.siteConfig.popupLink;
+                        link.classList.remove('cursor-default');
+                        overlay.classList.remove('hidden');
+                    } else {
+                        link.removeAttribute('href');
+                        link.classList.add('cursor-default');
+                        overlay.classList.add('hidden');
+                    }
+                    
+                    pop.classList.remove('hidden');
+                    setTimeout(() => {
+                        pop.classList.remove('opacity-0');
+                        cont.classList.remove('scale-95'); cont.classList.add('scale-100');
+                    }, 50);
+                }
+            }
         };
 
         window.navigate = (page, id = null) => {
@@ -328,15 +384,28 @@
 
         // === FUNGSI UPDATE UI ===
         window.updateSiteBranding = () => {
-            if (document.getElementById('site-logo-display')) document.getElementById('site-logo-display').src = window.siteConfig.logoImage;
-            if (document.getElementById('loading-logo-display')) document.getElementById('loading-logo-display').src = window.siteConfig.logoImage;
+            const logoImg = document.getElementById('site-logo-display');
+            const loadImg = document.getElementById('loading-logo-display');
+            
+            if (logoImg) {
+                logoImg.src = window.siteConfig.logoImage;
+                logoImg.classList.remove('hidden');
+                const hFallback = document.getElementById('header-fallback');
+                if(hFallback) hFallback.classList.add('hidden');
+            }
+            if (loadImg) {
+                loadImg.src = window.siteConfig.logoImage;
+                loadImg.classList.remove('hidden');
+                const lFallback = document.getElementById('loading-fallback');
+                if(lFallback) lFallback.classList.add('hidden');
+            }
+            
             if (document.getElementById('site-name-display')) document.getElementById('site-name-display').innerText = window.siteConfig.name;
             if (document.getElementById('site-slogan-display')) document.getElementById('site-slogan-display').innerText = window.siteConfig.slogan;
             if (document.getElementById('footer-site-name')) document.getElementById('footer-site-name').innerText = window.siteConfig.name;
             if (document.getElementById('footer-address')) document.getElementById('footer-address').innerText = window.siteConfig.address;
             if (document.getElementById('footer-phone')) document.getElementById('footer-phone').innerText = window.siteConfig.phone;
             
-            // Perbarui favicon secara otomatis berdasarkan logo sekolah
             const favicon = document.getElementById('favicon');
             if (favicon) favicon.href = window.siteConfig.logoImage;
         };
@@ -554,6 +623,7 @@
                 </section>
             `;
             window.startCarousel();
+            setTimeout(window.checkPopup, 1000);
         };
 
         window.renderProfil = () => {
@@ -601,13 +671,34 @@
 
         window.renderBeritaList = () => {
             document.getElementById('content').innerHTML = `
-                <div class="bg-blue-50 py-16 text-center"><h2 class="text-3xl font-black text-blue-900 uppercase">Portal Berita</h2><p class="text-slate-600 mt-2">Update informasi terbaru seputar kegiatan dan prestasi sekolah.</p></div>
-                <div class="max-w-7xl mx-auto py-20 px-4 grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-                    ${window.beritaList.sort((a,b) => b.timestamp - a.timestamp).map(n => `
-                        <div class="bg-white rounded-3xl border shadow-md hover:shadow-2xl transition cursor-pointer flex flex-col" onclick="window.navigate('berita-detail', '${n.id}')">
-                            <div class="h-56 overflow-hidden relative shrink-0"><img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700"><span class="absolute top-4 left-4 bg-yellow-400 text-blue-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase">${n.category}</span></div>
-                            <div class="p-8 flex-1 flex flex-col"><div class="text-xs text-slate-400 font-bold mb-3">${new Date(n.timestamp).toLocaleDateString('id-ID')}</div><h4 class="font-bold text-xl mb-4 text-blue-900 line-clamp-2">${n.title}</h4><p class="text-slate-500 text-sm line-clamp-3 leading-relaxed flex-1">${n.content}</p></div>
-                        </div>`).join('') || '<p class="col-span-full text-center py-32 text-slate-400 italic bg-white rounded-3xl border border-dashed">Belum ada berita.</p>'}
+                <div class="bg-blue-50 py-16 md:py-20 text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div class="absolute bottom-0 left-0 w-64 h-64 bg-yellow-100 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                    <div class="relative z-10 max-w-3xl mx-auto px-4">
+                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-blue-600 text-xs font-black uppercase tracking-widest mb-4 shadow-sm border border-blue-100">
+                            <i data-lucide="newspaper" size="16"></i> Mading Digital
+                        </div>
+                        <h2 class="text-3xl md:text-5xl font-black text-blue-900 uppercase tracking-tighter mb-4">Portal Berita</h2>
+                        <p class="text-slate-600 text-sm md:text-base leading-relaxed">Update informasi, pengumuman, dan prestasi terbaru dari lingkungan sekolah.</p>
+                    </div>
+                </div>
+                
+                <div class="max-w-7xl mx-auto py-16 px-4">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${window.beritaList.sort((a,b) => b.timestamp - a.timestamp).map(n => `
+                            <div class="bg-white rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_-10px_rgba(30,58,138,0.15)] transition-all duration-500 cursor-pointer flex flex-col group transform hover:-translate-y-2" onclick="window.navigate('berita-detail', '${n.id}')">
+                                <div class="h-56 overflow-hidden relative shrink-0 m-2 rounded-[1.5rem]">
+                                    <img src="${n.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                                    <div class="absolute top-4 left-4"><span class="bg-white/95 backdrop-blur-sm text-blue-900 font-black px-3 py-1.5 rounded-xl text-[10px] uppercase shadow-sm">${n.category}</span></div>
+                                </div>
+                                <div class="p-6 md:p-8 flex-1 flex flex-col text-left">
+                                    <div class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i data-lucide="calendar" size="14" class="text-blue-500"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</div>
+                                    <h4 class="font-black text-lg md:text-xl mb-4 text-blue-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">${n.title}</h4>
+                                    <p class="text-slate-500 text-sm line-clamp-3 leading-relaxed flex-1">${n.content}</p>
+                                    <div class="mt-6 pt-4 border-t border-slate-50 text-[11px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-2 group-hover:gap-3 transition-all">Baca Selengkapnya &rarr;</div>
+                                </div>
+                            </div>`).join('') || '<div class="col-span-full py-20 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-[2rem]">Belum ada berita yang dipublikasikan.</div>'}
+                    </div>
                 </div>`;
         };
 
@@ -618,12 +709,43 @@
                 else document.getElementById('content').innerHTML = `<div class="py-32 text-center">Berita tidak ditemukan.</div>`;
                 return;
             }
+            
             document.getElementById('content').innerHTML = `
-                <div class="max-w-4xl mx-auto py-12 px-4"><button onclick="window.navigate('berita')" class="text-blue-600 font-bold text-sm mb-8 flex items-center gap-2">&larr; Kembali</button>
-                    <div class="bg-white rounded-[2.5rem] shadow-xl border overflow-hidden">
-                        <div class="h-[300px] md:h-[500px] relative group cursor-pointer" onclick="window.openLightbox('${n.image}')"><img src="${n.image}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition"><i data-lucide="zoom-in" size="32"></i></div><div class="absolute bottom-8 left-8 text-white"><span class="bg-yellow-400 text-blue-900 text-[10px] font-black px-4 py-1 rounded-full uppercase mb-4 inline-block">${n.category}</span><h2 class="text-3xl md:text-5xl font-black drop-shadow-xl">${n.title}</h2></div></div>
-                        <div class="p-8 md:p-12 text-slate-700 leading-loose text-lg whitespace-pre-line text-justify">${n.content}</div>
-                    </div></div>`;
+                <!-- Header Detail Berita (Terpisah dari Gambar) -->
+                <div class="bg-slate-50 border-b border-slate-200 py-10 md:py-16">
+                    <div class="max-w-4xl mx-auto px-4">
+                        <button onclick="window.navigate('berita')" class="inline-flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest mb-8 hover:text-blue-800 transition"><i data-lucide="arrow-left" size="16"></i> Kembali ke Portal Berita</button>
+                        
+                        <div class="mb-6">
+                            <span class="inline-block bg-yellow-400 text-blue-900 text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest mb-4 shadow-sm">${n.category}</span>
+                            <h2 class="text-3xl md:text-5xl font-black text-blue-900 leading-tight tracking-tighter mb-8">${n.title}</h2>
+                            
+                            <div class="flex flex-wrap items-center gap-6 text-slate-500 text-xs md:text-sm font-bold uppercase tracking-widest border-t border-slate-200 pt-6">
+                                <span class="flex items-center gap-2"><i data-lucide="calendar" size="16" class="text-blue-500"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                <span class="flex items-center gap-2"><i data-lucide="user" size="16" class="text-blue-500"></i> Admin Sekolah</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Konten Gambar & Teks Berita -->
+                <div class="max-w-4xl mx-auto px-4 py-12">
+                    <div class="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden mb-12 group cursor-pointer" onclick="window.openLightbox('${n.image}')">
+                        <div class="relative h-[300px] md:h-[500px]">
+                            <img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                            <div class="absolute inset-0 bg-blue-900/10 group-hover:bg-blue-900/20 transition duration-300 flex items-center justify-center">
+                                <div class="bg-white/90 backdrop-blur-md p-4 rounded-full text-blue-900 opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100 shadow-xl">
+                                    <i data-lucide="zoom-in" size="24"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Area Teks Bacaan -->
+                    <div class="text-slate-700 leading-loose text-justify md:text-lg whitespace-pre-line font-medium">
+                        ${n.content}
+                    </div>
+                </div>`;
         };
 
         window.renderAlumniFoto = () => {
@@ -742,6 +864,15 @@
                                 <input type="url" id="conf-video2" value="${window.siteConfig.videoUrl2 || ''}" placeholder="Link Video 2" class="w-full p-3 border rounded-xl bg-blue-50 text-xs">
                                 <input type="url" id="conf-video3" value="${window.siteConfig.videoUrl3 || ''}" placeholder="Link Video 3" class="w-full p-3 border rounded-xl bg-blue-50 text-xs">
                             </div>
+                            
+                            <h4 class="font-black text-blue-900 border-b pb-2 mb-2 mt-4 uppercase">Pop-up Pengumuman</h4>
+                            <select id="conf-pop-status" class="w-full p-3 border rounded-xl mb-2 bg-white text-xs font-bold">
+                                <option value="false" ${window.siteConfig.popupEnabled === 'false' ? 'selected' : ''}>NONAKTIFKAN POP-UP</option>
+                                <option value="true" ${window.siteConfig.popupEnabled === 'true' ? 'selected' : ''}>AKTIFKAN POP-UP</option>
+                            </select>
+                            <input type="url" id="conf-pop-img" value="${window.siteConfig.popupImage || ''}" placeholder="URL Gambar / Poster Pop-up" class="w-full p-3 border rounded-xl mb-2 text-xs">
+                            <input type="url" id="conf-pop-link" value="${window.siteConfig.popupLink || ''}" placeholder="URL Tujuan Jika Diklik (Opsional)" class="w-full p-3 border rounded-xl mb-2 text-xs">
+
                             <h4 class="font-black text-blue-900 border-b pb-2 mb-2 mt-4 uppercase">Kontak Map</h4>
                             <input type="text" id="conf-address" value="${window.siteConfig.address}" placeholder="Alamat" required class="w-full p-3 border rounded-xl mb-2">
                             <div class="flex gap-2"><input type="text" id="conf-phone" value="${window.siteConfig.phone}" placeholder="No Telp" class="w-1/2 p-3 border rounded-xl"><input type="email" id="conf-email" value="${window.siteConfig.email}" placeholder="Email" class="w-1/2 p-3 border rounded-xl"></div>
@@ -833,6 +964,9 @@
                     videoUrl1: window.escapeHTML(document.getElementById('conf-video1').value),
                     videoUrl2: window.escapeHTML(document.getElementById('conf-video2').value),
                     videoUrl3: window.escapeHTML(document.getElementById('conf-video3').value),
+                    popupEnabled: document.getElementById('conf-pop-status').value,
+                    popupImage: window.escapeHTML(document.getElementById('conf-pop-img').value),
+                    popupLink: window.escapeHTML(document.getElementById('conf-pop-link').value),
                     stat1Val: window.escapeHTML(document.getElementById('c-s1-val').value),
                     stat1Label: window.escapeHTML(document.getElementById('c-s1-lab').value),
                     stat2Val: window.escapeHTML(document.getElementById('c-s2-val').value),
@@ -843,6 +977,7 @@
                     stat4Label: window.escapeHTML(document.getElementById('c-s4-lab').value)
                 };
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
+                sessionStorage.removeItem('popup_seen'); // Hapus sesi agar pop-up terlihat langsung setelah disimpan
                 window.showToast("Pengaturan Disimpan!");
             } catch (err) { window.handleFirebaseError(err); }
         };
