@@ -382,7 +382,6 @@
         };
 
         window.renderHome = () => {
-            // FIX TERBARU YOUTUBE: Menggunakan Basic Embed tanpa API JS untuk mencegah Error 153
             const getEmbed = (url) => {
                 if (!url) return null; let id = '';
                 try {
@@ -393,27 +392,25 @@
                 } catch(e) { return null; }
             };
 
-            // Memeriksa dan menyaring link video yang valid
             const validVideoUrls = [window.siteConfig.videoUrl1, window.siteConfig.videoUrl2, window.siteConfig.videoUrl3].filter(url => url && url.trim() !== '');
             let videoHTML = '';
             
-            // JIKA ADA VIDEO: Tampilkan grid dan judulnya
             if (validVideoUrls.length > 0) {
                 const gridItems = validVideoUrls.map((url) => {
                     const em = getEmbed(url);
                     if (!em) return '';
-                    return `<div class="aspect-video rounded-[2rem] overflow-hidden shadow-xl border-[6px] border-white bg-slate-900 relative"><iframe src="${em}" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+                    return `<div class="aspect-video rounded-xl md:rounded-2xl overflow-hidden shadow-md border-[3px] md:border-[4px] border-white bg-slate-900 relative"><iframe src="${em}" class="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
                 }).join('');
                 
                 if (gridItems !== '') {
                     videoHTML = `
-                        <div class="mt-12 pt-10 border-t border-slate-200">
-                            <div class="text-center mb-8">
-                                <div class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded-full shadow-lg">
-                                    <i data-lucide="play-circle" size="18" class="text-yellow-400"></i> Video Profil Institusi
+                        <div class="mt-8 pt-6 border-t border-slate-200">
+                            <div class="text-center mb-4">
+                                <div class="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-slate-900 text-white text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded-full shadow-md">
+                                    <i data-lucide="play-circle" size="14" class="text-yellow-400"></i> Video Profil Institusi
                                 </div>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-${Math.min(validVideoUrls.length, 3)} gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-${Math.min(validVideoUrls.length, 3)} gap-4">
                                 ${gridItems}
                             </div>
                         </div>
@@ -423,77 +420,131 @@
 
             document.getElementById('content').innerHTML = `
                 <!-- Slider Utama -->
-                <section class="relative bg-slate-900 h-[400px] md:h-[600px] overflow-hidden">
+                <section class="relative bg-slate-900 h-[350px] md:h-[500px] overflow-hidden">
                     <div id="carousel-inner" class="h-full relative">
                         ${window.galleryList.length > 0 ? window.galleryList.map((g, i) => `
                             <div class="carousel-item h-full w-full absolute inset-0 ${i === window.carouselIndex ? 'active' : ''}">
                                 <img src="${g.url}" class="w-full h-full object-cover">
                                 <div class="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-slate-900/40 to-transparent"></div>
-                                <div class="absolute inset-0 flex items-center max-w-7xl mx-auto px-6 md:px-12"><div class="max-w-2xl text-white"><div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 text-[10px] font-black uppercase tracking-widest mb-4 backdrop-blur-sm"><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span> Selamat Datang</div><h2 class="text-4xl md:text-6xl font-black mb-6 uppercase tracking-tighter leading-tight drop-shadow-2xl">${g.caption}</h2><p class="text-sm md:text-base text-blue-100 mb-8 max-w-lg leading-relaxed">${window.siteConfig.slogan}</p>${g.btnText ? `<button onclick="${g.btnType==='external'?`window.open('${g.btnTarget}')`:`window.navigate('${g.btnTarget}')`}" class="bg-yellow-400 text-blue-900 hover:bg-white font-black px-8 py-4 rounded-xl text-xs uppercase tracking-widest shadow-xl">${g.btnText}</button>` : ''}</div></div>
+                                <div class="absolute inset-0 flex items-center max-w-7xl mx-auto px-6 md:px-12"><div class="max-w-2xl text-white"><div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 text-[10px] font-black uppercase tracking-widest mb-4 backdrop-blur-sm"><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span> Selamat Datang</div><h2 class="text-3xl md:text-5xl font-black mb-4 uppercase tracking-tighter leading-tight drop-shadow-2xl">${g.caption}</h2><p class="text-xs md:text-sm text-blue-100 mb-6 max-w-lg leading-relaxed line-clamp-3">${window.siteConfig.slogan}</p>${g.btnText ? `<button onclick="${g.btnType==='external'?`window.open('${g.btnTarget}')`:`window.navigate('${g.btnTarget}')`}" class="bg-yellow-400 text-blue-900 hover:bg-white font-black px-6 py-3 rounded-xl text-[10px] md:text-xs uppercase tracking-widest shadow-xl">${g.btnText}</button>` : ''}</div></div>
                             </div>`).join('') : '<div class="h-full flex items-center justify-center text-white italic">Menunggu Foto Slide...</div>'}
                     </div>
-                    ${window.galleryList.length > 1 ? `<div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">${window.galleryList.map((_, i) => `<button onclick="window.goToSlide(${i})" class="w-12 h-1.5 rounded-full transition-all duration-300 slide-dot ${i === window.carouselIndex ? 'bg-yellow-400' : 'bg-white/30'}"></button>`).join('')}</div>` : ''}
+                    ${window.galleryList.length > 1 ? `<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">${window.galleryList.map((_, i) => `<button onclick="window.goToSlide(${i})" class="w-10 h-1.5 rounded-full transition-all duration-300 slide-dot ${i === window.carouselIndex ? 'bg-yellow-400' : 'bg-white/30'}"></button>`).join('')}</div>` : ''}
                 </section>
 
                 <!-- Sambutan Pimpinan & Video -->
-                <section class="py-10 md:py-16 bg-white border-b border-slate-100 relative overflow-hidden">
-                    <div class="max-w-6xl mx-auto px-4 relative z-10">
-                        <div class="flex flex-col md:flex-row items-center gap-8 md:gap-16 bg-white/80 backdrop-blur-xl p-8 md:p-12 rounded-[3rem] border border-slate-100 shadow-xl ${videoHTML === '' ? '' : 'mb-0'}">
-                            <div class="shrink-0 relative group"><div class="absolute inset-0 bg-blue-600 rounded-[2rem] translate-x-4 translate-y-4"></div><img src="${window.siteConfig.sambutanImage}" class="relative z-10 w-40 h-56 md:w-56 md:h-72 rounded-[2rem] object-cover border-[6px] border-white shadow-xl"><div class="absolute -bottom-5 -left-5 bg-yellow-400 text-white p-4 rounded-2xl shadow-lg z-20 transform -rotate-6"><i data-lucide="quote" size="28" class="fill-current"></i></div></div>
-                            <div class="text-center md:text-left flex-1 pt-2"><div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase mb-4"><span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span> Sambutan</div><h2 class="text-3xl md:text-4xl font-black text-blue-900 mb-6 leading-tight">Suara <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">${window.siteConfig.sambutanRole}</span></h2><p class="text-slate-600 text-base md:text-lg leading-relaxed italic mb-8">"${window.siteConfig.sambutanText}"</p><div class="inline-block bg-slate-50 px-6 py-4 rounded-2xl border shadow-sm"><p class="font-black text-blue-900 text-lg">${window.siteConfig.sambutanName}</p><p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">${window.siteConfig.sambutanRole}</p></div></div>
+                <section class="py-6 md:py-8 bg-white border-b border-slate-100 relative overflow-hidden">
+                    <div class="max-w-5xl mx-auto px-4 relative z-10">
+                        <div class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 bg-white/80 backdrop-blur-xl p-5 md:p-6 rounded-[2rem] border border-slate-100 shadow-md ${videoHTML === '' ? '' : 'mb-6'}">
+                            <div class="shrink-0 relative group mt-1">
+                                <div class="absolute inset-0 bg-blue-600 rounded-[1.5rem] translate-x-2 translate-y-2"></div>
+                                <img src="${window.siteConfig.sambutanImage}" class="relative z-10 w-28 h-40 md:w-36 md:h-48 rounded-[1.5rem] object-cover border-4 border-white shadow-sm">
+                                <div class="absolute -bottom-3 -left-3 bg-yellow-400 text-white p-2.5 rounded-xl shadow-md z-20 transform -rotate-6"><i data-lucide="quote" size="18" class="fill-current"></i></div>
+                            </div>
+                            <div class="text-center md:text-left flex-1">
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[9px] font-black uppercase mb-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> Sambutan</div>
+                                <h2 class="text-xl md:text-2xl font-black text-blue-900 mb-3 leading-tight">Suara <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">${window.siteConfig.sambutanRole}</span></h2>
+                                <p class="text-slate-600 text-xs md:text-sm leading-relaxed italic mb-4">"${window.siteConfig.sambutanText}"</p>
+                                <div class="inline-block bg-slate-50 px-4 py-2.5 rounded-xl border shadow-sm">
+                                    <p class="font-black text-blue-900 text-xs md:text-sm">${window.siteConfig.sambutanName}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">${window.siteConfig.sambutanRole}</p>
+                                </div>
+                            </div>
                         </div>
                         
-                        <!-- Area Video (Otomatis Hilang Jika URL Kosong) -->
+                        <!-- Area Video -->
                         ${videoHTML}
                     </div>
                 </section>
 
                 <!-- Angka Statistik -->
-                <section class="py-6 bg-blue-900 text-white text-center"><div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div><div class="text-4xl font-black text-yellow-400 mb-1">${window.siteConfig.stat1Val}</div><p class="text-[10px] font-bold uppercase text-blue-200">${window.siteConfig.stat1Label}</p></div>
-                    <div><div class="text-4xl font-black text-yellow-400 mb-1">${window.siteConfig.stat2Val}</div><p class="text-[10px] font-bold uppercase text-blue-200">${window.siteConfig.stat2Label}</p></div>
-                    <div><div class="text-4xl font-black text-yellow-400 mb-1">${window.siteConfig.stat3Val}</div><p class="text-[10px] font-bold uppercase text-blue-200">${window.siteConfig.stat3Label}</p></div>
-                    <div><div class="text-4xl font-black text-yellow-400 mb-1">${window.siteConfig.stat4Val}</div><p class="text-[10px] font-bold uppercase text-blue-200">${window.siteConfig.stat4Label}</p></div>
+                <section class="py-5 bg-blue-900 text-white text-center"><div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div><div class="text-3xl md:text-4xl font-black text-yellow-400 mb-1">${window.siteConfig.stat1Val}</div><p class="text-[9px] md:text-[10px] font-bold uppercase text-blue-200">${window.siteConfig.stat1Label}</p></div>
+                    <div><div class="text-3xl md:text-4xl font-black text-yellow-400 mb-1">${window.siteConfig.stat2Val}</div><p class="text-[9px] md:text-[10px] font-bold uppercase text-blue-200">${window.siteConfig.stat2Label}</p></div>
+                    <div><div class="text-3xl md:text-4xl font-black text-yellow-400 mb-1">${window.siteConfig.stat3Val}</div><p class="text-[9px] md:text-[10px] font-bold uppercase text-blue-200">${window.siteConfig.stat3Label}</p></div>
+                    <div><div class="text-3xl md:text-4xl font-black text-yellow-400 mb-1">${window.siteConfig.stat4Val}</div><p class="text-[9px] md:text-[10px] font-bold uppercase text-blue-200">${window.siteConfig.stat4Label}</p></div>
                 </div></section>
 
                 <!-- Program Keahlian -->
-                <section class="py-12 md:py-16 bg-gradient-to-b from-white to-slate-50">
+                <section class="py-8 md:py-10 bg-gradient-to-b from-white to-slate-50">
                     <div class="max-w-7xl mx-auto px-4">
-                        <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4"><div class="text-center md:text-left"><h3 class="text-3xl font-black text-blue-900 uppercase">Program Keahlian</h3></div><button onclick="window.navigate('jurusan')" class="px-6 py-3 bg-blue-900 text-white text-xs font-black uppercase rounded-xl shadow-lg">Lihat Semua</button></div>
-                        <div class="flex overflow-x-auto gap-6 pb-6 snap-x thin-scrollbar">
+                        <div class="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+                            <div class="text-center md:text-left"><h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase">Program Keahlian</h3></div>
+                            <button onclick="window.navigate('jurusan')" class="px-5 py-2.5 bg-blue-900 text-white text-[10px] md:text-xs font-black uppercase rounded-lg hover:bg-black transition shadow-sm">Lihat Semua &rarr;</button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
                             ${window.jurusanList.map(j => `
-                                <div class="w-[280px] shrink-0 snap-center bg-white rounded-[2.5rem] p-4 shadow-sm border flex flex-col group cursor-pointer" onclick="window.navigate('jurusan')">
-                                    <div class="h-56 w-full rounded-[2rem] overflow-hidden relative" onclick="event.stopPropagation(); window.openLightbox('${j.image}')">
-                                        <img src="${j.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
-                                        <div class="absolute inset-0 bg-blue-900/60 opacity-80"></div>
-                                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300"><div class="bg-white/30 backdrop-blur-md p-3 rounded-full text-white"><i data-lucide="zoom-in" size="20"></i></div></div>
-                                        <div class="absolute bottom-4 left-4"><span class="bg-yellow-400 text-blue-900 font-black px-3 py-1.5 rounded-xl text-[10px] uppercase">${j.code}</span></div>
+                                <div class="bg-white rounded-2xl p-2 md:p-3 shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 flex flex-col group cursor-pointer transform hover:-translate-y-1" onclick="window.navigate('jurusan')">
+                                    <div class="h-24 md:h-28 w-full rounded-xl overflow-hidden relative bg-transparent flex items-center justify-center" onclick="event.stopPropagation(); window.openLightbox('${j.image}')">
+                                        <img src="${j.image}" class="w-full h-full object-contain group-hover:scale-110 transition duration-500">
+                                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 bg-black/5"><div class="bg-white/80 backdrop-blur-sm p-2 rounded-full text-blue-900 shadow-sm"><i data-lucide="zoom-in" size="14"></i></div></div>
+                                        <div class="absolute bottom-1 left-1"><span class="bg-yellow-400 text-blue-900 font-black px-1.5 py-0.5 rounded text-[8px] md:text-[9px] uppercase shadow-sm">${j.code}</span></div>
                                     </div>
-                                    <div class="pt-6 pb-4 text-center"><h4 class="font-black text-lg text-blue-900 mb-3">${j.name}</h4><p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Detail &rarr;</p></div>
-                                </div>`).join('') || '<div class="w-full py-10 text-center italic text-slate-400 border-2 border-dashed rounded-[2rem]">Belum ada jurusan.</div>'}
+                                    <div class="pt-3 pb-1 text-center flex-1 flex flex-col items-center justify-center">
+                                        <h4 class="font-bold text-[10px] md:text-xs text-blue-900 group-hover:text-blue-600 transition-colors leading-snug">${j.name}</h4>
+                                    </div>
+                                </div>
+                            `).join('') || '<div class="col-span-full py-10 text-center italic text-slate-400 border-2 border-dashed border-slate-200 rounded-[2rem]">Belum ada jurusan.</div>'}
                         </div>
                     </div>
                 </section>
 
                 <!-- Berita Terbaru -->
-                <section class="py-12 md:py-16 bg-white border-t border-slate-100">
-                    <div class="max-w-7xl mx-auto px-4"><div class="text-center mb-10"><h3 class="text-3xl font-black text-blue-900 uppercase">Kabar Terbaru</h3></div>
-                        <div class="grid md:grid-cols-3 gap-8 mb-10">
+                <section class="py-8 md:py-10 bg-white border-t border-slate-100">
+                    <div class="max-w-7xl mx-auto px-4">
+                        <div class="text-center mb-8"><h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase">Kabar Terbaru</h3></div>
+                        
+                        <div class="flex flex-wrap justify-center gap-6 mb-8">
                             ${window.beritaList.slice(0, 3).map(n => `
-                                <div class="bg-white rounded-[2.5rem] overflow-hidden border shadow-sm hover:shadow-xl group cursor-pointer flex flex-col" onclick="window.navigate('berita-detail', '${n.id}')">
-                                    <div class="h-56 overflow-hidden relative shrink-0 m-3 rounded-[2rem]"><img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700"><div class="absolute top-4 left-4"><span class="bg-white/90 backdrop-blur-sm text-blue-900 font-black px-3 py-1.5 rounded-xl text-[10px] uppercase shadow-sm">${n.category}</span></div></div>
-                                    <div class="p-6 flex-1 text-center md:text-left"><div class="text-[10px] font-bold text-slate-400 uppercase mb-3"><i data-lucide="calendar" size="14" class="inline"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</div><h4 class="font-black text-xl text-blue-900 group-hover:text-blue-600 line-clamp-2">${n.title}</h4></div>
-                                </div>`).join('') || '<div class="col-span-3 py-16 text-center italic text-slate-400">Belum ada berita.</div>'}
+                                <div class="w-full sm:w-[320px] bg-white rounded-[1.5rem] overflow-hidden border shadow-sm hover:shadow-md group cursor-pointer flex flex-col transition-transform transform hover:-translate-y-1" onclick="window.navigate('berita-detail', '${n.id}')">
+                                    <div class="h-44 overflow-hidden relative shrink-0 m-2 rounded-xl">
+                                        <img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                                        <div class="absolute top-3 left-3"><span class="bg-white/90 backdrop-blur-sm text-blue-900 font-black px-2.5 py-1 rounded-lg text-[9px] uppercase shadow-sm">${n.category}</span></div>
+                                    </div>
+                                    <div class="p-4 md:p-5 flex-1 flex flex-col text-center md:text-left">
+                                        <div class="text-[9px] font-bold text-slate-400 uppercase mb-2"><i data-lucide="calendar" size="12" class="inline"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</div>
+                                        <h4 class="font-black text-base md:text-lg text-blue-900 group-hover:text-blue-600 line-clamp-2 leading-snug">${n.title}</h4>
+                                    </div>
+                                </div>
+                            `).join('') || '<div class="w-full py-12 text-center italic text-slate-400 border-2 border-dashed border-slate-200 rounded-2xl">Belum ada berita.</div>'}
                         </div>
-                        <div class="text-center"><button onclick="window.navigate('berita')" class="px-8 py-4 bg-slate-50 border text-blue-900 font-black uppercase text-xs rounded-2xl hover:bg-blue-900 hover:text-white transition">Semua Berita</button></div>
+                        
+                        <div class="text-center"><button onclick="window.navigate('berita')" class="px-6 py-3 bg-slate-50 border border-slate-200 text-blue-900 font-black uppercase text-[10px] md:text-xs rounded-xl hover:bg-blue-900 hover:text-white transition">Semua Berita</button></div>
                     </div>
                 </section>
 
                 <!-- Mitra Industri -->
-                <section class="py-12 md:py-16 bg-slate-50 border-t border-slate-100"><div class="max-w-7xl mx-auto px-4 text-center"><h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase mb-10 text-center">Mitra Industri Strategis</h3><div class="flex flex-wrap justify-center gap-8 md:gap-16 items-center">${window.mitraList.slice(0, 8).map(m => `<img src="${m.image}" alt="${m.name}" title="${m.name}" class="h-12 md:h-16 object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 hover:scale-110 transition-all duration-500 cursor-pointer" onclick="window.navigate('mitra')">`).join('') || '<p class="text-slate-400 italic">Data mitra belum tersedia.</p>'}</div></div></section>
+                <section class="py-8 md:py-10 bg-slate-50 border-t border-slate-100">
+                    <div class="max-w-7xl mx-auto px-4 text-center">
+                        <h3 class="text-xl md:text-2xl font-black text-blue-900 uppercase mb-8 text-center">Mitra Industri Strategis</h3>
+                        <div class="flex flex-wrap justify-center gap-6 md:gap-12 items-center">
+                            ${window.mitraList.slice(0, 8).map(m => `<img src="${m.image}" alt="${m.name}" title="${m.name}" class="h-10 md:h-12 object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 hover:scale-110 transition-all duration-500 cursor-pointer" onclick="window.navigate('mitra')">`).join('') || '<p class="text-slate-400 italic">Data mitra belum tersedia.</p>'}
+                        </div>
+                    </div>
+                </section>
 
                 <!-- Kunjungi Kampus (Peta) -->
-                <section class="py-12 md:py-16 bg-white"><div class="max-w-7xl mx-auto px-4"><div class="bg-blue-900 rounded-[3rem] p-4 md:p-6 shadow-2xl relative flex flex-col md:flex-row gap-6 border-b-8 border-yellow-400"><div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px;"></div><div class="flex-1 bg-white rounded-[2.5rem] p-8 relative z-10 flex flex-col justify-center"><h4 class="text-3xl font-black text-blue-900 uppercase mb-8 leading-tight">Kunjungi Kampus</h4><div class="space-y-6"><div class="flex items-start gap-4"><div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border"><i data-lucide="map-pin" size="20"></i></div><div><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Alamat</p><p class="text-sm font-semibold">${window.siteConfig.address}</p></div></div><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border"><i data-lucide="phone" size="20"></i></div><div><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Telepon</p><p class="text-sm font-black">${window.siteConfig.phone}</p></div></div><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border"><i data-lucide="mail" size="20"></i></div><div><p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Email</p><p class="text-sm font-black">${window.siteConfig.email}</p></div></div></div></div><div class="md:w-[50%] lg:w-[60%] h-[350px] md:h-auto rounded-[2.5rem] overflow-hidden relative z-10 border-4 border-white/10 bg-slate-200"><iframe src="https://maps.google.com/maps?q=-5.134376503433169,105.28336464668283&hl=id&z=16&output=embed" width="100%" height="100%" style="border:0;" loading="lazy"></iframe></div></div></div></section>
+                <section class="py-8 md:py-10 bg-white">
+                    <div class="max-w-7xl mx-auto px-4">
+                        <div class="bg-blue-900 rounded-[2.5rem] p-4 shadow-xl relative flex flex-col md:flex-row gap-4 border-b-8 border-yellow-400">
+                            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px;"></div>
+                            
+                            <div class="flex-1 bg-white rounded-[2rem] p-6 md:p-8 relative z-10 flex flex-col justify-center">
+                                <h4 class="text-2xl md:text-3xl font-black text-blue-900 uppercase mb-6 leading-tight">Kunjungi Kampus</h4>
+                                <div class="space-y-5">
+                                    <div class="flex items-start gap-3"><div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border"><i data-lucide="map-pin" size="18"></i></div><div><p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Alamat</p><p class="text-xs font-semibold">${window.siteConfig.address}</p></div></div>
+                                    <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border"><i data-lucide="phone" size="18"></i></div><div><p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Telepon</p><p class="text-xs font-black">${window.siteConfig.phone}</p></div></div>
+                                    <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border"><i data-lucide="mail" size="18"></i></div><div><p class="text-[9px] font-bold text-slate-400 uppercase mb-1">Email</p><p class="text-xs font-black">${window.siteConfig.email}</p></div></div>
+                                </div>
+                            </div>
+                            
+                            <div class="md:w-[50%] lg:w-[60%] h-[300px] md:h-auto rounded-[2rem] overflow-hidden relative z-10 border-4 border-white/10 bg-slate-200">
+                                <iframe src="https://maps.google.com/maps?q=-5.134376503433169,105.28336464668283&hl=id&z=16&output=embed" width="100%" height="100%" style="border:0;" loading="lazy"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             `;
             window.startCarousel();
         };
@@ -751,8 +802,8 @@
                 const pnd = window.alumniList.filter(a => a.status === 'pending');
                 const app = window.alumniList.filter(a => a.status === 'approved');
                 container.innerHTML = `<div class="space-y-12">
-                    <div><h3 class="font-bold mb-6 text-yellow-600 text-xl border-b pb-4">Menunggu Persetujuan (${pnd.length})</h3><div class="grid md:grid-cols-3 gap-6">${pnd.map(a => `<div class="bg-yellow-50 rounded-2xl border p-6"><div class="flex gap-4 mb-4"><img src="${a.image}" class="w-12 h-12 rounded-full object-cover"><div><h4 class="font-bold text-sm">${a.name}</h4><p class="text-[10px] text-slate-500">Lulusan ${a.graduationYear}</p></div></div><p class="text-xs mb-4 text-slate-600 italic">"${a.quote}"</p><div class="flex gap-2"><button onclick="window.handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg text-xs">Setujui</button><button onclick="window.requestDelete('alumni', '${a.id}')" class="flex-1 bg-red-100 text-red-600 font-bold py-2 rounded-lg text-xs">Tolak</button></div></div>`).join('') || '<p class="text-slate-400 italic">Tidak ada antrian.</p>'}</div></div>
-                    <div><h3 class="font-bold mb-6 text-green-600 text-xl border-b pb-4">Alumni Aktif (${app.length})</h3><div class="grid md:grid-cols-4 gap-6">${app.map(a => `<div class="bg-white rounded-2xl border p-4 text-center relative group"><img src="${a.image}" class="w-16 h-16 rounded-full mx-auto object-cover mb-2"><h4 class="font-bold text-sm">${a.name}</h4><p class="text-[10px] text-slate-400">${a.graduationYear}</p><button onclick="window.requestDelete('alumni', '${a.id}')" class="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-lg opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" size="14"></i></button></div>`).join('') || '<p class="text-slate-400 italic">Belum ada alumni.</p>'}</div></div></div>`;
+                    <div><h3 class="font-bold mb-6 text-yellow-600 text-xl border-b pb-4">Menunggu Persetujuan (${pnd.length})</h3><div class="grid md:grid-cols-3 gap-6">${pnd.map(a => `<div class="bg-yellow-50 rounded-2xl border p-6"><div class="flex gap-4 mb-4"><img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=fefce8&color=a16207&size=100';" class="w-12 h-12 rounded-full object-cover"><div><h4 class="font-bold text-sm">${a.name}</h4><p class="text-[10px] text-slate-500">Lulusan ${a.graduationYear}</p></div></div><p class="text-xs mb-4 text-slate-600 italic">"${a.quote}"</p><div class="flex gap-2"><button onclick="window.handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg text-xs">Setujui</button><button onclick="window.requestDelete('alumni', '${a.id}')" class="flex-1 bg-red-100 text-red-600 font-bold py-2 rounded-lg text-xs">Tolak</button></div></div>`).join('') || '<p class="text-slate-400 italic">Tidak ada antrian.</p>'}</div></div>
+                    <div><h3 class="font-bold mb-6 text-green-600 text-xl border-b pb-4">Alumni Aktif (${app.length})</h3><div class="grid md:grid-cols-4 gap-6">${app.map(a => `<div class="bg-white rounded-2xl border p-4 text-center relative group"><img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=eff6ff&color=1e3a8a&size=100';" class="w-16 h-16 rounded-full mx-auto object-cover mb-2"><h4 class="font-bold text-sm">${a.name}</h4><p class="text-[10px] text-slate-400">${a.graduationYear}</p><button onclick="window.requestDelete('alumni', '${a.id}')" class="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-lg opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" size="14"></i></button></div>`).join('') || '<p class="text-slate-400 italic">Belum ada alumni.</p>'}</div></div></div>`;
             }
             lucide.createIcons();
         };
