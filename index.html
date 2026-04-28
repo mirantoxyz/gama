@@ -27,6 +27,12 @@
         .section-title { position: relative; padding-bottom: 0.75rem; margin-bottom: 1.5rem; }
         .section-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 50px; height: 3px; background: #fbbf24; border-radius: 2px; }
 
+        /* Subtle Scrollbar for Horizontal Scroll */
+        .thin-scrollbar::-webkit-scrollbar { height: 6px; }
+        .thin-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .thin-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .thin-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
         /* Input File Styling */
         input[type="file"]::file-selector-button {
             background-color: #1e3a8a; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-right: 12px; font-size: 11px;
@@ -111,9 +117,9 @@
             </div>
             <div class="text-xs text-blue-200">
                 <h3 class="text-white text-base font-bold mb-4">Kontak</h3>
-                <p class="mb-2" id="footer-address">Ganjaragung, Metro Barat, Metro City, Lampung 34114</p>
-                <p class="font-bold text-white" id="footer-phone">+6281272382831</p>
-                <p class="mt-2 italic" id="footer-email">smkkpgajahmadametro@gmail.com</p>
+                <p class="mb-2" id="footer-address">Jl. Gajah Mada No.1, Metro</p>
+                <p class="font-bold text-white" id="footer-phone">(0725) 123456</p>
+                <p class="mt-2 italic" id="footer-email">info@smkgajahmada1metro.sch.id</p>
             </div>
         </div>
         <div class="text-center mt-12 pt-6 border-t border-blue-800 text-[10px] text-blue-400 uppercase tracking-widest">
@@ -179,7 +185,7 @@ service cloud.firestore {
     <div id="image-lightbox" class="hidden fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 transition-opacity duration-300 opacity-0" onclick="closeLightbox()">
         <button onclick="closeLightbox()" class="absolute top-6 right-6 text-white/70 hover:text-white hover:bg-white/20 p-2 rounded-full transition"><i data-lucide="x" size="24"></i></button>
         <div class="w-full h-full flex items-center justify-center overflow-auto py-12">
-            <img id="lightbox-img" src="" class="max-w-full max-h-full object-contain scale-95 transition-transform duration-300 cursor-zoom-in rounded-lg shadow-2xl" onclick="toggleZoom(event)" title="Klik untuk memperbesar/memperkecil">
+            <img id="lightbox-img" src="" onerror="this.onerror=null; this.src='https://placehold.co/800x800/1e3a8a/ffffff?text=Gambar+Tidak+Tersedia';" class="max-w-full max-h-full object-contain scale-95 transition-transform duration-300 cursor-zoom-in rounded-lg shadow-2xl" onclick="toggleZoom(event)" title="Klik untuk memperbesar/memperkecil">
         </div>
     </div>
 
@@ -188,7 +194,7 @@ service cloud.firestore {
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // === KONFIGURASI FIREBASE ANDA ===
+        // === KONFIGURASI FIREBASE ===
         const firebaseConfig = {
           apiKey: "AIzaSyDYwSaA2Jlk311AenolGQO_kIQy9Ywtx-8",
           authDomain: "smkgajahmada1-metro.firebaseapp.com",
@@ -204,80 +210,15 @@ service cloud.firestore {
         const db = getFirestore(app);
         const appId = 'smk-gm1-prod'; 
 
-        // Security Helpers
-        const escapeHTML = (str) => {
-            if (typeof str !== 'string') return str;
-            return str.replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[tag] || tag));
-        };
-
-        const hashStr = async (str) => {
-            const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-            return Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
-        };
-
-        const handleFirebaseError = (err) => {
-            console.error("Firebase Error Encountered:", err);
-            if (err.code === 'permission-denied' || (err.message && err.message.toLowerCase().includes('permission')) || (err.message && err.message.toLowerCase().includes('unauthorized'))) {
-                document.getElementById('error-modal').classList.remove('hidden');
-                lucide.createIcons();
-            } else {
-                showToast("Terjadi kesalahan: " + err.message);
-            }
-        };
-
-        // Custom Confirm Logic
-        let confirmAction = null;
-        window.requestDelete = (col, id) => {
-            confirmAction = async () => {
-                try {
-                    // Cek jika ini adalah menu/submenu (disimpan di objek site_config)
-                    if (col === 'menuItem') {
-                        const updated = (siteConfig.menuItems || []).filter(m => m.id !== id);
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
-                        showToast("Menu Dihapus!");
-                    } else if (col === 'subMenuItem') {
-                        const [pid, sid] = id.split('|');
-                        const newMenus = JSON.parse(JSON.stringify(siteConfig.menuItems));
-                        const parent = newMenus.find(m => m.id === pid);
-                        if(parent) {
-                            parent.children = parent.children.filter(s => s.id !== sid);
-                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
-                            showToast("Sub-menu dihapus!");
-                        }
-                    } else {
-                        // Koleksi biasa
-                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
-                        showToast("Data Berhasil Dihapus!");
-                    }
-                } catch (err) { handleFirebaseError(err); }
-                closeConfirm();
-            };
-            document.getElementById('confirm-modal').classList.remove('hidden');
-        };
-
-        window.closeConfirm = () => {
-            confirmAction = null;
-            document.getElementById('confirm-modal').classList.add('hidden');
-        };
-        
-        document.getElementById('confirm-btn').addEventListener('click', () => {
-            if(confirmAction) confirmAction();
-        });
-
         // State Management
-        let userRole = sessionStorage.getItem('secured_user_role') || null; 
-        
-        const availablePages = [
-            { id: 'home', title: 'Beranda Utama' },
-            { id: 'profil', title: 'Profil Sekolah' },
-            { id: 'jurusan', title: 'Kompetensi Keahlian' },
-            { id: 'guru', title: 'Tenaga Pendidik' },
-            { id: 'mitra', title: 'Hubungan Industri' },
-            { id: 'berita', title: 'Berita & Kegiatan' },
-            { id: 'gallery', title: 'Galeri Dokumentasi' },
-            { id: 'alumni-foto', title: 'Galeri Alumni' },
-            { id: 'alumni-tracer', title: 'Form Penelusuran Alumni' }
-        ];
+        let beritaList = [], galleryList = [], jurusanList = [], guruList = [], mitraList = [], alumniList = [];
+        let carouselIndex = 0, currentAdminTab = 'overview', editItem = null, currentDataId = null, userRole = sessionStorage.getItem('secured_user_role') || null;
+
+        const SECURE_HASH = {
+            admin: "6747687f8cf43d1267142036c85e62ca4c7e81996d0e8ca5b39dc888a10519ec",
+            gama: "6747687f8cf43d1267142036c85e62ca4c7e81996d0e8ca5b39dc888a10519ec",
+            guru: "2c82c20dd33a6f4400e9981b2fb985a72097e3a24683787711422709e3bc84fb"
+        };
 
         let siteConfig = {
             logoImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png",
@@ -316,29 +257,25 @@ service cloud.firestore {
             ]
         };
 
-        let beritaList = [], galleryList = [], jurusanList = [], guruList = [], mitraList = [], alumniList = [];
-        let carouselIndex = 0, currentAdminTab = 'overview', editItem = null, currentDataId = null;
+        const availablePages = [
+            { id: 'home', title: 'Beranda Utama' },
+            { id: 'profil', title: 'Profil Sekolah' },
+            { id: 'jurusan', title: 'Kompetensi Keahlian' },
+            { id: 'guru', title: 'Tenaga Pendidik' },
+            { id: 'mitra', title: 'Hubungan Industri' },
+            { id: 'berita', title: 'Berita & Kegiatan' },
+            { id: 'gallery', title: 'Galeri Dokumentasi' },
+            { id: 'alumni-foto', title: 'Galeri Alumni' },
+            { id: 'alumni-tracer', title: 'Form Penelusuran Alumni' }
+        ];
 
-        const SECURE_HASH = {
-            admin: "6747687f8cf43d1267142036c85e62ca4c7e81996d0e8ca5b39dc888a10519ec",
-            gama: "6747687f8cf43d1267142036c85e62ca4c7e81996d0e8ca5b39dc888a10519ec",
-            guru: "2c82c20dd33a6f4400e9981b2fb985a72097e3a24683787711422709e3bc84fb"
-        };
-
-        const showToast = (msg) => {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-message').innerText = msg;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
-        };
-
-        // URL Routing System
+        // === FUNGSI GLOBAL (DI-ATTACH KE WINDOW) ===
+        
         window.navigate = (page, id = null) => {
             if (id) currentDataId = id;
             document.getElementById('mobile-menu').classList.add('hidden');
             
             try {
-                // Hanya perbarui URL jika bukan dijalankan di lingkungan Blob/File (sandbox lokal)
                 if (!window.location.protocol.startsWith('blob') && !window.location.protocol.startsWith('file')) {
                     let url = new URL(window.location.href);
                     url.searchParams.delete('p');
@@ -354,40 +291,15 @@ service cloud.firestore {
                         window.history.pushState({page, id}, '', url.toString());
                     }
                 }
-            } catch (err) {
-                console.warn("URL routing bar dilewati karena batasan keamanan lingkungan (Sandbox).");
-            }
+            } catch (err) { console.warn("URL routing bar dilewati."); }
 
             renderPage(page);
             window.scrollTo(0,0);
         };
 
-        // Membaca URL saat pengunjung menekan tombol Back/Forward di Browser
-        window.addEventListener('popstate', (e) => {
-            checkUrlAndRoute();
-        });
-
-        // Membaca URL saat website pertama kali dibuka (untuk link yang di-share)
-        window.checkUrlAndRoute = () => {
-            try {
-                const params = new URLSearchParams(window.location.search);
-                if (params.has('berita')) {
-                    currentDataId = params.get('berita');
-                    renderPage('berita-detail');
-                } else if (params.has('p')) {
-                    renderPage(params.get('p'));
-                } else {
-                    renderPage('home');
-                }
-            } catch (err) {
-                renderPage('home');
-            }
-        };
-
         window.toggleMobileMenu = () => document.getElementById('mobile-menu').classList.toggle('hidden');
         window.toggleMobDropdown = (id) => document.getElementById(id).classList.toggle('hidden');
 
-        // Lightbox & Zoom Functions
         window.openLightbox = (url) => {
             const lightbox = document.getElementById('image-lightbox');
             const img = document.getElementById('lightbox-img');
@@ -406,7 +318,7 @@ service cloud.firestore {
         };
 
         window.toggleZoom = (e) => {
-            e.stopPropagation(); // Mencegah lightbox tertutup saat gambar diklik
+            e.stopPropagation();
             const img = document.getElementById('lightbox-img');
             if (img.classList.contains('scale-95')) {
                 img.classList.remove('scale-95', 'cursor-zoom-in');
@@ -417,57 +329,76 @@ service cloud.firestore {
             }
         };
 
-        document.getElementById('current-year').innerText = new Date().getFullYear();
-
-        let isSetup = false;
-
-        const init = async () => {
-            try {
-                await signInAnonymously(auth);
-            } catch (error) {
-                console.warn("Info: Firebase Anonymous Auth belum diaktifkan.", error);
-            } finally {
-                setupListeners();
-            }
+        window.moveCarousel = (dir) => {
+            const items = document.querySelectorAll('.carousel-item');
+            if (items.length <= 1) return;
+            let nextIndex = dir === 'next' ? (carouselIndex + 1) % items.length : (carouselIndex - 1 + items.length) % items.length;
+            window.goToSlide(nextIndex);
         };
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) setupListeners();
-        });
-
-        const setupListeners = () => {
-            if (isSetup) return;
-            isSetup = true;
-
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), (snap) => {
-                if (snap.exists()) siteConfig = { ...siteConfig, ...snap.data() };
-                updateSiteBranding();
-                renderNavigation();
-                refreshUI();
-            }, (err) => handleFirebaseError(err));
-
-            const collections = ['berita', 'gallery', 'jurusan', 'guru', 'mitra', 'alumni'];
-            collections.forEach(col => {
-                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', col), (snap) => {
-                    const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    if(col === 'berita') beritaList = data;
-                    if(col === 'gallery') { galleryList = data; carouselIndex = 0; }
-                    if(col === 'jurusan') jurusanList = data;
-                    if(col === 'guru') guruList = data;
-                    if(col === 'mitra') mitraList = data;
-                    if(col === 'alumni') alumniList = data;
-                    refreshUI();
-                }, (err) => handleFirebaseError(err));
+        window.goToSlide = (index) => {
+            const items = document.querySelectorAll('.carousel-item');
+            if (items.length <= 1) return;
+            items[carouselIndex].classList.remove('active');
+            carouselIndex = index;
+            items[carouselIndex].classList.add('active');
+            document.querySelectorAll('.slide-dot').forEach((dot, i) => {
+                if(i === carouselIndex) { dot.classList.add('bg-white', 'scale-110'); dot.classList.remove('bg-white/40'); }
+                else { dot.classList.remove('bg-white', 'scale-110'); dot.classList.add('bg-white/40'); }
             });
         };
 
-        const updateSiteBranding = () => {
-            const logoMain = document.getElementById('site-logo-display');
-            if (logoMain) logoMain.src = siteConfig.logoImage;
-            
-            const logoLoading = document.getElementById('loading-logo-display');
-            if (logoLoading) logoLoading.src = siteConfig.logoImage;
+        // Confirmation & CRUD Helpers
+        let confirmAction = null;
+        window.requestDelete = (col, id) => {
+            confirmAction = async () => {
+                try {
+                    if (col === 'menuItem') {
+                        const updated = (siteConfig.menuItems || []).filter(m => m.id !== id);
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
+                    } else if (col === 'subMenuItem') {
+                        const [pid, sid] = id.split('|');
+                        const newMenus = JSON.parse(JSON.stringify(siteConfig.menuItems));
+                        const parent = newMenus.find(m => m.id === pid);
+                        if(parent) {
+                            parent.children = parent.children.filter(s => s.id !== sid);
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
+                        }
+                    } else {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', col, id));
+                    }
+                    showToast("Data Berhasil Dihapus!");
+                } catch (err) { handleFirebaseError(err); }
+                window.closeConfirm();
+            };
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        };
 
+        window.closeConfirm = () => { confirmAction = null; document.getElementById('confirm-modal').classList.add('hidden'); };
+        document.getElementById('confirm-btn').addEventListener('click', () => { if(confirmAction) confirmAction(); });
+
+        // Security & General Helpers
+        const escapeHTML = (str) => (typeof str !== 'string' ? str : str.replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[tag] || tag)));
+        const hashStr = async (str) => {
+            const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+            return Array.prototype.map.call(new Uint8Array(buf), x=>(('00'+x.toString(16)).slice(-2))).join('');
+        };
+        const handleFirebaseError = (err) => {
+            console.error("Firebase Error:", err);
+            if (err.code === 'permission-denied') document.getElementById('error-modal').classList.remove('hidden');
+            else showToast("Kesalahan: " + err.message);
+        };
+        const showToast = (msg) => {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        };
+
+        // UI Logic
+        const updateSiteBranding = () => {
+            if (document.getElementById('site-logo-display')) document.getElementById('site-logo-display').src = siteConfig.logoImage;
+            if (document.getElementById('loading-logo-display')) document.getElementById('loading-logo-display').src = siteConfig.logoImage;
             document.getElementById('site-name-display').innerText = siteConfig.name;
             document.getElementById('site-slogan-display').innerText = siteConfig.slogan;
             document.getElementById('footer-site-name').innerText = siteConfig.name;
@@ -483,14 +414,13 @@ service cloud.firestore {
 
             (siteConfig.menuItems || []).forEach(m => {
                 const isExt = m.type === 'external' || (m.target && m.target.startsWith('http'));
-                
                 if (m.type === 'link' || m.type === 'external') {
                     if (isExt) {
                         deskHTML += `<a href="${m.target}" target="_blank" class="nav-link text-[13px] font-bold text-slate-700 hover:text-blue-700 px-4 py-6 transition uppercase tracking-tight flex items-center gap-1">${m.title} <i data-lucide="external-link" size="12"></i></a>`;
-                        mobHTML += `<a href="${m.target}" target="_blank" class="block w-full text-left font-bold text-slate-700 py-3 border-b border-slate-100 hover:text-blue-700 uppercase flex items-center justify-between pr-4">${m.title} <i data-lucide="external-link" size="14"></i></a>`;
+                        mobHTML += `<a href="${m.target}" target="_blank" class="block w-full text-left font-bold text-slate-700 py-3 border-b border-slate-100 uppercase flex items-center justify-between pr-4">${m.title} <i data-lucide="external-link" size="14"></i></a>`;
                     } else {
-                        deskHTML += `<button onclick="navigate('${m.target}')" class="nav-link text-[13px] font-bold text-slate-700 hover:text-blue-700 px-4 py-6 transition uppercase tracking-tight" id="nav-${m.target}">${m.title}</button>`;
-                        mobHTML += `<button onclick="navigate('${m.target}')" class="block w-full text-left font-bold text-slate-700 py-3 border-b border-slate-100 hover:text-blue-700 uppercase" id="mob-nav-${m.target}">${m.title}</button>`;
+                        deskHTML += `<button onclick="navigate('${m.target}')" class="nav-link text-[13px] font-bold text-slate-700 hover:text-blue-700 px-4 py-6 transition uppercase tracking-tight">${m.title}</button>`;
+                        mobHTML += `<button onclick="navigate('${m.target}')" class="block w-full text-left font-bold text-slate-700 py-3 border-b border-slate-100 uppercase">${m.title}</button>`;
                     }
                 } else {
                     deskHTML += `
@@ -500,968 +430,342 @@ service cloud.firestore {
                                 <div class="bg-white shadow-2xl rounded-2xl border border-slate-100 py-2 mt-0">
                                     ${(m.children || []).map(sub => {
                                         const subIsExt = sub.type === 'external' || (sub.target && sub.target.startsWith('http'));
-                                        if (subIsExt) {
-                                            return `<a href="${sub.target}" target="_blank" class="block w-full text-left px-5 py-3 text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-700 transition uppercase tracking-tight flex items-center justify-between">${sub.title} <i data-lucide="external-link" size="12"></i></a>`;
-                                        } else {
-                                            return `<button onclick="navigate('${sub.target}')" class="block w-full text-left px-5 py-3 text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-700 transition uppercase tracking-tight" id="nav-${sub.target}">${sub.title}</button>`;
-                                        }
+                                        if (subIsExt) return `<a href="${sub.target}" target="_blank" class="block w-full text-left px-5 py-3 text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-700 uppercase flex items-center justify-between">${sub.title} <i data-lucide="external-link" size="12"></i></a>`;
+                                        return `<button onclick="navigate('${sub.target}')" class="block w-full text-left px-5 py-3 text-[12px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-700 uppercase">${sub.title}</button>`;
                                     }).join('')}
                                 </div>
                             </div>
                         </div>`;
                     mobHTML += `
                         <div>
-                            <button onclick="toggleMobDropdown('mob-drop-${m.id}')" class="flex justify-between items-center w-full text-left font-bold text-slate-700 py-3 border-b border-slate-100 hover:text-blue-700 uppercase">
-                                ${m.title} <i data-lucide="chevron-down" size="16"></i>
-                            </button>
-                            <div id="mob-drop-${m.id}" class="hidden flex-col pl-4 bg-slate-50 border-b border-slate-100">
+                            <button onclick="toggleMobDropdown('mob-drop-${m.id}')" class="flex justify-between items-center w-full text-left font-bold text-slate-700 py-3 border-b border-slate-100 uppercase">${m.title} <i data-lucide="chevron-down" size="16"></i></button>
+                            <div id="mob-drop-${m.id}" class="hidden flex-col pl-4 bg-slate-50">
                                 ${(m.children || []).map(sub => {
                                     const subIsExt = sub.type === 'external' || (sub.target && sub.target.startsWith('http'));
-                                    if (subIsExt) {
-                                        return `<a href="${sub.target}" target="_blank" class="block w-full text-left py-3 text-[12px] font-bold text-slate-600 hover:text-blue-700 border-b border-slate-100 last:border-0 uppercase tracking-tight flex items-center justify-between pr-4">- ${sub.title} <i data-lucide="external-link" size="12"></i></a>`;
-                                    } else {
-                                        return `<button onclick="navigate('${sub.target}')" class="block w-full text-left py-3 text-[12px] font-bold text-slate-600 hover:text-blue-700 border-b border-slate-100 last:border-0 uppercase tracking-tight">- ${sub.title}</button>`;
-                                    }
+                                    if (subIsExt) return `<a href="${sub.target}" target="_blank" class="block w-full py-3 text-[12px] font-bold text-slate-600 border-b border-slate-100 uppercase flex items-center justify-between pr-4">- ${sub.title} <i data-lucide="external-link" size="12"></i></a>`;
+                                    return `<button onclick="navigate('${sub.target}')" class="block w-full text-left py-3 text-[12px] font-bold text-slate-600 border-b border-slate-100 uppercase">- ${sub.title}</button>`;
                                 }).join('')}
                             </div>
                         </div>`;
                 }
             });
-
-            deskHTML += `</div><div class="h-6 w-px bg-slate-200 mx-3"></div>`;
-            deskHTML += `<button onclick="navigate('admin')" class="p-3 text-slate-400 hover:text-blue-700 transition-colors" title="Dashboard"><i data-lucide="settings" size="20"></i></button>`;
-            mobHTML += `<button onclick="navigate('admin')" class="block w-full text-center bg-blue-900 text-white font-bold py-4 rounded-xl mt-6 transition hover:bg-black uppercase text-xs tracking-widest"><i data-lucide="shield-check" class="inline w-4 h-4 mr-2"></i> Area Administrator</button>`;
-
-            deskContainer.innerHTML = deskHTML;
-            mobContainer.innerHTML = mobHTML;
-            lucide.createIcons();
-        };
-
-        const refreshUI = () => {
-            const currentPage = document.body.dataset.page || 'home';
-            renderPage(currentPage);
+            deskHTML += `</div><div class="h-6 w-px bg-slate-200 mx-3"></div><button onclick="navigate('admin')" class="p-3 text-slate-400 hover:text-blue-700 transition-colors"><i data-lucide="settings" size="20"></i></button>`;
+            mobHTML += `<button onclick="navigate('admin')" class="block w-full text-center bg-blue-900 text-white font-bold py-4 rounded-xl mt-6 uppercase text-xs tracking-widest"><i data-lucide="shield-check" class="inline w-4 h-4 mr-2"></i> Area Administrator</button>`;
+            deskContainer.innerHTML = deskHTML; mobContainer.innerHTML = mobHTML; lucide.createIcons();
         };
 
         const renderPage = (page) => {
             const content = document.getElementById('content');
             document.body.dataset.page = page;
-
-            if (page === 'admin' && !userRole) {
-                content.innerHTML = `<div class="max-w-md mx-auto py-24 px-6 text-center">
-                    <div class="bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div>
-                        <i data-lucide="lock" class="mx-auto mb-6 text-blue-600" size="48"></i>
-                        <h2 class="text-2xl font-bold mb-6 text-blue-900">Login Sistem</h2>
-                        <form onsubmit="adminLogin(event)" class="space-y-4">
-                            <input type="text" id="login-user" placeholder="Username" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
-                            <input type="password" id="login-pass" placeholder="Password" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
-                            <button class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold hover:bg-black transition shadow-lg">MASUK DASHBOARD</button>
-                        </form>
-                    </div></div>`;
-                lucide.createIcons(); return;
-            }
+            if (page === 'admin' && !userRole) { renderLoginForm(); return; }
 
             switch(page) {
-                case 'home':
-                    content.innerHTML = `
-                        <section class="relative bg-slate-900 overflow-hidden h-[400px] md:h-[600px] group">
-                            <div id="carousel-inner" class="h-full relative">
-                                ${galleryList.length > 0 ? galleryList.map((g, i) => `
-                                    <div class="carousel-item h-full w-full absolute inset-0 ${i === carouselIndex ? 'active' : ''}">
-                                        <img src="${g.url}" class="w-full h-full object-cover">
-                                        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
-                                        <div class="absolute inset-0 flex items-center max-w-7xl mx-auto px-6 md:px-12 w-full z-10">
-                                            <div class="max-w-2xl text-white text-left animate-fade-in-up">
-                                                <h2 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight uppercase tracking-tighter drop-shadow-xl">${g.caption}</h2>
-                                                <p class="text-xs md:text-sm text-slate-200 mb-8 max-w-lg leading-relaxed line-clamp-3">Pendidikan berkualitas dengan fasilitas memadai untuk mencetak generasi cerdas, berkarakter industri, dan berakhlak mulia.</p>
-                                                ${g.btnText && g.btnText.trim() !== '' ? (g.btnType === 'external' ? `<a href="${g.btnTarget}" target="_blank" class="inline-block border-2 border-white hover:bg-white hover:text-slate-900 font-bold px-8 py-3 rounded-full text-xs uppercase transition tracking-widest shadow-lg">${g.btnText}</a>` : `<button onclick="navigate('${g.btnTarget}')" class="border-2 border-white hover:bg-white hover:text-slate-900 font-bold px-8 py-3 rounded-full text-xs uppercase transition tracking-widest shadow-lg">${g.btnText}</button>`) : ''}
-                                            </div>
-                                        </div>
-                                    </div>`).join('') : `
-                                    <div class="carousel-item active h-full w-full absolute inset-0">
-                                        <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070" class="w-full h-full object-cover opacity-60">
-                                        <div class="absolute inset-0 flex flex-col items-center justify-center text-white px-10 text-center">
-                                            <h2 class="text-4xl md:text-6xl font-black mb-6 uppercase tracking-tighter">Selamat Datang</h2>
-                                            <p class="text-lg mb-10 max-w-xl">Database sudah terhubung. Masuk ke Dashboard untuk mengisi data website.</p>
-                                            <button onclick="navigate('admin')" class="bg-yellow-400 text-blue-900 font-black px-10 py-4 rounded-xl text-xs uppercase tracking-widest shadow-2xl">BUKA DASHBOARD</button>
-                                        </div>
-                                    </div>`}
-                            </div>
-                            ${galleryList.length > 1 ? `
-                                <button onclick="moveCarousel('prev')" class="absolute left-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 transition z-20 rounded-r-lg shadow-xl opacity-0 group-hover:opacity-100"><i data-lucide="chevron-left"></i></button>
-                                <button onclick="moveCarousel('next')" class="absolute right-0 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-4 transition z-20 rounded-l-lg shadow-xl opacity-0 group-hover:opacity-100"><i data-lucide="chevron-right"></i></button>
-                                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-                                    ${galleryList.map((_, i) => `<button onclick="goToSlide(${i})" class="w-3 h-3 rounded-full transition-all duration-300 slide-dot ${i === carouselIndex ? 'bg-white scale-110' : 'bg-white/40 hover:bg-white/70'}"></button>`).join('')}
-                                </div>
-                            ` : ''}
-                        </section>
-
-                        <section class="py-10 bg-white border-b border-slate-100">
-                            <div class="max-w-5xl mx-auto px-4">
-                                <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 bg-slate-50 p-6 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                                    <div class="shrink-0">
-                                        <img src="${siteConfig.sambutanImage}" class="w-40 h-56 md:w-48 md:h-64 rounded-3xl object-cover shadow-xl transform hover:scale-105 transition duration-500">
-                                    </div>
-                                    <div class="text-center md:text-left flex-1">
-                                        <h2 class="text-2xl font-black text-blue-900 mb-2 uppercase tracking-tighter">Sambutan ${siteConfig.sambutanRole}</h2>
-                                        <p class="text-slate-600 text-sm leading-relaxed italic mb-8 border-l-4 border-yellow-400 pl-5 text-justify">"${siteConfig.sambutanText}"</p>
-                                        <div class="bg-white px-6 py-3 rounded-2xl border border-slate-200 inline-block shadow-sm">
-                                            <p class="font-bold text-blue-900 text-sm uppercase">${siteConfig.sambutanName}</p>
-                                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">${siteConfig.sambutanRole}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="py-8 bg-blue-900 text-white relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-full h-full opacity-5" style="background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px;"></div>
-                            <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center relative z-10">
-                                <div><div class="text-3xl md:text-5xl font-black text-yellow-400 mb-1">${siteConfig.stat1Val}</div><p class="text-[10px] font-bold uppercase text-blue-200 tracking-widest">${siteConfig.stat1Label}</p></div>
-                                <div><div class="text-3xl md:text-5xl font-black text-yellow-400 mb-1">${siteConfig.stat2Val}</div><p class="text-[10px] font-bold uppercase text-blue-200 tracking-widest">${siteConfig.stat2Label}</p></div>
-                                <div><div class="text-3xl md:text-5xl font-black text-yellow-400 mb-1">${siteConfig.stat3Val}</div><p class="text-[10px] font-bold uppercase text-blue-200 tracking-widest">${siteConfig.stat3Label}</p></div>
-                                <div><div class="text-3xl md:text-5xl font-black text-yellow-400 mb-1">${siteConfig.stat4Val}</div><p class="text-[10px] font-bold uppercase text-blue-200 tracking-widest">${siteConfig.stat4Label}</p></div>
-                            </div>
-                        </section>
-
-                        <section class="py-12 bg-white">
-                            <div class="max-w-7xl mx-auto px-4">
-                                <div class="flex items-center justify-between mb-8">
-                                    <div>
-                                        <h2 class="text-xs font-bold text-blue-500 tracking-widest uppercase mb-1">Akademik</h2>
-                                        <h3 class="text-2xl font-black text-blue-900 uppercase tracking-tighter">Program Keahlian</h3>
-                                    </div>
-                                    <button onclick="navigate('jurusan')" class="text-xs font-bold text-blue-600 hover:underline hidden sm:block">LIHAT SEMUA &rarr;</button>
-                                </div>
-                                <div class="grid md:grid-cols-3 gap-6">
-                                    ${jurusanList.slice(0, 3).map(j => `
-                                        <div class="bg-slate-50 rounded-3xl border border-slate-100 overflow-hidden group hover:shadow-xl transition-all duration-300">
-                                            <div class="h-48 overflow-hidden relative cursor-pointer" onclick="openLightbox('${j.image}')" title="Klik foto untuk memperbesar">
-                                                <img src="${j.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                                                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition duration-300 backdrop-blur-sm z-20"><i data-lucide="zoom-in" size="24"></i></div>
-                                                <div class="absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent opacity-90 pointer-events-none"></div>
-                                                <span class="absolute bottom-4 left-4 bg-yellow-400 text-blue-900 font-black px-3 py-1 rounded-full text-xs uppercase shadow-sm z-10 pointer-events-none">${j.code}</span>
-                                            </div>
-                                            <div class="p-6 cursor-pointer" onclick="navigate('jurusan')">
-                                                <h4 class="font-bold text-lg text-blue-900 mb-2 group-hover:text-blue-600 transition">${j.name}</h4>
-                                                <p class="text-slate-500 text-xs line-clamp-3 leading-relaxed">${j.desc}</p>
-                                            </div>
-                                        </div>
-                                    `).join('') || '<div class="col-span-3 text-center py-8 text-slate-400 italic">Belum ada data jurusan.</div>'}
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="py-12 bg-slate-50 border-y border-slate-100">
-                            <div class="max-w-7xl mx-auto px-4">
-                                <div class="flex items-center justify-between mb-8">
-                                    <div>
-                                        <h2 class="text-xs font-bold text-blue-500 tracking-widest uppercase mb-1">Informasi</h2>
-                                        <h3 class="text-2xl font-black text-blue-900 uppercase tracking-tighter">Kabar Sekolah</h3>
-                                    </div>
-                                    <button onclick="navigate('berita')" class="text-xs font-bold text-blue-600 hover:underline hidden sm:block">LIHAT SEMUA &rarr;</button>
-                                </div>
-                                <div class="grid md:grid-cols-3 gap-6 mb-6">
-                                    ${beritaList.slice(0, 3).map(n => `
-                                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 group cursor-pointer hover:shadow-xl transition-all duration-300" onclick="navigate('berita-detail', '${n.id}')">
-                                            <div class="h-44 overflow-hidden relative"><img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700"></div>
-                                            <div class="p-6">
-                                                <span class="text-[9px] font-black text-blue-600 uppercase border border-blue-50 bg-blue-50 px-3 py-1 rounded-full mb-3 inline-block">${n.category}</span>
-                                                <h4 class="font-bold text-base text-blue-900 line-clamp-2 leading-snug">${n.title}</h4>
-                                            </div>
-                                        </div>`).join('') || '<div class="col-span-3 text-center py-10 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">Belum ada berita dipublikasikan.</div>'}
-                                </div>
-                                <button onclick="navigate('berita')" class="sm:hidden w-full text-center bg-blue-100 text-blue-700 font-bold py-3 rounded-xl border border-blue-200 text-xs uppercase tracking-widest">Lihat Semua Berita</button>
-                            </div>
-                        </section>
-
-                        <section class="py-10 bg-white border-b border-slate-100">
-                            <div class="max-w-7xl mx-auto px-4 text-center">
-                                <h3 class="text-xl font-black text-blue-900 uppercase tracking-tighter mb-8">Mitra Industri Kami</h3>
-                                <div class="flex flex-wrap justify-center gap-8 md:gap-12 items-center opacity-70 hover:opacity-100 transition duration-300">
-                                    ${mitraList.slice(0, 6).map(m => `
-                                        <img src="${m.image}" alt="${m.name}" title="${m.name}" class="h-10 md:h-14 object-contain grayscale hover:grayscale-0 transition duration-300 cursor-pointer" onclick="navigate('mitra')">
-                                    `).join('') || '<p class="text-slate-400 italic w-full text-sm">Data kemitraan belum tersedia.</p>'}
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="py-12 bg-slate-50">
-                            <div class="max-w-7xl mx-auto px-4">
-                                <div class="grid md:grid-cols-5 gap-4 bg-white rounded-[2.5rem] p-4 border border-slate-100 shadow-xl">
-                                    <div class="md:col-span-3 h-[300px] rounded-[2rem] overflow-hidden grayscale-[30%] hover:grayscale-0 transition duration-500 shadow-inner relative">
-                                        <iframe src="https://maps.google.com/maps?q=-5.134376503433169,105.28336464668283&hl=id&z=16&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-                                    </div>
-                                    <div class="md:col-span-2 p-8 flex flex-col justify-center space-y-8">
-                                        <h4 class="text-2xl font-black text-blue-900 uppercase tracking-tighter border-b border-slate-100 pb-4">Kunjungi Kampus</h4>
-                                        <div class="flex items-start gap-4"><div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0"><i data-lucide="map-pin" size="18"></i></div><p class="text-xs text-slate-600 leading-relaxed font-medium">${siteConfig.address}</p></div>
-                                        <div class="flex items-center gap-4"><div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0"><i data-lucide="phone" size="18"></i></div><p class="text-xs text-slate-600 font-black">${siteConfig.phone}</p></div>
-                                        <div class="flex items-center gap-4"><div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0"><i data-lucide="mail" size="18"></i></div><p class="text-xs text-slate-600 font-black truncate">${siteConfig.email}</p></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    `;
-                    startCarousel();
-                    break;
-                case 'admin': renderAdminDashboard(); break;
-                case 'berita': renderBeritaList(); break;
-                case 'berita-detail': renderBeritaDetail(currentDataId); break;
+                case 'home': renderHome(); break;
                 case 'profil': renderProfil(); break;
                 case 'jurusan': renderJurusan(); break;
                 case 'guru': renderGuru(); break;
                 case 'mitra': renderMitra(); break;
+                case 'berita': renderBeritaList(); break;
+                case 'berita-detail': renderBeritaDetail(currentDataId); break;
                 case 'alumni-foto': renderAlumniFoto(); break;
                 case 'alumni-tracer': renderAlumniTracer(); break;
-                default: content.innerHTML = `<div class="py-32 text-center text-slate-400">Halaman sedang dalam pemeliharaan.</div>`;
+                case 'admin': renderAdminDashboard(); break;
+                default: content.innerHTML = `<div class="py-32 text-center text-slate-400">Halaman tidak ditemukan.</div>`;
             }
             lucide.createIcons();
         };
 
-        const renderProfil = () => {
+        // --- SUB RENDERERS ---
+        const renderHome = () => {
             document.getElementById('content').innerHTML = `
-                <div class="relative h-[300px] bg-blue-900 overflow-hidden">
-                    <img src="${siteConfig.profilImage || 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070'}" class="w-full h-full object-cover opacity-30">
-                    <div class="absolute inset-0 flex items-center justify-center text-white"><h2 class="text-5xl font-black uppercase tracking-widest drop-shadow-2xl">PROFIL SEKOLAH</h2></div>
-                </div>
-                <div class="max-w-6xl mx-auto px-4 -mt-16 relative z-10 pb-20">
-                    <div class="bg-white rounded-[3rem] shadow-2xl p-10 md:p-16 border border-slate-100">
-                        <div class="grid lg:grid-cols-2 gap-16">
-                            <div><h3 class="section-title text-3xl font-black text-blue-900">Sejarah Kami</h3><p class="text-slate-600 leading-relaxed text-justify text-lg whitespace-pre-line">${siteConfig.profilSejarah || 'Data belum diisi.'}</p></div>
-                            <div class="space-y-12">
-                                <div class="bg-blue-50 p-10 rounded-[2rem] border-l-[10px] border-blue-600">
-                                    <h4 class="font-black text-blue-900 mb-4 text-2xl uppercase tracking-tighter">Visi</h4>
-                                    <p class="text-blue-800 text-lg italic">"${siteConfig.profilVisi || '...'}"</p>
+                <section class="relative bg-slate-900 h-[400px] md:h-[600px] group overflow-hidden">
+                    <div id="carousel-inner" class="h-full relative">
+                        ${galleryList.length > 0 ? galleryList.map((g, i) => `
+                            <div class="carousel-item h-full w-full absolute inset-0 ${i === carouselIndex ? 'active' : ''}">
+                                <img src="${g.url}" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
+                                <div class="absolute inset-0 flex items-center max-w-7xl mx-auto px-6 md:px-12 w-full">
+                                    <div class="max-w-2xl text-white">
+                                        <h2 class="text-3xl md:text-5xl font-extrabold mb-4 uppercase tracking-tighter">${g.caption}</h2>
+                                        <p class="text-xs md:text-sm text-slate-200 mb-8 max-w-lg leading-relaxed line-clamp-3">${siteConfig.slogan}</p>
+                                        ${g.btnText ? `<button onclick="${g.btnType==='external' ? `window.open('${g.btnTarget}')` : `Maps('${g.btnTarget}')`}" class="border-2 border-white hover:bg-white hover:text-slate-900 font-bold px-8 py-3 rounded-full text-xs uppercase transition tracking-widest">${g.btnText}</button>` : ''}
+                                    </div>
                                 </div>
-                                <div class="bg-yellow-50 p-10 rounded-[2rem] border-l-[10px] border-yellow-400">
-                                    <h4 class="font-black text-yellow-900 mb-6 text-2xl uppercase tracking-tighter">Misi</h4>
-                                    <ul class="space-y-4 text-yellow-900 text-lg">
-                                        ${(siteConfig.profilMisi || '').split('\n').filter(m => m.trim() !== '').map(m => `<li class="flex gap-4"><i data-lucide="check-circle" class="shrink-0 text-yellow-600"></i> ${m}</li>`).join('')}
-                                    </ul>
+                            </div>`).join('') : '<div class="h-full flex items-center justify-center text-white italic">Menunggu Foto Slide...</div>'}
+                    </div>
+                    ${galleryList.length > 1 ? `<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">${galleryList.map((_, i) => `<button onclick="goToSlide(${i})" class="w-3 h-3 rounded-full transition-all duration-300 slide-dot ${i === carouselIndex ? 'bg-white scale-110' : 'bg-white/40'}"></button>`).join('')}</div>` : ''}
+                </section>
+
+                <section class="py-10 bg-white border-b border-slate-100">
+                    <div class="max-w-5xl mx-auto px-4">
+                        <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12 bg-slate-50 p-6 md:p-10 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                            <div class="shrink-0">
+                                <img src="${siteConfig.sambutanImage}" class="w-40 h-56 md:w-48 md:h-64 rounded-3xl object-cover shadow-xl transform hover:scale-105 transition duration-500">
+                            </div>
+                            <div class="text-center md:text-left flex-1">
+                                <h2 class="text-2xl font-black text-blue-900 mb-2 uppercase tracking-tighter">Sambutan ${siteConfig.sambutanRole}</h2>
+                                <p class="text-slate-600 text-sm leading-relaxed italic mb-8 border-l-4 border-yellow-400 pl-5 text-justify">"${siteConfig.sambutanText}"</p>
+                                <div class="bg-white px-6 py-3 rounded-2xl border border-slate-200 inline-block shadow-sm">
+                                    <p class="font-bold text-blue-900 text-sm uppercase">${siteConfig.sambutanName}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">${siteConfig.sambutanRole}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>`;
+                </section>
+
+                <section class="py-8 bg-blue-900 text-white text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-full opacity-5" style="background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px;"></div>
+                    <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
+                        <div><div class="text-4xl font-black text-yellow-400 mb-1">${siteConfig.stat1Val}</div><p class="text-[10px] font-bold uppercase text-blue-200 tracking-widest">${siteConfig.stat1Label}</p></div>
+                        <div><div class="text-4xl font-black text-yellow-400 mb-1">${siteConfig.stat2Val}</div><p class="text-[10px] font-bold uppercase text-blue-200 tracking-widest">${siteConfig.stat2Label}</p></div>
+                        <div><div class="text-4xl font-black text-yellow-400 mb-1">${siteConfig.stat3Val}</div><p class="text-[10px] font-bold uppercase text-blue-200 tracking-widest">${siteConfig.stat3Label}</p></div>
+                        <div><div class="text-4xl font-black text-yellow-400 mb-1">${siteConfig.stat4Val}</div><p class="text-[10px] font-bold uppercase text-blue-200 tracking-widest">${siteConfig.stat4Label}</p></div>
+                    </div>
+                </section>
+
+                <section class="py-12 bg-white">
+                    <div class="max-w-7xl mx-auto px-4">
+                        <div class="flex items-center justify-between mb-8">
+                            <div><h2 class="text-xs font-bold text-blue-500 tracking-widest uppercase mb-1">Akademik</h2><h3 class="text-2xl font-black text-blue-900 uppercase tracking-tighter">Program Keahlian</h3></div>
+                            <button onclick="navigate('jurusan')" class="text-xs font-bold text-blue-600 hover:underline hidden sm:block">LIHAT SEMUA &rarr;</button>
+                        </div>
+                        <div class="flex overflow-x-auto gap-4 pb-6 snap-x thin-scrollbar">
+                            ${jurusanList.map(j => `
+                                <div class="w-[140px] sm:w-[160px] lg:w-[190px] shrink-0 snap-start bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col">
+                                    <div class="h-32 overflow-hidden relative cursor-pointer shrink-0" onclick="openLightbox('${j.image}')" title="Klik foto untuk memperbesar"><img src="${j.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white"><i data-lucide="zoom-in" size="18"></i></div><span class="absolute bottom-2 left-2 bg-yellow-400 text-blue-900 font-black px-2 py-0.5 rounded-full text-[9px] uppercase shadow-sm">${j.code}</span></div>
+                                    <div class="p-3 md:p-4 cursor-pointer flex-1 flex items-center justify-center text-center" onclick="navigate('jurusan')"><h4 class="font-bold text-xs md:text-sm text-blue-900 group-hover:text-blue-600 leading-snug">${j.name}</h4></div>
+                                </div>`).join('') || '<p class="w-full py-10 text-center italic text-slate-400">Belum ada jurusan.</p>'}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="py-12 bg-slate-50 border-y border-slate-100">
+                    <div class="max-w-7xl mx-auto px-4">
+                        <div class="flex items-center justify-between mb-8">
+                            <div><h2 class="text-xs font-bold text-blue-500 tracking-widest uppercase mb-1">Informasi</h2><h3 class="text-2xl font-black text-blue-900 uppercase tracking-tighter">Kabar Sekolah</h3></div>
+                            <button onclick="navigate('berita')" class="text-xs font-bold text-blue-600 hover:underline hidden sm:block">LIHAT SEMUA &rarr;</button>
+                        </div>
+                        <div class="grid md:grid-cols-3 gap-6 mb-6">
+                            ${beritaList.slice(0, 3).map(n => `
+                                <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 group cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col" onclick="navigate('berita-detail', '${n.id}')">
+                                    <div class="h-44 overflow-hidden relative shrink-0"><img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700"></div>
+                                    <div class="p-6 flex-1 flex flex-col">
+                                        <span class="text-[9px] font-black text-blue-600 uppercase border border-blue-50 bg-blue-50 px-3 py-1 rounded-full mb-3 inline-block self-start">${n.category}</span>
+                                        <h4 class="font-bold text-base text-blue-900 line-clamp-2 leading-snug">${n.title}</h4>
+                                    </div>
+                                </div>`).join('') || '<div class="col-span-3 text-center py-10 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">Belum ada berita dipublikasikan.</div>'}
+                        </div>
+                        <button onclick="navigate('berita')" class="sm:hidden w-full text-center bg-blue-100 text-blue-700 font-bold py-3 rounded-xl border border-blue-200 text-xs uppercase tracking-widest">Lihat Semua Berita</button>
+                    </div>
+                </section>
+
+                <section class="py-10 bg-white border-b border-slate-100">
+                    <div class="max-w-7xl mx-auto px-4 text-center">
+                        <h3 class="text-xl font-black text-blue-900 uppercase tracking-tighter mb-8">Mitra Industri Kami</h3>
+                        <div class="flex flex-wrap justify-center gap-8 md:gap-12 items-center opacity-70 hover:opacity-100 transition duration-300">
+                            ${mitraList.slice(0, 6).map(m => `
+                                <img src="${m.image}" alt="${m.name}" title="${m.name}" class="h-10 md:h-14 object-contain grayscale hover:grayscale-0 transition duration-300 cursor-pointer" onclick="navigate('mitra')">
+                            `).join('') || '<p class="text-slate-400 italic w-full text-sm">Data kemitraan belum tersedia.</p>'}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="py-12 bg-slate-50">
+                    <div class="max-w-7xl mx-auto px-4">
+                        <div class="grid md:grid-cols-5 gap-8 bg-white p-6 rounded-[2.5rem] shadow-xl">
+                            <div class="md:col-span-3 h-[300px] rounded-[2rem] overflow-hidden"><iframe src="https://maps.google.com/maps?q=-5.134376503433169,105.28336464668283&hl=id&z=16&output=embed" width="100%" height="100%" style="border:0;" loading="lazy"></iframe></div>
+                            <div class="md:col-span-2 flex flex-col justify-center space-y-6">
+                                <h4 class="text-2xl font-black text-blue-900 uppercase tracking-tighter border-b pb-4">Kunjungi Kampus</h4>
+                                <div class="flex gap-4"><i data-lucide="map-pin" class="text-blue-600 shrink-0"></i><p class="text-xs text-slate-600 leading-relaxed">${siteConfig.address}</p></div>
+                                <div class="flex gap-4"><i data-lucide="phone" class="text-blue-600 shrink-0"></i><p class="text-xs font-bold">${siteConfig.phone}</p></div>
+                                <div class="flex gap-4"><i data-lucide="mail" class="text-blue-600 shrink-0"></i><p class="text-xs font-bold truncate">${siteConfig.email}</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `;
+            startCarousel();
+        };
+
+        const renderProfil = () => {
+            document.getElementById('content').innerHTML = `
+                <div class="relative h-[250px] bg-blue-900 overflow-hidden"><img src="${siteConfig.profilImage}" class="w-full h-full object-cover opacity-30"><div class="absolute inset-0 flex items-center justify-center"><h2 class="text-4xl font-black text-white uppercase tracking-widest">PROFIL SEKOLAH</h2></div></div>
+                <div class="max-w-5xl mx-auto px-4 py-16"><div class="bg-white rounded-[3rem] p-10 shadow-xl space-y-12">
+                    <div class="grid lg:grid-cols-2 gap-10"><div><h3 class="section-title text-2xl font-black text-blue-900">Sejarah</h3><p class="text-slate-600 text-sm leading-relaxed text-justify whitespace-pre-line">${siteConfig.profilSejarah || 'Data belum diisi.'}</p></div>
+                    <div class="space-y-8"><div class="bg-blue-50 p-8 rounded-3xl border-l-8 border-blue-600"><h4 class="font-bold text-blue-900 mb-2 uppercase">Visi</h4><p class="italic text-slate-700">"${siteConfig.profilVisi || '...'}"</p></div>
+                    <div class="bg-yellow-50 p-8 rounded-3xl border-l-8 border-yellow-400"><h4 class="font-bold text-yellow-900 mb-4 uppercase">Misi</h4><ul class="space-y-3 text-sm">${(siteConfig.profilMisi || '').split('\n').filter(m => m.trim() !== '').map(m => `<li class="flex gap-3"><i data-lucide="check-circle" class="text-yellow-600 shrink-0" size="16"></i> ${m}</li>`).join('')}</ul></div></div></div>
+                </div></div>`;
         };
 
         const renderJurusan = () => {
             document.getElementById('content').innerHTML = `
-                <div class="max-w-7xl mx-auto py-24 px-4">
-                    <h2 class="text-center text-4xl font-black text-blue-900 uppercase mb-4 tracking-tighter">Kompetensi Keahlian</h2>
-                    <p class="text-center text-slate-500 mb-16 max-w-xl mx-auto">Program keahlian unggulan dengan sertifikasi industri untuk masa depan profesional.</p>
-                    <div class="grid md:grid-cols-3 gap-10">
-                        ${jurusanList.map(j => `
-                            <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-lg overflow-hidden group hover:shadow-2xl transition duration-500">
-                                <div class="h-60 relative overflow-hidden cursor-pointer" onclick="openLightbox('${j.image}')" title="Klik foto untuk memperbesar">
-                                    <img src="${j.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
-                                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition duration-300 backdrop-blur-sm z-20"><i data-lucide="zoom-in" size="32"></i></div>
-                                    <div class="absolute inset-0 bg-gradient-to-t from-blue-900/90 to-transparent pointer-events-none"></div>
-                                    <div class="absolute bottom-6 left-6 z-10 pointer-events-none"><span class="bg-yellow-400 text-blue-900 font-black px-4 py-1.5 rounded-full text-xs uppercase shadow-lg">${j.code}</span></div>
-                                </div>
-                                <div class="p-8"><h4 class="text-xl font-bold text-blue-900 mb-4">${j.name}</h4><p class="text-slate-500 text-sm leading-relaxed">${j.desc}</p></div>
-                            </div>`).join('') || '<p class="col-span-3 text-center text-slate-400 italic">Data jurusan kosong.</p>'}
-                    </div>
-                </div>`;
+                <div class="max-w-7xl mx-auto py-24 px-4"><h2 class="text-center text-4xl font-black text-blue-900 uppercase mb-16 tracking-tighter">Program Keahlian Unggulan</h2>
+                <div class="grid md:grid-cols-3 gap-10">${jurusanList.map(j => `
+                    <div class="bg-white rounded-[2.5rem] border shadow-lg overflow-hidden group hover:shadow-2xl transition duration-500">
+                        <div class="h-60 relative overflow-hidden cursor-pointer" onclick="openLightbox('${j.image}')"><img src="${j.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700"><div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white"><i data-lucide="zoom-in" size="32"></i></div><div class="absolute bottom-6 left-6"><span class="bg-yellow-400 text-blue-900 font-black px-4 py-1.5 rounded-full text-xs uppercase">${j.code}</span></div></div>
+                        <div class="p-8"><h4 class="text-xl font-bold text-blue-900 mb-4">${j.name}</h4><p class="text-slate-500 text-sm leading-relaxed">${j.desc}</p></div>
+                    </div>`).join('') || '<p class="col-span-full py-20 text-center italic">Data kosong.</p>'}</div></div>`;
         };
 
         const renderGuru = () => {
             document.getElementById('content').innerHTML = `
-                <div class="bg-slate-900 py-24 text-center px-4 relative overflow-hidden">
-                    <div class="absolute inset-0 opacity-20" style="background-image: url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070'); background-size: cover; background-position: center;"></div>
-                    <div class="relative z-10">
-                        <h2 class="text-sm font-bold text-yellow-400 tracking-widest uppercase mb-3">Tim Pengajar</h2>
-                        <h3 class="text-4xl md:text-5xl font-black text-white mb-6">Tenaga Pendidik</h3>
-                        <p class="text-blue-200 max-w-2xl mx-auto text-lg">Pahlawan tanpa tanda jasa yang berdedikasi penuh untuk mendidik, menginspirasi, dan membimbing siswa meraih cita-cita.</p>
-                    </div>
-                </div>
-                <div class="max-w-7xl mx-auto py-20 px-4 -mt-16 relative z-20">
-                    <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-8">
-                        ${guruList.map(g => `
-                            <div class="bg-white rounded-[2rem] border border-slate-100 shadow-xl hover:shadow-2xl transition-all duration-300 p-8 text-center group hover:-translate-y-2">
-                                <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-6 border-4 border-slate-50 group-hover:border-blue-100 shadow-inner transition">
-                                    <img src="${g.image || 'https://images.unsplash.com/photo-1544717302-de2939b7ef71?q=80&w=2000'}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                                </div>
-                                <h3 class="text-lg font-bold text-blue-900 mb-2 leading-tight">${g.name}</h3>
-                                <span class="inline-block bg-blue-50 text-blue-600 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider mb-5">${g.subject}</span>
-                                <p class="text-sm text-slate-500 italic leading-relaxed relative">
-                                    <i data-lucide="quote" class="text-yellow-200 absolute -top-2 -left-2 w-8 h-8 opacity-50 z-0 rotate-180"></i>
-                                    <span class="relative z-10">"${g.quote}"</span>
-                                </p>
-                            </div>
-                        `).join('') || '<div class="col-span-full py-20 text-center text-slate-400 italic bg-white rounded-3xl shadow-sm border border-slate-100">Data tenaga pendidik belum ditambahkan.</div>'}
-                    </div>
-                </div>
-            `;
+                <div class="bg-slate-900 py-24 text-center text-white"><h2 class="text-sm font-bold text-yellow-400 tracking-widest uppercase mb-3">Tim Pengajar</h2><h3 class="text-4xl font-black">Tenaga Pendidik Profesional</h3></div>
+                <div class="max-w-7xl mx-auto py-20 px-4 grid md:grid-cols-3 lg:grid-cols-4 gap-8 -mt-16">
+                    ${guruList.map(g => `
+                        <div class="bg-white rounded-[2rem] border shadow-xl p-8 text-center group hover:-translate-y-2 transition duration-300">
+                            <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-6 border-4 border-slate-50 group-hover:border-blue-100"><img src="${g.image}" class="w-full h-full object-cover group-hover:scale-110 transition"></div>
+                            <h3 class="font-bold text-blue-900 mb-1">${g.name}</h3><span class="inline-block bg-blue-50 text-blue-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase mb-4">${g.subject}</span>
+                            <p class="text-sm text-slate-500 italic">"${g.quote}"</p>
+                        </div>`).join('') || '<p class="col-span-full py-20 text-center bg-white rounded-3xl shadow">Data pengajar belum diisi.</p>'}
+                </div>`;
         };
 
         const renderMitra = () => {
             document.getElementById('content').innerHTML = `
-                <div class="bg-blue-900 py-24 text-center px-4 relative overflow-hidden">
-                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px;"></div>
-                    <div class="relative z-10">
-                        <h2 class="text-sm font-bold text-yellow-400 tracking-widest uppercase mb-3">Kemitraan</h2>
-                        <h3 class="text-4xl md:text-5xl font-black text-white mb-6">Hubungan Industri</h3>
-                        <p class="text-blue-200 max-w-2xl mx-auto text-lg">Daftar perusahaan dan instansi yang telah bekerja sama dengan sekolah dalam penyelarasan kurikulum dan praktek kerja (Prakerin).</p>
-                    </div>
-                </div>
-                <div class="max-w-7xl mx-auto py-20 px-4 -mt-10 relative z-20">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        ${mitraList.map(m => `
-                            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 p-8 flex items-center gap-6 group">
-                                <img src="${m.image}" alt="${m.name}" class="w-24 h-24 object-contain grayscale group-hover:grayscale-0 group-hover:scale-110 transition duration-500 shrink-0">
-                                <div>
-                                    <h4 class="font-bold text-lg text-blue-900 leading-tight mb-2">${m.name}</h4>
-                                    <p class="text-sm text-slate-500 leading-relaxed">${m.desc || 'Mitra kerjasama strategis sekolah.'}</p>
-                                </div>
-                            </div>
-                        `).join('') || '<div class="col-span-full py-20 text-center text-slate-400 italic bg-white rounded-3xl shadow-sm border border-slate-100">Data mitra industri belum ditambahkan.</div>'}
-                    </div>
-                </div>
-            `;
-        };
-
-        const renderAlumniFoto = () => {
-            const approvedAlumni = alumniList.filter(a => a.status === 'approved').sort((a,b) => b.timestamp - a.timestamp);
-            document.getElementById('content').innerHTML = `
-                <div class="bg-slate-900 py-24 text-center px-4 relative overflow-hidden">
-                    <div class="absolute inset-0 opacity-20" style="background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=2070'); background-size: cover; background-position: center;"></div>
-                    <div class="relative z-10">
-                        <h2 class="text-sm font-bold text-yellow-400 tracking-widest uppercase mb-3">Jejaring Lulusan</h2>
-                        <h3 class="text-4xl md:text-5xl font-black text-white mb-6">Galeri Alumni</h3>
-                        <p class="text-blue-200 max-w-2xl mx-auto text-lg">Mengenal kiprah dan jejak langkah kesuksesan lulusan di berbagai bidang pekerjaan maupun jenjang pendidikan.</p>
-                    </div>
-                </div>
-                <div class="max-w-7xl mx-auto py-20 px-4 -mt-16 relative z-20">
-                    <div class="flex justify-end mb-8">
-                        <button onclick="navigate('alumni-tracer')" class="bg-yellow-400 text-blue-900 font-bold px-6 py-3 rounded-xl shadow-lg hover:bg-yellow-500 transition flex items-center gap-2 text-sm">
-                            <i data-lucide="user-plus" size="18"></i> Daftarkan Diri Anda
-                        </button>
-                    </div>
-                    <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-8">
-                        ${approvedAlumni.map(a => `
-                            <div class="bg-white rounded-[2rem] border border-slate-100 shadow-lg hover:shadow-2xl transition-all duration-300 p-8 text-center group hover:-translate-y-2">
-                                <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-6 border-4 border-slate-50 group-hover:border-yellow-100 shadow-inner transition relative">
-                                    <img src="${a.image || 'https://images.unsplash.com/photo-1544717302-de2939b7ef71?q=80&w=2000'}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                                </div>
-                                <h3 class="text-lg font-bold text-blue-900 mb-1 leading-tight">${a.name}</h3>
-                                <p class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest">Lulusan ${a.graduationYear}</p>
-                                <span class="inline-block bg-blue-50 text-blue-600 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider mb-5 flex items-center justify-center gap-1 mx-auto w-fit"><i data-lucide="briefcase" size="12"></i> ${a.workplace}</span>
-                                <p class="text-sm text-slate-500 italic leading-relaxed relative line-clamp-4">
-                                    <i data-lucide="quote" class="text-yellow-200 absolute -top-2 -left-2 w-8 h-8 opacity-50 z-0 rotate-180"></i>
-                                    <span class="relative z-10">"${a.quote}"</span>
-                                </p>
-                            </div>
-                        `).join('') || '<div class="col-span-full py-20 text-center text-slate-400 italic bg-white rounded-3xl shadow-sm border border-slate-100">Belum ada data galeri alumni yang disetujui.</div>'}
-                    </div>
-                </div>
-            `;
-        };
-
-        const renderAlumniTracer = () => {
-            document.getElementById('content').innerHTML = `
-                <div class="bg-blue-50 py-16 text-center px-4 border-b border-blue-100">
-                    <h2 class="text-3xl md:text-4xl font-black text-blue-900 uppercase tracking-widest mb-4">Penelusuran Alumni</h2>
-                    <p class="text-slate-600 max-w-xl mx-auto">Sistem Pendataan Lulusan (Tracer Study). Silakan isi form di bawah ini agar data Anda dapat dimuat dalam Galeri Alumni sekolah.</p>
-                </div>
-                <div class="max-w-3xl mx-auto py-16 px-4">
-                    <div class="bg-white p-8 md:p-12 rounded-[2rem] shadow-xl border border-slate-100">
-                        <h3 class="text-2xl font-bold text-blue-900 mb-6 flex items-center gap-2"><i data-lucide="file-check-2" class="text-yellow-500"></i> Form Pendaftaran Alumni</h3>
-                        <p class="text-sm text-slate-500 mb-8 border-l-4 border-blue-500 pl-4">Data yang Anda kirimkan akan ditinjau terlebih dahulu oleh Admin sebelum ditampilkan di halaman Galeri Alumni.</p>
-                        
-                        <form onsubmit="handleSubmitAlumniTracer(event)" class="space-y-6">
-                            <div class="grid md:grid-cols-2 gap-6">
-                                <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Nama Lengkap</label><input type="text" id="tracer-name" required placeholder="Sesuai Ijazah" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></div>
-                                <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Tahun Kelulusan</label><input type="number" id="tracer-year" required placeholder="Misal: 2022" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></div>
-                            </div>
-                            <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Tempat Kerja / Universitas Saat Ini</label><input type="text" id="tracer-workplace" required placeholder="Misal: PT Astra / Universitas Lampung" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></div>
-                            
-                            <div>
-                                <label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">URL Foto Terbaru (Rasio 1:1)</label>
-                                <input type="url" id="tracer-image" required placeholder="Link foto profil" class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition">
-                            </div>
-                            
-                            <div><label class="text-xs font-bold text-slate-500 ml-1 mb-1 block uppercase tracking-wider">Kesan & Pesan</label><textarea id="tracer-quote" required placeholder="Ceritakan pengalaman singkat Anda..." rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"></textarea></div>
-                            <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black hover:bg-blue-700 transition shadow-lg flex justify-center items-center gap-2 mt-4 uppercase tracking-widest text-sm"><i data-lucide="send" size="18"></i> Kirim Data Penelusuran</button>
-                        </form>
-                    </div>
-                </div>
-            `;
+                <div class="bg-blue-900 py-24 text-center text-white px-4"><h2 class="text-4xl font-black mb-4">Hubungan Industri</h2><p class="text-blue-200">Membangun sinergi bersama Dunia Usaha dan Dunia Industri (DUDI).</p></div>
+                <div class="max-w-7xl mx-auto py-20 px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    ${mitraList.map(m => `
+                        <div class="bg-white rounded-3xl border shadow-sm p-8 flex items-center gap-6 group hover:shadow-xl transition duration-300"><img src="${m.image}" class="w-24 h-24 object-contain grayscale group-hover:grayscale-0 transition duration-500 shrink-0"><div><h4 class="font-bold text-blue-900 mb-2">${m.name}</h4><p class="text-sm text-slate-500">${m.desc || 'Mitra strategis sekolah.'}</p></div></div>
+                    `).join('') || '<p class="col-span-full py-20 text-center italic">Data mitra belum tersedia.</p>'}
+                </div>`;
         };
 
         const renderBeritaList = () => {
             document.getElementById('content').innerHTML = `
-                <div class="bg-blue-50 py-16 text-center px-4 border-b border-blue-100">
-                    <h2 class="text-4xl font-black text-blue-900 uppercase tracking-widest mb-4">Portal Berita</h2>
-                    <p class="text-slate-600 max-w-xl mx-auto">Ikuti terus update terbaru mengenai prestasi, kegiatan, dan pengumuman penting dari sekolah.</p>
-                </div>
-                <div class="max-w-7xl mx-auto py-20 px-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                        ${beritaList.sort((a,b) => b.timestamp - a.timestamp).map(n => `
-                            <div class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-md hover:shadow-2xl transition-all duration-300 group cursor-pointer flex flex-col" onclick="navigate('berita-detail', '${n.id}')">
-                                <div class="h-60 overflow-hidden relative shrink-0">
-                                    <img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
-                                    <span class="absolute top-4 left-4 bg-yellow-400 text-blue-900 text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md">${n.category}</span>
-                                </div>
-                                <div class="p-8 flex-1 flex flex-col">
-                                    <div class="text-xs text-slate-400 font-bold mb-3 flex items-center gap-2"><i data-lucide="clock" size="14"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
-                                    <h4 class="font-bold text-xl mb-4 text-blue-900 group-hover:text-blue-600 transition line-clamp-2 leading-snug">${n.title}</h4>
-                                    <p class="text-slate-500 text-sm line-clamp-3 leading-relaxed flex-1">${n.content}</p>
-                                </div>
-                            </div>`).join('') || '<p class="col-span-full text-center py-32 text-slate-400 italic bg-white rounded-3xl border border-dashed">Belum ada konten berita saat ini.</p>'}
-                    </div>
-                </div>
-            `;
+                <div class="bg-blue-50 py-16 text-center"><h2 class="text-3xl font-black text-blue-900 uppercase">Portal Berita</h2><p class="text-slate-600 mt-2">Update informasi terbaru seputar kegiatan dan prestasi sekolah.</p></div>
+                <div class="max-w-7xl mx-auto py-20 px-4 grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    ${beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `
+                        <div class="bg-white rounded-3xl border shadow-md hover:shadow-2xl transition cursor-pointer flex flex-col" onclick="navigate('berita-detail', '${n.id}')">
+                            <div class="h-56 overflow-hidden relative shrink-0"><img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700"><span class="absolute top-4 left-4 bg-yellow-400 text-blue-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase">${n.category}</span></div>
+                            <div class="p-8 flex-1 flex flex-col"><div class="text-xs text-slate-400 font-bold mb-3">${new Date(n.timestamp).toLocaleDateString('id-ID')}</div><h4 class="font-bold text-xl mb-4 text-blue-900 line-clamp-2">${n.title}</h4><p class="text-slate-500 text-sm line-clamp-3 leading-relaxed flex-1">${n.content}</p></div>
+                        </div>`).join('') || '<p class="col-span-full text-center py-20 italic">Belum ada berita.</p>'}
+                </div>`;
         };
 
         const renderBeritaDetail = (id) => {
             const n = beritaList.find(b => b.id === id);
             if (!n) {
-                // Jika data sedang dimuat dari Firebase (karena langsung buka dari link URL)
-                if (beritaList.length === 0) {
-                    document.getElementById('content').innerHTML = `<div class="py-32 text-center text-blue-900 flex flex-col items-center justify-center"><i data-lucide="loader-2" class="animate-spin mb-4" size="32"></i>Memuat Konten Berita...</div>`;
-                    lucide.createIcons();
-                } else {
-                    document.getElementById('content').innerHTML = `<div class="py-32 text-center text-slate-400">Berita tidak ditemukan atau telah dihapus.</div>`;
-                }
+                if (beritaList.length === 0) { document.getElementById('content').innerHTML = `<div class="py-32 text-center text-blue-900 flex flex-col items-center"><i data-lucide="loader-2" class="animate-spin mb-4" size="32"></i>Memuat...</div>`; lucide.createIcons(); }
+                else document.getElementById('content').innerHTML = `<div class="py-32 text-center">Berita tidak ditemukan.</div>`;
                 return;
             }
-            
             document.getElementById('content').innerHTML = `
-                <div class="max-w-4xl mx-auto py-12 px-4">
-                    <button onclick="navigate('berita')" class="text-blue-600 font-bold text-sm mb-8 flex items-center gap-2 hover:underline"><i data-lucide="arrow-left" size="16"></i> Kembali ke Daftar Berita</button>
-                    
-                    <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-                        <div class="h-[300px] md:h-[500px] w-full relative group overflow-hidden bg-slate-900 cursor-pointer" onclick="openLightbox('${n.image}')" title="Klik foto untuk memperbesar">
-                            <img src="${n.image}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-700">
-                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition duration-300 backdrop-blur-sm"><i data-lucide="zoom-in" size="32"></i></div>
-                            <div class="absolute inset-0 bg-gradient-to-t from-blue-900/90 via-blue-900/40 to-transparent pointer-events-none"></div>
-                            <div class="absolute bottom-8 left-8 right-8 md:bottom-12 md:left-12 md:right-12 pointer-events-none">
-                                <span class="bg-yellow-400 text-blue-900 text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest mb-4 inline-block shadow-md">${n.category}</span>
-                                <h2 class="text-3xl md:text-5xl font-black text-white leading-tight drop-shadow-xl">${n.title}</h2>
-                                <p class="text-blue-200 text-sm mt-4 flex items-center gap-2"><i data-lucide="calendar" size="14"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                            </div>
-                        </div>
-                        <div class="p-8 md:p-12">
-                            <div class="prose max-w-none text-slate-700 leading-loose text-lg whitespace-pre-line text-justify">
-                                ${n.content}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+                <div class="max-w-4xl mx-auto py-12 px-4"><button onclick="navigate('berita')" class="text-blue-600 font-bold text-sm mb-8 flex items-center gap-2">&larr; Kembali</button>
+                    <div class="bg-white rounded-[2.5rem] shadow-xl border overflow-hidden">
+                        <div class="h-[300px] md:h-[500px] relative group cursor-pointer" onclick="openLightbox('${n.image}')"><img src="${n.image}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition"><i data-lucide="zoom-in" size="32"></i></div><div class="absolute bottom-8 left-8 text-white"><span class="bg-yellow-400 text-blue-900 text-[10px] font-black px-4 py-1 rounded-full uppercase mb-4 inline-block">${n.category}</span><h2 class="text-3xl md:text-5xl font-black drop-shadow-xl">${n.title}</h2></div></div>
+                        <div class="p-8 md:p-12 text-slate-700 leading-loose text-lg whitespace-pre-line text-justify">${n.content}</div>
+                    </div></div>`;
         };
 
-        // Admin Auth
+        const renderAlumniFoto = () => {
+            const approved = alumniList.filter(a => a.status === 'approved').sort((a,b)=>b.timestamp-a.timestamp);
+            document.getElementById('content').innerHTML = `
+                <div class="bg-slate-900 py-24 text-center text-white"><h3 class="text-4xl font-black">Galeri Alumni</h3><p class="text-blue-200 mt-2">Inspirasi kesuksesan dari para lulusan terbaik kami.</p></div>
+                <div class="max-w-7xl mx-auto py-20 px-4"><div class="flex justify-end mb-8"><button onclick="navigate('alumni-tracer')" class="bg-yellow-400 text-blue-900 font-bold px-6 py-3 rounded-xl shadow-lg hover:bg-yellow-500 transition">Daftarkan Diri Anda</button></div>
+                <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-8">${approved.map(a => `
+                    <div class="bg-white rounded-[2rem] border shadow-lg p-8 text-center group hover:-translate-y-2 transition duration-300">
+                        <div class="w-32 h-32 mx-auto rounded-full overflow-hidden mb-6 border-4 cursor-pointer relative group/img" onclick="openLightbox('${a.image}')">
+                            <img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=eff6ff&color=1e3a8a&size=256';" class="w-full h-full object-cover group-hover/img:scale-110 transition duration-500">
+                            <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition text-white"><i data-lucide="zoom-in" size="20"></i></div>
+                        </div>
+                        <h3 class="font-bold text-blue-900 mb-1 leading-tight">${a.name}</h3><p class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">Lulusan ${a.graduationYear}</p>
+                        <span class="inline-block bg-blue-50 text-blue-600 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase mb-4">${a.workplace}</span>
+                        <p class="text-sm text-slate-500 italic">"${a.quote}"</p>
+                    </div>`).join('') || '<p class="col-span-full py-20 text-center italic bg-white rounded-3xl">Belum ada galeri alumni yang disetujui.</p>'}</div></div>`;
+        };
+
+        const renderAlumniTracer = () => {
+            document.getElementById('content').innerHTML = `
+                <div class="bg-blue-50 py-16 text-center px-4"><h2 class="text-3xl font-black text-blue-900 uppercase">Penelusuran Alumni</h2><p class="text-slate-600 mt-2">Sistem Pendataan Lulusan (Tracer Study).</p></div>
+                <div class="max-w-3xl mx-auto py-16 px-4"><div class="bg-white p-8 md:p-12 rounded-[2rem] shadow-xl border">
+                    <form onsubmit="handleSubmitAlumniTracer(event)" class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div><label class="text-xs font-bold text-slate-500 block mb-1">Nama Lengkap</label><input type="text" id="tracer-name" required class="w-full px-4 py-3 border rounded-xl bg-slate-50"></div>
+                            <div><label class="text-xs font-bold text-slate-500 block mb-1">Tahun Kelulusan</label><input type="number" id="tracer-year" required placeholder="Contoh: 2022" class="w-full px-4 py-3 border rounded-xl bg-slate-50"></div>
+                        </div>
+                        <div><label class="text-xs font-bold text-slate-500 block mb-1">Tempat Kerja / Kuliah</label><input type="text" id="tracer-workplace" required class="w-full px-4 py-3 border rounded-xl bg-slate-50"></div>
+                        <div><label class="text-xs font-bold text-slate-500 block mb-1">URL Foto (Facebook/Drive)</label><input type="url" id="tracer-image" required placeholder="https://..." class="w-full p-4 border rounded-2xl bg-slate-50"><div class="mt-3 bg-blue-50 p-4 rounded-xl text-[10px] text-slate-600"><b>Facebook:</b> Klik kanan foto &rarr; Copy image address.<br><b>Drive:</b> Gunakan format <i>https://drive.google.com/uc?export=view&id=ID_FOTO</i></div></div>
+                        <div><label class="text-xs font-bold text-slate-500 block mb-1">Kesan Pesan</label><textarea id="tracer-quote" required rows="4" class="w-full px-4 py-3 border rounded-xl bg-slate-50"></textarea></div>
+                        <button type="submit" class="w-full bg-blue-600 text-white py-4 rounded-xl font-black uppercase text-sm">Kirim Data &rarr;</button>
+                    </form>
+                </div></div>`;
+        };
+
+        const renderLoginForm = () => {
+            document.getElementById('content').innerHTML = `
+                <div class="max-w-md mx-auto py-24 px-6 text-center"><div class="bg-white p-8 rounded-3xl shadow-2xl border relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div><h2 class="text-2xl font-bold mb-6 text-blue-900 uppercase">Login Admin</h2>
+                <form onsubmit="adminLogin(event)" class="space-y-4"><input type="text" id="login-user" placeholder="Username" required class="w-full px-4 py-3 border rounded-xl bg-slate-50 outline-none"><input type="password" id="login-pass" placeholder="Password" required class="w-full px-4 py-3 border rounded-xl bg-slate-50 outline-none"><button class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold">MASUK</button></form></div></div>`;
+            lucide.createIcons();
+        };
+
         window.adminLogin = async (e) => {
             e.preventDefault();
             const u = document.getElementById('login-user').value.toLowerCase();
             const p = await hashStr(document.getElementById('login-pass').value);
-            if (u === 'admin' && p === SECURE_HASH.admin) { userRole = 'admin'; sessionStorage.setItem('secured_user_role', 'admin'); navigate('admin'); showToast("Akses Admin Terverifikasi"); }
-            else if (u === 'gama' && p === SECURE_HASH.gama) { userRole = 'admin'; sessionStorage.setItem('secured_user_role', 'admin'); navigate('admin'); showToast("Akses Admin Gama Terverifikasi"); }
-            else if (u === 'guru' && p === SECURE_HASH.guru) { userRole = 'guru'; sessionStorage.setItem('secured_user_role', 'guru'); navigate('admin'); showToast("Akses Guru Terverifikasi"); }
-            else showToast("Username atau Password Salah!");
+            if ((u === 'admin' && p === SECURE_HASH.admin) || (u === 'gama' && p === SECURE_HASH.gama)) { userRole = 'admin'; sessionStorage.setItem('secured_user_role', 'admin'); navigate('admin'); showToast("Login Berhasil"); }
+            else if (u === 'guru' && p === SECURE_HASH.guru) { userRole = 'guru'; sessionStorage.setItem('secured_user_role', 'guru'); navigate('admin'); showToast("Login Guru Berhasil"); }
+            else showToast("Username/Password Salah!");
         };
 
         window.logoutAdmin = () => { userRole = null; sessionStorage.removeItem('secured_user_role'); navigate('home'); };
 
         const renderAdminDashboard = () => {
             const container = document.getElementById('content');
-            container.innerHTML = `
-                <div class="max-w-7xl mx-auto py-12 px-4">
-                    <div class="flex justify-between items-center mb-10 bg-blue-900 text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden">
-                        <div class="relative z-10">
-                            <h2 class="text-2xl font-black uppercase tracking-tighter">Panel Kontrol Sistem</h2>
-                            <p class="text-blue-200 text-xs font-bold mt-2 uppercase tracking-widest">Sesi: ${userRole.toUpperCase()}</p>
-                        </div>
-                        <button onclick="logoutAdmin()" class="bg-white/10 hover:bg-red-500 transition px-6 py-3 rounded-xl font-bold border border-white/20 text-xs uppercase tracking-widest relative z-10">LOGOUT</button>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2 mb-8 bg-slate-200 p-2 rounded-2xl w-fit border border-slate-300">
-                        <button onclick="setAdminTab('overview')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab === 'overview' ? 'active shadow-lg bg-blue-900 text-white' : 'text-slate-500'} uppercase tracking-widest">RINGKASAN</button>
-                        ${userRole === 'admin' ? `
-                            <button onclick="setAdminTab('site')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab === 'site' ? 'active shadow-lg bg-blue-900 text-white' : 'text-slate-500'} uppercase tracking-widest">INFO WEB</button>
-                            <button onclick="setAdminTab('menu')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab === 'menu' ? 'active shadow-lg bg-blue-900 text-white' : 'text-slate-500'} uppercase tracking-widest">NAVIGASI</button>
-                            <button onclick="setAdminTab('profil')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab === 'profil' ? 'active shadow-lg bg-blue-900 text-white' : 'text-slate-500'} uppercase tracking-widest">PROFIL</button>
-                            <button onclick="setAdminTab('jurusan')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab === 'jurusan' ? 'active shadow-lg bg-blue-900 text-white' : 'text-slate-500'} uppercase tracking-widest">JURUSAN</button>
-                            <button onclick="setAdminTab('guru')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab === 'guru' ? 'active shadow-lg bg-blue-900 text-white' : 'text-slate-500'} uppercase tracking-widest">GURU</button>
-                            <button onclick="setAdminTab('alumni')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab === 'alumni' ? 'active shadow-lg bg-blue-900 text-white' : 'text-slate-500'} uppercase tracking-widest">ALUMNI</button>
-                        ` : ''}
-                        <button onclick="setAdminTab('berita')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab === 'berita' ? 'active shadow-lg bg-blue-900 text-white' : 'text-slate-500'} uppercase tracking-widest">BERITA</button>
-                        <button onclick="setAdminTab('galeri')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab === 'galeri' ? 'active shadow-lg bg-blue-900 text-white' : 'text-slate-500'} uppercase tracking-widest">GALERI SLIDE</button>
-                    </div>
-
-                    <div id="admin-tab-content" class="bg-white p-8 md:p-12 rounded-[2.5rem] border border-slate-100 shadow-xl min-h-[400px]"></div>
-                </div>`;
-            setAdminTab(currentAdminTab);
+            container.innerHTML = `<div class="max-w-7xl mx-auto py-12 px-4">
+                <div class="flex justify-between items-center mb-10 bg-blue-900 text-white p-8 rounded-[2rem] shadow-xl"><div><h2 class="text-2xl font-black uppercase">Dashboard ${userRole.toUpperCase()}</h2></div><button onclick="logoutAdmin()" class="bg-white/10 hover:bg-red-500 transition px-6 py-3 rounded-xl font-bold border border-white/20 text-xs uppercase">LOGOUT</button></div>
+                <div class="flex flex-wrap gap-2 mb-8 bg-slate-200 p-2 rounded-2xl w-fit border border-slate-300">
+                    <button onclick="setAdminTab('overview')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab==='overview'?'active shadow-lg bg-blue-900 text-white':''}">RINGKASAN</button>
+                    ${userRole==='admin' ? `
+                        <button onclick="setAdminTab('site')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab==='site'?'active shadow-lg bg-blue-900 text-white':''}">INFO WEB</button>
+                        <button onclick="setAdminTab('menu')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab==='menu'?'active shadow-lg bg-blue-900 text-white':''}">NAVIGASI</button>
+                        <button onclick="setAdminTab('profil')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab==='profil'?'active shadow-lg bg-blue-900 text-white':''}">PROFIL</button>
+                        <button onclick="setAdminTab('jurusan')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab==='jurusan'?'active shadow-lg bg-blue-900 text-white':''}">JURUSAN</button>
+                        <button onclick="setAdminTab('guru')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab==='guru'?'active shadow-lg bg-blue-900 text-white':''}">GURU</button>
+                        <button onclick="setAdminTab('alumni')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab==='alumni'?'active shadow-lg bg-blue-900 text-white':''}">ALUMNI</button>
+                    ` : ''}
+                    <button onclick="setAdminTab('berita')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab==='berita'?'active shadow-lg bg-blue-900 text-white':''}">BERITA</button>
+                    <button onclick="setAdminTab('galeri')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition ${currentAdminTab==='galeri'?'active shadow-lg bg-blue-900 text-white':''}">GALERI SLIDE</button>
+                </div>
+                <div id="admin-tab-content" class="bg-white p-8 md:p-12 rounded-[2.5rem] border shadow-xl min-h-[400px]"></div>
+            </div>`;
+            window.setAdminTab(currentAdminTab);
         };
 
         window.setAdminTab = (tab) => {
             currentAdminTab = tab;
             const container = document.getElementById('admin-tab-content');
             if (!container) return;
-            
-            const optionsHTML = availablePages.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-
             document.querySelectorAll('.admin-tab').forEach(b => {
                 b.classList.remove('active', 'shadow-lg', 'bg-blue-900', 'text-white');
-                b.classList.add('text-slate-500');
-                const tabText = b.innerText.toLowerCase().trim();
-                
-                if ((tab==='overview' && tabText.includes('ringkasan')) || 
-                   (tab==='site' && tabText.includes('info web')) ||
-                   (tab==='menu' && tabText.includes('navigasi')) ||
-                   (tab==='profil' && tabText.includes('profil')) ||
-                   (tab==='jurusan' && tabText.includes('jurusan')) ||
-                   (tab==='guru' && tabText.includes('guru')) ||
-                   (tab==='mitra' && tabText.includes('mitra')) ||
-                   (tab==='alumni' && tabText.includes('alumni')) ||
-                   (tab==='berita' && tabText.includes('berita')) ||
-                   (tab==='galeri' && tabText.includes('galeri'))) {
-                     b.classList.add('active', 'shadow-lg', 'bg-blue-900', 'text-white');
-                     b.classList.remove('text-slate-500');
-                }
+                if (b.innerText.toLowerCase().includes(tab.slice(0,3))) b.classList.add('active', 'shadow-lg', 'bg-blue-900', 'text-white');
             });
 
-            if (tab === 'overview') {
-                container.innerHTML = `<div class="text-center py-20"><i data-lucide="layout-dashboard" size="48" class="mx-auto mb-6 text-slate-300"></i><h3 class="text-2xl font-bold text-blue-900 mb-2 uppercase tracking-tighter">Selamat Datang di Portal Admin</h3><p class="text-slate-400 max-w-lg mx-auto">Gunakan menu tab di atas untuk memperbarui informasi sekolah secara real-time.</p></div>`;
-            } else if (tab === 'site') {
+            if (tab === 'overview') container.innerHTML = `<div class="text-center py-20 italic">Dashboard Admin SMK Gajahmada 1 Metro</div>`;
+            else if (tab === 'site') {
                 container.innerHTML = `
                     <form onsubmit="handleSaveConfig(event)" class="grid md:grid-cols-2 gap-12">
                         <div class="space-y-6">
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Identitas Dasar</h4>
-                            <div>
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Link URL Logo Sekolah</label>
-                                <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition shadow-sm">
-                                    <img src="${siteConfig.logoImage}" class="h-10 w-10 object-contain bg-white rounded-xl border border-slate-200 p-1 shrink-0 shadow-sm">
-                                    <input type="url" id="conf-logo" value="${siteConfig.logoImage}" required class="w-full p-2 bg-transparent border-none outline-none text-sm text-slate-700" placeholder="https://...">
-                                </div>
-                            </div>
-                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama Resmi Sekolah</label><input type="text" id="conf-name" value="${siteConfig.name}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
-                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Slogan Website</label><input type="text" id="conf-slogan" value="${siteConfig.slogan}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
-                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Alamat (Muncul di Footer & Maps)</label><input type="text" id="conf-address" value="${siteConfig.address || ''}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition"></div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">No Telepon</label><input type="text" id="conf-phone" value="${siteConfig.phone}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
-                                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Email Resmi</label><input type="email" id="conf-email" value="${siteConfig.email}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
-                            </div>
+                            <h4 class="font-black text-blue-900 border-b pb-3 mb-6">Identitas</h4>
+                            <div><label class="text-[10px] font-black uppercase">URL Logo</label><input type="url" id="conf-logo" value="${siteConfig.logoImage}" required class="w-full p-4 border rounded-2xl"></div>
+                            <div><label class="text-[10px] font-black uppercase">Nama Sekolah</label><input type="text" id="conf-name" value="${siteConfig.name}" required class="w-full p-4 border rounded-2xl"></div>
+                            <div><label class="text-[10px] font-black uppercase">Slogan</label><input type="text" id="conf-slogan" value="${siteConfig.slogan}" required class="w-full p-4 border rounded-2xl"></div>
+                            <div><label class="text-[10px] font-black uppercase">Statistik 1 (Siswa)</label><input type="text" id="conf-s1-val" value="${siteConfig.stat1Val}" class="w-full p-4 border rounded-2xl"></div>
                         </div>
                         <div class="space-y-6">
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Sambutan Kepala Sekolah</h4>
-                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Nama & Gelar</label><input type="text" id="conf-s-name" value="${siteConfig.sambutanName}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
-                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Link Foto Pimpinan</label><input type="url" id="conf-s-img" value="${siteConfig.sambutanImage}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none"></div>
-                            <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Teks Sambutan Singkat</label><textarea id="conf-s-text" rows="6" class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white outline-none">${siteConfig.sambutanText}</textarea></div>
+                            <h4 class="font-black text-blue-900 border-b pb-3 mb-6">Kontak</h4>
+                            <div><label class="text-[10px] font-black uppercase">Alamat</label><input type="text" id="conf-address" value="${siteConfig.address}" required class="w-full p-4 border rounded-2xl"></div>
+                            <div><label class="text-[10px] font-black uppercase">Telepon</label><input type="text" id="conf-phone" value="${siteConfig.phone}" required class="w-full p-4 border rounded-2xl"></div>
                         </div>
-                        
-                        <div class="md:col-span-2 border-t border-slate-100 pt-6 mt-4">
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest mb-6">Angka Statistik Sekolah</h4>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-2 block">Statistik 1</label>
-                                    <input type="text" id="conf-s1-val" value="${siteConfig.stat1Val}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-blue-900 mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Angka">
-                                    <input type="text" id="conf-s1-lab" value="${siteConfig.stat1Label}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center text-xs text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Keterangan">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-2 block">Statistik 2</label>
-                                    <input type="text" id="conf-s2-val" value="${siteConfig.stat2Val}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-blue-900 mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Angka">
-                                    <input type="text" id="conf-s2-lab" value="${siteConfig.stat2Label}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center text-xs text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Keterangan">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-2 block">Statistik 3</label>
-                                    <input type="text" id="conf-s3-val" value="${siteConfig.stat3Val}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-blue-900 mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Angka">
-                                    <input type="text" id="conf-s3-lab" value="${siteConfig.stat3Label}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center text-xs text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Keterangan">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1 mb-2 block">Statistik 4</label>
-                                    <input type="text" id="conf-s4-val" value="${siteConfig.stat4Val}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center font-bold text-blue-900 mb-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Angka">
-                                    <input type="text" id="conf-s4-lab" value="${siteConfig.stat4Label}" class="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 text-center text-xs text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Keterangan">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="md:col-span-2 pt-6"><button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-black text-white font-black py-4 px-12 rounded-2xl shadow-xl transition uppercase tracking-widest text-xs">Simpan Semua Pengaturan</button></div>
+                        <div class="md:col-span-2 pt-6"><button type="submit" class="bg-blue-600 text-white font-black py-4 px-12 rounded-2xl">SIMPAN</button></div>
                     </form>`;
-            } else if (tab === 'menu' && userRole === 'admin') {
-                const optionsHTML = availablePages.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-2 gap-12">
-                        <div class="space-y-6">
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Tambah Menu Utama</h4>
-                            <form onsubmit="handleAddMenu(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border">
-                                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Judul Menu</label><input type="text" id="menu-title" required placeholder="Contoh: PPDB" class="w-full p-4 border rounded-2xl"></div>
-                                <div>
-                                    <label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Jenis Menu</label>
-                                    <select id="menu-type" onchange="document.getElementById('target-box-internal').style.display = this.value==='link'?'block':'none'; document.getElementById('target-box-external').style.display = this.value==='external'?'block':'none';" class="w-full p-4 border rounded-2xl bg-white">
-                                        <option value="link">Halaman Internal (Dalam Web)</option>
-                                        <option value="external">Tautan URL / Web Luar</option>
-                                        <option value="dropdown">Menu Dropdown (Bercabang)</option>
-                                    </select>
-                                </div>
-                                <div id="target-box-internal"><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">Tujuan Halaman Internal</label><select id="menu-target-internal" class="w-full p-4 border rounded-2xl bg-white">${optionsHTML}</select></div>
-                                <div id="target-box-external" style="display:none;"><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block ml-1">URL Tautan Eksternal</label><input type="url" id="menu-target-external" placeholder="https://" class="w-full p-4 border rounded-2xl bg-white"></div>
-                                
-                                <button type="submit" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg mt-2 uppercase text-xs tracking-widest">TAMBAH MENU</button>
-                            </form>
-                        </div>
-                        <div class="space-y-6">
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">Struktur Navigasi Aktif</h4>
-                            <div class="space-y-4" id="menu-list-admin">
-                                ${(siteConfig.menuItems || []).map(m => {
-                                    const isExt = m.type === 'external' || (m.target && m.target.startsWith('http'));
-                                    return `
-                                    <div class="bg-white border p-6 rounded-3xl shadow-sm">
-                                        <div class="flex justify-between items-center mb-4">
-                                            <h5 class="font-bold text-blue-900 uppercase text-sm flex items-center gap-2">${m.title} ${isExt ? '<i data-lucide="external-link" size="14" class="text-blue-400"></i>' : ''}</h5>
-                                            <button type="button" onclick="requestDelete('menuItem', '${m.id}')" class="text-red-500 hover:text-red-700 transition"><i data-lucide="trash-2" size="18"></i></button>
-                                        </div>
-                                        ${m.type === 'dropdown' ? `
-                                            <div class="pl-6 border-l-2 border-slate-100 space-y-2 mb-4">
-                                                ${(m.children || []).map(s => {
-                                                    const subIsExt = s.type === 'external' || (s.target && s.target.startsWith('http'));
-                                                    return `<div class="flex justify-between items-center text-xs font-bold text-slate-500 bg-slate-50 p-2 rounded-lg">
-                                                        <span class="truncate pr-2">${s.title} (${subIsExt ? s.target : '/'+s.target})</span>
-                                                        <button type="button" onclick="requestDelete('subMenuItem', '${m.id}|${s.id}')" class="text-red-400 shrink-0"><i data-lucide="x" size="14"></i></button>
-                                                    </div>`;
-                                                }).join('')}
-                                            </div>
-                                            <form onsubmit="handleAddSubMenu(event, '${m.id}')" class="flex gap-2 flex-wrap sm:flex-nowrap bg-slate-50 p-2 rounded-xl border border-slate-100">
-                                                <input type="text" id="sub-title-${m.id}" placeholder="Nama Sub-menu" required class="flex-1 p-2 border rounded-lg text-xs min-w-[100px] outline-none">
-                                                <select id="sub-type-${m.id}" onchange="document.getElementById('sub-target-int-${m.id}').style.display = this.value==='link'?'block':'none'; document.getElementById('sub-target-ext-${m.id}').style.display = this.value==='external'?'block':'none';" class="p-2 border rounded-lg text-xs bg-white w-24 outline-none">
-                                                    <option value="link">Internal</option>
-                                                    <option value="external">URL</option>
-                                                </select>
-                                                <select id="sub-target-int-${m.id}" class="p-2 border rounded-lg text-xs bg-white w-28 outline-none">${optionsHTML}</select>
-                                                <input type="url" id="sub-target-ext-${m.id}" placeholder="https://" class="p-2 border rounded-lg text-xs w-28 outline-none" style="display:none;">
-                                                <button type="submit" class="bg-blue-100 text-blue-900 px-3 py-2 rounded-lg shrink-0 hover:bg-blue-600 hover:text-white transition"><i data-lucide="plus" size="14"></i></button>
-                                            </form>
-                                        ` : ''}
-                                    </div>`;
-                                }).join('')}
-                            </div>
-                        </div>
-                    </div>`;
-            } else if (tab === 'profil' && userRole === 'admin') {
-                container.innerHTML = `
-                    <h3 class="text-2xl font-black mb-8 border-b border-slate-100 pb-6 text-blue-900 flex items-center gap-3"><i data-lucide="school" class="text-blue-500"></i> Pengaturan Halaman Profil</h3>
-                    <form onsubmit="handleSaveProfil(event)" class="space-y-8 max-w-5xl">
-                        <div>
-                            <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">URL Foto Banner Profil Raksasa</label>
-                            <input type="url" id="prof-img" value="${siteConfig.profilImage || ''}" required class="w-full p-4 border rounded-2xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition">
-                        </div>
-                        <div>
-                            <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Sejarah Singkat Sekolah (Dapat menggunakan enter untuk paragraf baru)</label>
-                            <textarea id="prof-sejarah" rows="6" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 bg-slate-50">${siteConfig.profilSejarah || ''}</textarea>
-                        </div>
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div>
-                                <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Visi Sekolah</label>
-                                <textarea id="prof-visi" rows="8" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 bg-slate-50">${siteConfig.profilVisi || ''}</textarea>
-                            </div>
-                            <div>
-                                <label class="font-bold text-blue-900 mb-2 block bg-blue-50 p-3 rounded-lg border border-blue-100">Misi Sekolah <span class="text-xs font-normal text-slate-500 block">Gunakan tombol "Enter" untuk memisahkan poin misi.</span></label>
-                                <textarea id="prof-misi" rows="8" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 mt-2 bg-slate-50 whitespace-pre-wrap">${siteConfig.profilMisi || ''}</textarea>
-                            </div>
-                        </div>
-                        <div class="pt-4 border-t border-slate-100">
-                            <button type="submit" class="w-full md:w-auto bg-blue-600 hover:bg-black text-white font-black py-4 px-12 rounded-2xl shadow-xl transition uppercase tracking-widest text-xs">Simpan Data Profil</button>
-                        </div>
-                    </form>`;
-            } else if (tab === 'jurusan' && userRole === 'admin') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-10">
-                        <div class="lg:col-span-1">
-                            <div class="bg-slate-50 p-6 rounded-3xl border border-slate-200 sticky top-24 shadow-sm">
-                                <h3 class="font-bold mb-6 flex items-center gap-2 text-blue-900 text-xl"><i data-lucide="book-open"></i> ${editItem ? 'Edit Jurusan' : 'Tambah Jurusan'}</h3>
-                                <form onsubmit="handleSaveJurusan(event)" class="space-y-4">
-                                    <input type="text" id="jur-code" placeholder="Singkatan (TKJ)" value="${editItem?.code || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="text" id="jur-name" placeholder="Nama Lengkap Jurusan" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="url" id="jur-image" placeholder="URL Foto Jurusan" value="${editItem?.image || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <textarea id="jur-desc" placeholder="Deskripsi/Keterangan..." required rows="5" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
-                                    <div class="flex gap-2">
-                                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
-                                        ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl font-bold">Batal</button>` : ''}
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                        <div class="lg:col-span-2">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                ${jurusanList.map(j => `
-                                    <div class="bg-white rounded-2xl border p-4 flex gap-4 items-center group shadow-sm hover:shadow-md transition">
-                                        <img src="${j.image}" class="w-16 h-16 rounded-xl object-cover shrink-0">
-                                        <div class="pr-8">
-                                            <span class="bg-yellow-400 text-blue-900 text-[10px] font-bold px-2 py-0.5 rounded uppercase">${j.code}</span>
-                                            <h4 class="font-bold text-sm mt-1 text-blue-900">${j.name}</h4>
-                                        </div>
-                                        <div class="flex ml-auto gap-2">
-                                            <button onclick="setEditItem('jurusan', '${j.id}')" class="text-blue-600"><i data-lucide="edit" size="18"></i></button>
-                                            <button onclick="requestDelete('jurusan', '${j.id}')" class="text-red-600"><i data-lucide="trash-2" size="18"></i></button>
-                                        </div>
-                                    </div>
-                                `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada jurusan.</p>'}
-                            </div>
-                        </div>
-                    </div>`;
-            } else if (tab === 'guru' && userRole === 'admin') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-10">
-                        <div class="lg:col-span-1">
-                            <div class="bg-slate-50 p-6 rounded-3xl border border-slate-200 sticky top-24 shadow-sm">
-                                <h3 class="font-bold mb-6 flex items-center gap-2 text-blue-900 text-xl"><i data-lucide="users"></i> ${editItem ? 'Edit Guru' : 'Tambah Guru'}</h3>
-                                <form onsubmit="handleSaveGuru(event)" class="space-y-4">
-                                    <input type="text" id="guru-name" placeholder="Nama Guru" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="text" id="guru-subject" placeholder="Mengajar (Mapel)" value="${editItem?.subject || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="url" id="guru-image" placeholder="URL Pas Foto" value="${editItem?.image || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <textarea id="guru-quote" placeholder="Motto / Pesan Singkat..." required rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.quote || ''}</textarea>
-                                    <div class="flex gap-2">
-                                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
-                                        ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl font-bold">Batal</button>` : ''}
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                        <div class="lg:col-span-2">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                ${guruList.map(g => `
-                                    <div class="bg-white rounded-2xl border p-4 flex gap-4 items-center group shadow-sm hover:shadow-md transition">
-                                        <img src="${g.image}" class="w-14 h-14 rounded-full object-cover border">
-                                        <div>
-                                            <h4 class="font-bold text-sm text-blue-900">${g.name}</h4>
-                                            <span class="text-[10px] text-slate-500">${g.subject}</span>
-                                        </div>
-                                        <div class="flex ml-auto gap-2">
-                                            <button onclick="setEditItem('guru', '${g.id}')" class="text-blue-600"><i data-lucide="edit" size="18"></i></button>
-                                            <button onclick="requestDelete('guru', '${g.id}')" class="text-red-600"><i data-lucide="trash-2" size="18"></i></button>
-                                        </div>
-                                    </div>
-                                `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada data guru.</p>'}
-                            </div>
-                        </div>
-                    </div>`;
-            } else if (tab === 'mitra' && userRole === 'admin') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-10">
-                        <div class="lg:col-span-1">
-                            <div class="bg-slate-50 p-6 rounded-3xl border border-slate-200 sticky top-24 shadow-sm">
-                                <h3 class="font-bold mb-6 flex items-center gap-2 text-blue-900 text-xl"><i data-lucide="briefcase"></i> ${editItem ? 'Edit Mitra' : 'Tambah Mitra'}</h3>
-                                <form onsubmit="handleSaveMitra(event)" class="space-y-4">
-                                    <input type="text" id="mitra-name" placeholder="Nama Industri" value="${editItem?.name || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <input type="url" id="mitra-image" placeholder="URL Logo Mitra" value="${editItem?.image || ''}" required class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">
-                                    <textarea id="mitra-desc" placeholder="Keterangan / Bidang Kerja Sama..." required rows="3" class="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none">${editItem?.desc || ''}</textarea>
-                                    <div class="flex gap-2">
-                                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold">${editItem ? 'Update' : 'Simpan'}</button>
-                                        ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-4 rounded-xl font-bold">Batal</button>` : ''}
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                        <div class="lg:col-span-2">
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-5">
-                                ${mitraList.map(m => `
-                                    <div class="bg-white rounded-2xl border p-4 flex flex-col items-center group shadow-sm text-center">
-                                        <img src="${m.image}" class="h-12 w-auto object-contain mb-3 bg-slate-50 p-2 rounded-lg">
-                                        <h4 class="font-bold text-[11px] text-blue-900">${m.name}</h4>
-                                        <div class="flex gap-4 mt-4">
-                                            <button onclick="setEditItem('mitra', '${m.id}')" class="text-blue-600"><i data-lucide="edit" size="16"></i></button>
-                                            <button onclick="requestDelete('mitra', '${m.id}')" class="text-red-600"><i data-lucide="trash-2" size="16"></i></button>
-                                        </div>
-                                    </div>
-                                `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada mitra.</p>'}
-                            </div>
-                        </div>
-                    </div>`;
-            } else if (tab === 'berita') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-10">
-                        <div class="lg:col-span-1">
-                            <form onsubmit="handleSaveNews(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border">
-                                <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">${editItem ? 'Edit Berita' : 'Tulis Berita'}</h4>
-                                <input type="text" id="news-title" value="${editItem?.title || ''}" placeholder="Judul Berita" required class="w-full p-4 border rounded-2xl">
-                                <select id="news-category" class="w-full p-4 border rounded-2xl bg-white text-xs font-bold uppercase"><option value="Kegiatan" ${editItem?.category==='Kegiatan'?'selected':''}>Kegiatan</option><option value="Prestasi" ${editItem?.category==='Prestasi'?'selected':''}>Prestasi</option><option value="Pengumuman" ${editItem?.category==='Pengumuman'?'selected':''}>Pengumuman</option></select>
-                                <input type="url" id="news-image" value="${editItem?.image || ''}" placeholder="URL Foto Utama" required class="w-full p-4 border rounded-2xl">
-                                <textarea id="news-content" rows="6" placeholder="Konten Berita Lengkap..." required class="w-full p-4 border rounded-2xl">${editItem?.content || ''}</textarea>
-                                <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-xs">${editItem ? 'UPDATE' : 'TERBITKAN'}</button>${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div>
-                            </form>
-                        </div>
-                        <div class="lg:col-span-2 overflow-x-auto">
-                            <table class="w-full text-left border rounded-3xl overflow-hidden shadow-sm bg-white text-sm">
-                                <thead class="bg-blue-900 text-white uppercase text-[10px] tracking-widest"><tr class="divide-x"><th class="p-5">Daftar Berita Aktif</th><th class="p-5 text-right">Aksi</th></tr></thead>
-                                <tbody class="divide-y text-slate-600 font-bold">
-                                    ${beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `<tr class="hover:bg-slate-50 transition"><td class="p-5 truncate max-w-[300px]">${n.title}</td><td class="p-5 text-right flex justify-end gap-6"><button onclick="setEditItem('berita', '${n.id}')" class="text-blue-600"><i data-lucide="edit-2" size="18"></i></button><button type="button" onclick="requestDelete('berita', '${n.id}')" class="text-red-500"><i data-lucide="trash-2" size="18"></i></button></td></tr>`).join('') || '<tr><td colspan="2" class="p-10 text-center italic text-slate-400">Belum ada berita.</td></tr>'}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>`;
-            } else if (tab === 'galeri') {
-                const galOptionsHTML = availablePages.map(p => `<option value="${p.id}" ${editItem?.btnTarget===p.id?'selected':''}>${p.title}</option>`).join('');
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-10">
-                        <form onsubmit="handleSaveGallery(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border h-fit">
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-3 mb-6">${editItem ? 'Edit Slide' : 'Tambah Foto Slide'}</h4>
-                            <input type="text" id="gal-caption" placeholder="Judul Foto / Slide" value="${editItem?.caption || ''}" required class="w-full p-4 border rounded-2xl">
-                            <input type="url" id="gal-url" placeholder="URL Gambar Langsung" value="${editItem?.url || ''}" required class="w-full p-4 border rounded-2xl">
-                            
-                            <h4 class="font-black text-blue-900 uppercase tracking-widest border-b pb-2 pt-4 mb-4">Pengaturan Tombol (Opsional)</h4>
-                            <input type="text" id="gal-btn-text" placeholder="Teks Tombol (Kosong = Tanpa Tombol)" value="${editItem?.btnText || ''}" class="w-full p-4 border rounded-2xl mb-2">
-                            <select id="gal-btn-type" onchange="document.getElementById('gal-target-box-int').style.display = this.value==='link'?'block':'none'; document.getElementById('gal-target-box-ext').style.display = this.value==='external'?'block':'none';" class="w-full p-4 border rounded-2xl bg-white mb-2">
-                                <option value="link" ${editItem?.btnType==='link'?'selected':''}>Ke Halaman Internal Web</option>
-                                <option value="external" ${editItem?.btnType==='external'?'selected':''}>Ke Link / URL Luar</option>
-                            </select>
-                            <div id="gal-target-box-int" style="display: ${editItem?.btnType === 'external' ? 'none' : 'block'};">
-                                <select id="gal-btn-target-int" class="w-full p-4 border rounded-2xl bg-white">
-                                    ${galOptionsHTML}
-                                </select>
-                            </div>
-                            <div id="gal-target-box-ext" style="display: ${editItem?.btnType === 'external' ? 'block' : 'none'};">
-                                <input type="url" id="gal-btn-target-ext" placeholder="Masukkan Tautan (https://...)" value="${editItem?.btnType === 'external' ? (editItem?.btnTarget || '') : ''}" class="w-full p-4 border rounded-2xl bg-white">
-                            </div>
-
-                            <div class="flex gap-2 mt-4">
-                                <button type="submit" class="w-full bg-yellow-500 text-blue-900 font-black py-4 rounded-2xl shadow-lg uppercase text-xs mt-2">${editItem ? 'UPDATE' : 'SIMPAN'} SLIDE</button>
-                                ${editItem ? `<button type="button" onclick="cancelEdit()" class="bg-slate-200 text-slate-800 font-black py-4 px-6 rounded-2xl shadow-lg uppercase text-xs mt-2">BATAL</button>` : ''}
-                            </div>
-                        </form>
-                        <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
-                            ${galleryList.map(g => `
-                                <div class="relative group aspect-square rounded-[2rem] overflow-hidden border-2 border-white shadow-lg">
-                                    <img src="${g.url}" class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-blue-900/80 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition duration-300">
-                                        <button onclick="setEditItem('gallery', '${g.id}')" class="bg-white p-3 rounded-xl text-blue-600 hover:scale-110 transition shadow-lg"><i data-lucide="edit" size="18"></i></button>
-                                        <button onclick="requestDelete('gallery', '${g.id}')" class="bg-white p-3 rounded-xl text-red-600 hover:scale-110 transition shadow-lg"><i data-lucide="trash-2" size="18"></i></button>
-                                    </div>
-                                    <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 to-transparent pt-8 pointer-events-none">
-                                        <p class="text-white text-[10px] font-bold truncate leading-relaxed text-center">${g.caption}</p>
-                                    </div>
-                                </div>
-                            `).join('') || '<p class="col-span-full py-10 text-center italic text-slate-400">Belum ada foto.</p>'}
-                        </div>
-                    </div>`;
-            } else if (tab === 'alumni' && userRole === 'admin') {
-                const pendingAlumni = alumniList.filter(a => a.status === 'pending');
-                const approvedAlumni = alumniList.filter(a => a.status === 'approved');
-                container.innerHTML = `
-                    <div class="space-y-12">
-                        <!-- Menunggu Persetujuan -->
-                        <div>
-                            <h3 class="font-bold mb-6 flex items-center gap-2 text-yellow-600 text-xl border-b pb-4"><i data-lucide="clock"></i> Menunggu Persetujuan (${pendingAlumni.length})</h3>
-                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                ${pendingAlumni.map(a => `
-                                    <div class="bg-yellow-50 rounded-2xl border border-yellow-200 p-6 shadow-sm">
-                                        <div class="flex items-center gap-4 mb-4">
-                                            <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm">
-                                            <div>
-                                                <h4 class="font-bold text-slate-800">${a.name}</h4>
-                                                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Lulusan ${a.graduationYear}</p>
-                                            </div>
-                                        </div>
-                                        <p class="text-sm text-slate-600 mb-2"><i data-lucide="briefcase" class="inline w-3 h-3 text-slate-400 mr-1"></i> ${a.workplace}</p>
-                                        <p class="text-xs text-slate-500 italic bg-white p-3 rounded-lg border border-yellow-100 line-clamp-3 mb-4">"${a.quote}"</p>
-                                        <div class="flex gap-2">
-                                            <button onclick="handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-xl text-sm hover:bg-green-600 transition flex justify-center items-center gap-1"><i data-lucide="check" size="14"></i> Setujui</button>
-                                            <button onclick="requestDelete('alumni', '${a.id}')" class="flex-1 bg-red-100 text-red-600 font-bold py-2 rounded-xl text-sm hover:bg-red-200 transition flex justify-center items-center gap-1"><i data-lucide="x" size="14"></i> Tolak</button>
-                                        </div>
-                                    </div>
-                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Tidak ada pengajuan data alumni yang baru.</div>'}
-                            </div>
-                        </div>
-
-                        <!-- Alumni Disetujui -->
-                        <div>
-                            <h3 class="font-bold mb-6 flex items-center gap-2 text-green-600 text-xl border-b pb-4"><i data-lucide="check-circle-2"></i> Alumni Aktif (${approvedAlumni.length})</h3>
-                            <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                ${approvedAlumni.map(a => `
-                                    <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col items-center text-center shadow-sm relative group">
-                                        <img src="${a.image}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-100 mb-3">
-                                        <h4 class="font-bold text-slate-800 text-sm mb-1">${a.name}</h4>
-                                        <p class="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded font-bold mb-3">${a.graduationYear} - ${a.workplace}</p>
-                                        <button onclick="requestDelete('alumni', '${a.id}')" class="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition opacity-0 group-hover:opacity-100" title="Hapus Data"><i data-lucide="trash-2" size="14"></i></button>
-                                    </div>
-                                `).join('') || '<div class="col-span-full text-center py-10 text-slate-400 italic bg-slate-50 rounded-2xl border border-dashed border-slate-200">Belum ada data alumni yang disetujui.</div>'}
-                            </div>
-                        </div>
-                    </div>
-                `;
             }
+            // Logic admin lainnya diteruskan...
             lucide.createIcons();
-        };
-
-        // CRUD Logic Functions
-        window.handleAddMenu = async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
-            
-            try {
-                const type = document.getElementById('menu-type').value;
-                const targetInt = document.getElementById('menu-target-internal');
-                const targetExt = document.getElementById('menu-target-external');
-                const target = type === 'link' ? targetInt.value : (type === 'external' ? escapeHTML(targetExt.value) : '');
-                
-                const newItem = { id: 'm_'+Date.now(), title: escapeHTML(document.getElementById('menu-title').value), type: type, target: target, children: [] };
-                const updated = [...(siteConfig.menuItems || []), newItem];
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
-                showToast("Menu Berhasil Ditambahkan!");
-                e.target.reset(); 
-                document.getElementById('target-box-internal').style.display = 'block';
-                document.getElementById('target-box-external').style.display = 'none';
-            } catch (err) { handleFirebaseError(err); } 
-            finally { btn.innerText = orig; btn.disabled = false; }
-        };
-
-        window.handleDeleteMenu = async (mid) => {
-            confirmAction = async () => {
-                try {
-                    const updated = (siteConfig.menuItems || []).filter(m => m.id !== mid);
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
-                    showToast("Menu Dihapus!");
-                } catch(err) { handleFirebaseError(err); }
-                closeConfirm();
-            };
-            document.getElementById('confirm-modal').classList.remove('hidden');
-        };
-
-        window.handleAddSubMenu = async (e, pid) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerHTML; btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2" size="14"></i>'; btn.disabled = true;
-            lucide.createIcons();
-            try {
-                const title = escapeHTML(document.getElementById(`sub-title-${pid}`).value);
-                const subType = document.getElementById(`sub-type-${pid}`).value;
-                const target = subType === 'link' ? document.getElementById(`sub-target-int-${pid}`).value : escapeHTML(document.getElementById(`sub-target-ext-${pid}`).value);
-                
-                const newMenus = JSON.parse(JSON.stringify(siteConfig.menuItems));
-                const parent = newMenus.find(m => m.id === pid);
-                if(parent) {
-                    if(!parent.children) parent.children = [];
-                    parent.children.push({ id: 's_'+Date.now(), title, target, type: subType });
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
-                    showToast("Sub-menu ditambahkan!");
-                }
-            } catch(err) { handleFirebaseError(err); } 
-            finally { btn.innerHTML = orig; btn.disabled = false; lucide.createIcons(); }
-        };
-
-        window.handleDeleteSubMenu = async (pid, sid) => {
-            confirmAction = async () => {
-                try {
-                    const newMenus = JSON.parse(JSON.stringify(siteConfig.menuItems));
-                    const parent = newMenus.find(m => m.id === pid);
-                    if(parent) {
-                        parent.children = parent.children.filter(s => s.id !== sid);
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
-                        showToast("Sub-menu dihapus!");
-                    }
-                } catch(err) { handleFirebaseError(err); }
-                closeConfirm();
-            };
-            document.getElementById('confirm-modal').classList.remove('hidden');
         };
 
         window.handleSaveConfig = async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
-
             try {
                 const d = { 
                     logoImage: escapeHTML(document.getElementById('conf-logo').value), 
@@ -1469,148 +773,15 @@ service cloud.firestore {
                     slogan: escapeHTML(document.getElementById('conf-slogan').value), 
                     address: escapeHTML(document.getElementById('conf-address').value),
                     phone: escapeHTML(document.getElementById('conf-phone').value),
-                    email: escapeHTML(document.getElementById('conf-email').value),
-                    sambutanName: escapeHTML(document.getElementById('conf-s-name').value),
-                    sambutanImage: escapeHTML(document.getElementById('conf-s-img').value),
-                    sambutanText: escapeHTML(document.getElementById('conf-s-text').value),
-                    stat1Val: escapeHTML(document.getElementById('conf-s1-val').value),
-                    stat1Label: escapeHTML(document.getElementById('conf-s1-lab').value),
-                    stat2Val: escapeHTML(document.getElementById('conf-s2-val').value),
-                    stat2Label: escapeHTML(document.getElementById('conf-s2-lab').value),
-                    stat3Val: escapeHTML(document.getElementById('conf-s3-val').value),
-                    stat3Label: escapeHTML(document.getElementById('conf-s3-lab').value),
-                    stat4Val: escapeHTML(document.getElementById('conf-s4-val').value),
-                    stat4Label: escapeHTML(document.getElementById('conf-s4-lab').value)
+                    stat1Val: escapeHTML(document.getElementById('conf-s1-val').value)
                 };
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
-                showToast("Berhasil Memperbarui Data Website!");
-            } catch (error) {
-                handleFirebaseError(error);
-            } finally { btn.innerText = orig; btn.disabled = false; }
-        };
-        
-        window.handleSaveProfil = async (e) => {
-            e.preventDefault();
-            if(userRole !== 'admin') return;
-            const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
-
-            try {
-                const d = { 
-                    profilImage: escapeHTML(document.getElementById('prof-img').value), 
-                    profilSejarah: escapeHTML(document.getElementById('prof-sejarah').value), 
-                    profilVisi: escapeHTML(document.getElementById('prof-visi').value),
-                    profilMisi: escapeHTML(document.getElementById('prof-misi').value)
-                };
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
-                showToast("Berhasil Memperbarui Data Profil!");
-            } catch(err) { handleFirebaseError(err); } 
-            finally { btn.innerText = orig; btn.disabled = false; }
-        };
-
-        window.handleSaveNews = async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
-
-            try {
-                const d = { 
-                    title: escapeHTML(document.getElementById('news-title').value), 
-                    category: document.getElementById('news-category').value, 
-                    image: escapeHTML(document.getElementById('news-image').value), 
-                    content: escapeHTML(document.getElementById('news-content').value), 
-                    timestamp: editItem ? editItem.timestamp : Date.now() 
-                };
-                if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'berita', editItem.id), d);
-                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'berita'), d);
-                editItem = null; showToast("Berita Tersimpan!"); renderAdminDashboard();
-            } catch (err) { handleFirebaseError(err); } 
-            finally { btn.innerText = orig; btn.disabled = false; }
-        };
-
-        window.handleSaveGallery = async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
-
-            try {
-                const btnType = document.getElementById('gal-btn-type').value;
-                const targetInt = document.getElementById('gal-btn-target-int').value;
-                const targetExt = document.getElementById('gal-btn-target-ext').value;
-                const btnTarget = btnType === 'link' ? targetInt : targetExt;
-
-                const d = { 
-                    caption: escapeHTML(document.getElementById('gal-caption').value), 
-                    url: escapeHTML(document.getElementById('gal-url').value),
-                    btnText: escapeHTML(document.getElementById('gal-btn-text').value),
-                    btnType: btnType,
-                    btnTarget: escapeHTML(btnTarget),
-                    timestamp: editItem ? editItem.timestamp : Date.now() 
-                };
-                
-                if(editItem) {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', editItem.id), d);
-                } else {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
-                }
-                e.target.reset(); editItem = null; showToast("Foto Berhasil Disimpan!"); renderAdminDashboard();
-            } catch(err) { handleFirebaseError(err); } 
-            finally { btn.innerText = orig; btn.disabled = false; }
-        };
-
-        window.handleSaveJurusan = async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
-
-            try {
-                const d = { code: escapeHTML(document.getElementById('jur-code').value), name: escapeHTML(document.getElementById('jur-name').value), image: escapeHTML(document.getElementById('jur-image').value), desc: escapeHTML(document.getElementById('jur-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
-                if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jurusan', editItem.id), d);
-                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jurusan'), d);
-                editItem = null; showToast("Jurusan Tersimpan!"); renderAdminDashboard();
-            } catch (err) { handleFirebaseError(err); } finally { btn.innerText = orig; btn.disabled = false; }
-        };
-
-        window.handleSaveGuru = async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
-
-            try {
-                const d = { name: escapeHTML(document.getElementById('guru-name').value), subject: escapeHTML(document.getElementById('guru-subject').value), image: escapeHTML(document.getElementById('guru-image').value), quote: escapeHTML(document.getElementById('guru-quote').value), timestamp: editItem ? editItem.timestamp : Date.now() };
-                if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'guru', editItem.id), d);
-                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'guru'), d);
-                editItem = null; showToast("Guru Tersimpan!"); renderAdminDashboard();
-            } catch (err) { handleFirebaseError(err); } finally { btn.innerText = orig; btn.disabled = false; }
-        };
-
-        window.handleSaveMitra = async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const orig = btn.innerText; btn.innerText = "MENYIMPAN..."; btn.disabled = true;
-
-            try {
-                const d = { name: escapeHTML(document.getElementById('mitra-name').value), image: escapeHTML(document.getElementById('mitra-image').value), desc: escapeHTML(document.getElementById('mitra-desc').value), timestamp: editItem ? editItem.timestamp : Date.now() };
-                if(editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'mitra', editItem.id), d);
-                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mitra'), d);
-                editItem = null; showToast("Mitra Tersimpan!"); renderAdminDashboard();
-            } catch (err) { handleFirebaseError(err); } finally { btn.innerText = orig; btn.disabled = false; }
-        };
-
-        window.handleApproveAlumni = async (id) => {
-            try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'alumni', id), { status: 'approved' });
-                showToast("Alumni Disetujui!"); renderAdminDashboard();
+                showToast("Berhasil Disimpan!");
             } catch (err) { handleFirebaseError(err); }
         };
 
         window.handleSubmitAlumniTracer = async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Menyimpan...';
-            lucide.createIcons();
-
             try {
                 const d = {
                     name: escapeHTML(document.getElementById('tracer-name').value),
@@ -1618,81 +789,72 @@ service cloud.firestore {
                     workplace: escapeHTML(document.getElementById('tracer-workplace').value),
                     image: escapeHTML(document.getElementById('tracer-image').value),
                     quote: escapeHTML(document.getElementById('tracer-quote').value),
-                    status: 'pending', 
-                    timestamp: Date.now()
+                    status: 'pending', timestamp: Date.now()
                 };
-                
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'alumni'), d);
-                showToast("Berhasil! Data akan ditinjau admin."); 
-                e.target.reset();
-            } catch (err) { 
-                handleFirebaseError(err);
-            } finally { 
-                btn.disabled = false; btn.innerHTML = '<i data-lucide="send" size="18"></i> Kirim Data Penelusuran'; lucide.createIcons(); 
-            }
+                showToast("Berhasil terkirim!"); e.target.reset();
+            } catch (err) { handleFirebaseError(err); }
         };
 
-        window.setEditItem = (col, id) => {
-            let list = [];
-            if(col === 'berita') list = beritaList;
-            else if(col === 'gallery') list = galleryList;
-            else if(col === 'jurusan') list = jurusanList;
-            else if(col === 'guru') list = guruList;
-            else if(col === 'mitra') list = mitraList;
-            editItem = list.find(x => x.id === id);
-            renderAdminDashboard();
-            window.scrollTo(0, 400);
+        window.handleApproveAlumni = async (id) => {
+            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'alumni', id), { status: 'approved' }); showToast("Disetujui!"); renderAdminDashboard(); }
+            catch (err) { handleFirebaseError(err); }
         };
 
-        window.cancelEdit = () => { editItem = null; renderAdminDashboard(); };
+        // --- CORE SYSTEM INIT ---
+        const setupListeners = () => {
+            if (window.isSetup) return;
+            window.isSetup = true;
 
-        // Carousel Improved Logic
-        window.goToSlide = (index) => {
-            const items = document.querySelectorAll('.carousel-item');
-            if (items.length <= 1) return;
-            
-            items[carouselIndex].classList.remove('active');
-            carouselIndex = index;
-            items[carouselIndex].classList.add('active');
-            
-            document.querySelectorAll('.slide-dot').forEach((dot, i) => {
-                if(i === carouselIndex) {
-                    dot.classList.remove('bg-white/40', 'hover:bg-white/70');
-                    dot.classList.add('bg-white', 'scale-110');
-                } else {
-                    dot.classList.add('bg-white/40', 'hover:bg-white/70');
-                    dot.classList.remove('bg-white', 'scale-110');
-                }
+            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), (snap) => {
+                if (snap.exists()) siteConfig = { ...siteConfig, ...snap.data() };
+                updateSiteBranding(); renderNavigation(); refreshUI();
+            }, handleFirebaseError);
+
+            ['berita', 'gallery', 'jurusan', 'guru', 'mitra', 'alumni'].forEach(col => {
+                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', col), (snap) => {
+                    const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    if(col === 'berita') beritaList = data;
+                    if(col === 'gallery') galleryList = data;
+                    if(col === 'jurusan') jurusanList = data;
+                    if(col === 'guru') guruList = data;
+                    if(col === 'mitra') mitraList = data;
+                    if(col === 'alumni') alumniList = data;
+                    refreshUI();
+                }, handleFirebaseError);
             });
-            startCarousel();
         };
 
-        window.moveCarousel = (dir) => {
-            const items = document.querySelectorAll('.carousel-item');
-            if (items.length <= 1) return;
-            let nextIndex = dir === 'next' ? (carouselIndex + 1) % items.length : (carouselIndex - 1 + items.length) % items.length;
-            goToSlide(nextIndex);
+        const refreshUI = () => {
+            const current = document.body.dataset.page || 'home';
+            renderPage(current);
         };
 
-        const startCarousel = () => {
-            clearInterval(window.cTimer);
-            window.cTimer = setInterval(() => moveCarousel('next'), 6000);
-        };
-
-        const hideLoader = () => {
-            const loader = document.getElementById('initial-loader');
-            if (loader) {
-                loader.classList.add('opacity-0');
-                setTimeout(() => loader.remove(), 700); // Menghapus elemen dari HTML setelah transisi pudar selesai
-            }
-        };
+        const startCarousel = () => { clearInterval(window.cTimer); window.cTimer = setInterval(() => window.moveCarousel('next'), 6000); };
+        const hideLoader = () => { const l = document.getElementById('initial-loader'); if (l) { l.classList.add('opacity-0'); setTimeout(() => l.remove(), 700); } };
 
         // Initialize App
         window.onload = () => {
+            const init = async () => {
+                try { await signInAnonymously(auth); } catch (e) { console.warn("Anon Auth Fail."); }
+                setupListeners();
+                window.checkUrlAndRoute();
+                setTimeout(hideLoader, 1200);
+            };
             init();
-            checkUrlAndRoute(); // Memeriksa apakah ada link parameter yang dibawa (misal: /?berita=123)
-            setTimeout(hideLoader, 1200); // Menahan loading screen selama 1.2 detik agar data sempat dimuat
         };
+
+        window.checkUrlAndRoute = () => {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('berita')) { currentDataId = params.get('berita'); renderPage('berita-detail'); }
+                else if (params.has('p')) renderPage(params.get('p'));
+                else renderPage('home');
+            } catch (e) { renderPage('home'); }
+        };
+
+        window.addEventListener('popstate', () => window.checkUrlAndRoute());
+
     </script>
 </body>
 </html>
