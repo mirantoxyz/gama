@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMK GAJAHMADA 1 METRO - Sistem Terintegrasi</title>
+    <!-- Favicon Dinamis -->
+    <link rel="icon" id="favicon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png" type="image/png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Firebase SDKs -->
@@ -332,6 +335,10 @@
             if (document.getElementById('footer-site-name')) document.getElementById('footer-site-name').innerText = window.siteConfig.name;
             if (document.getElementById('footer-address')) document.getElementById('footer-address').innerText = window.siteConfig.address;
             if (document.getElementById('footer-phone')) document.getElementById('footer-phone').innerText = window.siteConfig.phone;
+            
+            // Perbarui favicon secara otomatis berdasarkan logo sekolah
+            const favicon = document.getElementById('favicon');
+            if (favicon) favicon.href = window.siteConfig.logoImage;
         };
 
         window.renderNavigation = () => {
