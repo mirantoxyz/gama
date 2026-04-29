@@ -14,7 +14,7 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.3s ease; background-color: #f8fafc; }
         
         .carousel-item { display: none; height: 450px; }
@@ -25,12 +25,14 @@
         .nav-link { position: relative; transition: color 0.2s; white-space: nowrap; }
         .nav-link.active-link { color: #1d4ed8; }
         
-        .admin-tab.active { background-color: #1e3a8a !important; color: white !important; }
+        /* Modifikasi Active Tab untuk Sidebar Baru */
+        .admin-tab.active { background-color: #2563eb !important; color: white !important; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        .admin-tab.active i { color: white !important; }
         
         .section-title { position: relative; padding-bottom: 0.75rem; margin-bottom: 1.5rem; }
         .section-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 50px; height: 3px; background: #fbbf24; border-radius: 2px; }
 
-        .thin-scrollbar::-webkit-scrollbar { height: 6px; }
+        .thin-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
         .thin-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .thin-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .thin-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -143,8 +145,8 @@
             <h3 class="text-xl font-bold text-slate-800 mb-2">Hapus Data?</h3>
             <p class="text-slate-500 text-sm mb-6">Data tidak dapat dikembalikan setelah dihapus.</p>
             <div class="flex gap-3">
-                <button onclick="window.closeConfirm()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200">Batal</button>
-                <button id="confirm-btn" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700">Hapus</button>
+                <button onclick="window.closeConfirm()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition">Batal</button>
+                <button id="confirm-btn" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl hover:bg-red-700 transition shadow-lg shadow-red-600/30">Hapus</button>
             </div>
         </div>
     </div>
@@ -175,63 +177,67 @@
     <!-- WIDGET LAYANAN INFORMASI -->
     <!-- Tombol Mengambang (Floating Button) -->
     <div class="fixed bottom-6 right-6 z-[90]">
-        <button onclick="window.toggleLayananInfo()" class="bg-blue-900 text-white px-5 py-3 rounded-full font-black shadow-[0_10px_30px_rgba(30,58,138,0.5)] flex items-center gap-3 hover:bg-blue-800 transition-all duration-300 transform hover:scale-105 border-2 border-white/20">
+        <button onclick="window.toggleLayananInfo()" class="bg-[#1e3a8a] text-white px-5 py-3 rounded-[2rem] font-bold shadow-[0_10px_30px_rgba(30,58,138,0.5)] flex items-center gap-3 hover:bg-blue-800 transition-all duration-300 transform hover:scale-105 border-2 border-white/10">
             <i data-lucide="message-circle" size="22"></i> <span class="hidden sm:block">Layanan Informasi</span>
         </button>
     </div>
 
     <!-- Kotak Pop-up Layanan Informasi -->
-    <div id="layanan-info-modal" class="fixed bottom-24 right-6 z-[100] w-[340px] max-w-[calc(100vw-3rem)] bg-white rounded-3xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.3)] border border-slate-100 transform transition-all duration-300 translate-y-10 opacity-0 pointer-events-none overflow-hidden flex flex-col">
+    <div id="layanan-info-modal" class="fixed bottom-24 right-6 z-[100] w-[350px] max-w-[calc(100vw-3rem)] bg-white rounded-[1.5rem] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.3)] border border-slate-100 transform transition-all duration-300 translate-y-10 opacity-0 pointer-events-none overflow-hidden flex flex-col">
         <!-- Header -->
-        <div class="bg-blue-900 p-6 text-white relative">
-            <button onclick="window.toggleLayananInfo()" class="absolute top-4 right-4 text-white/70 hover:text-white transition"><i data-lucide="x" size="20"></i></button>
-            <div class="flex justify-between items-center mb-4">
+        <div class="bg-[#274690] p-6 text-white relative">
+            <div class="flex justify-between items-start mb-4">
                 <i data-lucide="headphones" size="28" class="text-yellow-400"></i>
-                <span class="bg-green-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-2 shadow-sm"><span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> ONLINE</span>
+                <div class="flex items-center gap-3">
+                    <span class="bg-[#22c55e] text-white text-[9px] font-black px-3 py-1 rounded-full uppercase flex items-center gap-1.5 shadow-sm"><span class="w-1.5 h-1.5 bg-white rounded-full"></span> ONLINE</span>
+                    <button onclick="window.toggleLayananInfo()" class="text-white/70 hover:text-white transition focus:outline-none"><i data-lucide="x" size="20"></i></button>
+                </div>
             </div>
-            <h3 class="text-2xl font-black leading-tight tracking-tight">Layanan Informasi</h3>
-            <p class="text-[10px] text-blue-200 mt-1 uppercase tracking-widest font-bold truncate" id="layanan-site-name">SMK Gajahmada 1 Metro</p>
+            <h3 class="text-2xl font-black leading-tight tracking-tight mb-1">Layanan Informasi</h3>
+            <p class="text-[9px] text-blue-200 uppercase tracking-widest font-bold truncate" id="layanan-site-name">SMK KP GAJAH MADA 1 METRO</p>
         </div>
         
         <!-- Kontak Body -->
-        <div class="p-2 space-y-1 bg-slate-50 flex-1 overflow-y-auto max-h-[40vh] thin-scrollbar">
+        <div class="p-4 space-y-2 bg-white flex-1 overflow-y-auto max-h-[45vh] thin-scrollbar">
             <!-- Admin Pendaftaran -->
-            <a href="javascript:void(0)" onclick="window.openWA('waPendaftaran', 'Halo Admin Pendaftaran, saya ingin bertanya seputar PPDB / Pendaftaran Siswa Baru.')" class="flex items-center gap-4 p-4 hover:bg-white rounded-2xl transition-all duration-300 group">
-                <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0 border border-green-200 group-hover:scale-110 transition"><i data-lucide="user-check" size="20"></i></div>
+            <a href="javascript:void(0)" onclick="window.openWA('waPendaftaran', 'Halo Admin Pendaftaran, saya ingin bertanya seputar PPDB / Pendaftaran Siswa Baru.')" class="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-2xl transition-all duration-300 group border border-transparent hover:border-slate-100">
+                <div class="w-12 h-12 rounded-full bg-[#dcfce7]/50 border border-[#bbf7d0] text-[#16a34a] flex items-center justify-center shrink-0 group-hover:scale-110 transition shadow-sm"><i data-lucide="user-check" size="20"></i></div>
                 <div>
-                    <h4 class="font-black text-blue-900 text-sm">Admin Pendaftaran</h4>
+                    <h4 class="font-black text-[#1e3a8a] text-[14px]">Admin Pendaftaran</h4>
                     <p class="text-[11px] font-medium text-slate-500 mt-0.5">Tanya seputar SPMB/PPDB</p>
                 </div>
             </a>
+            <div class="w-full h-[1px] bg-slate-100 mx-auto max-w-[85%]"></div>
             <!-- Admin Umum -->
-            <a href="javascript:void(0)" onclick="window.openWA('waUmum', 'Halo Admin Umum, saya ingin bertanya informasi akademik/tata usaha.')" class="flex items-center gap-4 p-4 hover:bg-white rounded-2xl transition-all duration-300 group">
-                <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 border border-blue-200 group-hover:scale-110 transition"><i data-lucide="building" size="20"></i></div>
+            <a href="javascript:void(0)" onclick="window.openWA('waUmum', 'Halo Admin Umum, saya ingin bertanya informasi akademik/tata usaha.')" class="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-2xl transition-all duration-300 group border border-transparent hover:border-slate-100">
+                <div class="w-12 h-12 rounded-full bg-[#e0f2fe]/50 border border-[#bae6fd] text-[#2563eb] flex items-center justify-center shrink-0 group-hover:scale-110 transition shadow-sm"><i data-lucide="building-2" size="20"></i></div>
                 <div>
-                    <h4 class="font-black text-blue-900 text-sm">Admin Umum</h4>
+                    <h4 class="font-black text-[#1e3a8a] text-[14px]">Admin Umum</h4>
                     <p class="text-[11px] font-medium text-slate-500 mt-0.5">Informasi akademik & tata usaha</p>
                 </div>
             </a>
+            <div class="w-full h-[1px] bg-slate-100 mx-auto max-w-[85%]"></div>
             <!-- Kerjasama -->
-            <a href="javascript:void(0)" onclick="window.openWA('waKerjasama', 'Halo bagian Hubungan Kerjasama, saya ingin mendiskusikan peluang kunjungan/magang/industri.')" class="flex items-center gap-4 p-4 hover:bg-white rounded-2xl transition-all duration-300 group">
-                <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 border border-orange-200 group-hover:scale-110 transition"><i data-lucide="briefcase" size="20"></i></div>
+            <a href="javascript:void(0)" onclick="window.openWA('waKerjasama', 'Halo bagian Hubungan Kerjasama, saya ingin mendiskusikan peluang kunjungan/magang/industri.')" class="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-2xl transition-all duration-300 group border border-transparent hover:border-slate-100">
+                <div class="w-12 h-12 rounded-full bg-[#ffedd5]/50 border border-[#fed7aa] text-[#ea580c] flex items-center justify-center shrink-0 group-hover:scale-110 transition shadow-sm"><i data-lucide="briefcase" size="20"></i></div>
                 <div>
-                    <h4 class="font-black text-blue-900 text-sm">Hubungan Kerjasama</h4>
+                    <h4 class="font-black text-[#1e3a8a] text-[14px]">Hubungan Kerjasama</h4>
                     <p class="text-[11px] font-medium text-slate-500 mt-0.5">Kunjungan, Magang & Industri</p>
                 </div>
             </a>
         </div>
         
-        <!-- Email Area -->
-        <div class="p-4 bg-white border-t border-slate-100">
-            <div class="bg-blue-900 rounded-2xl p-4 flex items-center gap-4 text-white">
-                <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0 border border-white/20"><i data-lucide="mail" size="18"></i></div>
+        <!-- Email Area & Waktu -->
+        <div class="px-5 pb-6 pt-2 bg-white rounded-b-[1.5rem]">
+            <a href="javascript:void(0)" onclick="window.location.href='mailto:'+window.siteConfig.email" class="bg-[#274690] rounded-[1.25rem] p-4 flex items-center gap-4 text-white hover:bg-blue-800 transition shadow-md block">
+                <div class="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center shrink-0 bg-white/10"><i data-lucide="mail" size="18"></i></div>
                 <div class="overflow-hidden">
-                    <p class="text-[9px] font-black uppercase tracking-widest text-yellow-400 mb-0.5">Email Resmi</p>
-                    <p class="text-[13px] font-bold truncate w-full" id="layanan-email">info@smk.sch.id</p>
+                    <p class="text-[8px] font-black uppercase tracking-widest text-yellow-400 mb-0.5">EMAIL RESMI</p>
+                    <p class="text-[12px] font-bold truncate w-full" id="layanan-email">info@smk.sch.id</p>
                 </div>
-            </div>
-            <div class="text-center mt-4">
-                <p class="text-[10px] font-semibold text-slate-400">Jam Operasional: Senin - Sabtu (07.00 - 15.00 WIB)</p>
+            </a>
+            <div class="text-center mt-5">
+                <p class="text-[10px] font-bold text-slate-400">Jam Operasional: Senin - Sabtu (07.00 - 15.00 WIB)</p>
             </div>
         </div>
     </div>
@@ -284,7 +290,7 @@
             videoUrl1: "", videoUrl2: "", videoUrl3: "",
             address: "Jl. Gajah Mada No.1, Metro, Lampung",
             phone: "(0725) 123456",
-            email: "smkkpgajahmadametro@gmail.com",
+            email: "info@smkgajahmada1metro.sch.id",
             stat1Val: "440", stat1Label: "Siswa Aktif",
             stat2Val: "31", stat2Label: "Guru & Staff",
             stat3Val: "5", stat3Label: "Laboratorium",
@@ -595,13 +601,13 @@
                 
                 if (gridItems !== '') {
                     videoHTML = `
-                        <div class="mt-8 pt-6 border-t border-slate-200">
-                            <div class="text-center mb-4">
-                                <div class="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-slate-900 text-white text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded-full shadow-md">
-                                    <i data-lucide="play-circle" size="14" class="text-yellow-400"></i> Video Profil Institusi
+                        <div class="mt-4 pt-4 border-t border-slate-200">
+                            <div class="text-center mb-3">
+                                <div class="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-slate-900 text-white text-[9px] font-bold uppercase tracking-widest rounded-full shadow-sm">
+                                    <i data-lucide="play-circle" size="14" class="text-yellow-400"></i> Video Profil
                                 </div>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-${Math.min(validVideoUrls.length, 3)} gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-${Math.min(validVideoUrls.length, 3)} gap-3 md:gap-4">
                                 ${gridItems}
                             </div>
                         </div>
@@ -624,25 +630,29 @@
                 </section>
 
                 <!-- Sambutan Pimpinan & Video -->
-                <section class="py-6 md:py-8 bg-white border-b border-slate-100 relative overflow-hidden">
-                    <div class="max-w-5xl mx-auto px-4 relative z-10">
-                        <div class="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8 bg-white/80 backdrop-blur-xl p-5 md:p-6 rounded-[2rem] border border-slate-100 shadow-md ${videoHTML === '' ? '' : 'mb-6'}">
-                            <div class="shrink-0 relative group mt-1">
-                                <div class="absolute inset-0 bg-blue-600 rounded-[1.5rem] translate-x-2 translate-y-2"></div>
-                                <img src="${window.siteConfig.sambutanImage}" class="relative z-10 w-28 h-40 md:w-36 md:h-48 rounded-[1.5rem] object-cover border-4 border-white shadow-sm">
-                                <div class="absolute -bottom-3 -left-3 bg-yellow-400 text-white p-2.5 rounded-xl shadow-md z-20 transform -rotate-6"><i data-lucide="quote" size="18" class="fill-current"></i></div>
+                <section class="py-4 md:py-6 bg-slate-50 border-b border-slate-200 relative overflow-hidden">
+                    <div class="max-w-6xl mx-auto px-4 relative z-10">
+                        
+                        <!-- CARD SAMBUTAN BARU -->
+                        <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.05)] p-4 md:p-5 w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-5 md:gap-6 ${videoHTML === '' ? '' : 'mb-4'}">
+                            <!-- image side -->
+                            <div class="shrink-0 relative mt-1 md:mt-0">
+                                <div class="absolute inset-0 bg-blue-600 rounded-2xl translate-x-1.5 translate-y-1.5"></div>
+                                <img src="${window.siteConfig.sambutanImage}" class="relative z-10 w-24 h-32 md:w-32 md:h-44 rounded-2xl object-cover border-[3px] border-white shadow-sm">
+                                <div class="absolute -bottom-2 -left-2 bg-yellow-400 p-2 rounded-lg shadow-md z-20"><i data-lucide="quote" class="text-white fill-current" size="14"></i></div>
                             </div>
-                            <div class="text-center md:text-left flex-1">
-                                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[9px] font-black uppercase mb-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span> Sambutan</div>
-                                <h2 class="text-xl md:text-2xl font-black text-blue-900 mb-3 leading-tight">Suara <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">${window.siteConfig.sambutanRole}</span></h2>
-                                <p class="text-slate-600 text-xs md:text-sm leading-relaxed italic mb-4">"${window.siteConfig.sambutanText}"</p>
-                                <div class="inline-block bg-slate-50 px-4 py-2.5 rounded-xl border shadow-sm">
-                                    <p class="font-black text-blue-900 text-xs md:text-sm">${window.siteConfig.sambutanName}</p>
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">${window.siteConfig.sambutanRole}</p>
+                            <!-- text side -->
+                            <div class="flex-1 text-center md:text-left">
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[8px] md:text-[9px] font-black uppercase tracking-widest mb-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> SAMBUTAN</div>
+                                <h2 class="text-xl md:text-2xl font-black text-blue-900 mb-2 leading-tight">Suara <span class="text-blue-500">${window.siteConfig.sambutanRole}</span></h2>
+                                <p class="text-slate-600 text-[11px] md:text-sm leading-snug italic mb-3">"${window.siteConfig.sambutanText}"</p>
+                                <div class="inline-block border border-slate-100 bg-slate-50 px-4 py-2 rounded-xl">
+                                    <p class="font-black text-blue-900 text-[11px] md:text-sm">${window.siteConfig.sambutanName}</p>
+                                    <p class="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">${window.siteConfig.sambutanRole}</p>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Area Video -->
                         ${videoHTML}
                     </div>
@@ -657,23 +667,24 @@
                 </div></section>
 
                 <!-- Program Keahlian -->
-                <section class="py-8 md:py-10 bg-gradient-to-b from-white to-slate-50">
+                <section class="py-10 md:py-16 bg-gradient-to-b from-white to-slate-50">
                     <div class="max-w-7xl mx-auto px-4">
-                        <div class="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+                        <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
                             <div class="text-center md:text-left"><h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase">Program Keahlian</h3></div>
                             <button onclick="window.navigate('jurusan')" class="px-5 py-2.5 bg-blue-900 text-white text-[10px] md:text-xs font-black uppercase rounded-lg hover:bg-black transition shadow-sm">Lihat Semua &rarr;</button>
                         </div>
                         
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4">
                             ${window.jurusanList.map(j => `
-                                <div class="bg-white rounded-2xl p-2 md:p-3 shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 flex flex-col group cursor-pointer transform hover:-translate-y-1" onclick="window.navigate('jurusan')">
-                                    <div class="h-24 md:h-28 w-full rounded-xl overflow-hidden relative bg-transparent flex items-center justify-center" onclick="event.stopPropagation(); window.openLightbox('${j.image}')">
-                                        <img src="${j.image}" class="w-full h-full object-contain group-hover:scale-110 transition duration-500">
-                                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 bg-black/5"><div class="bg-white/80 backdrop-blur-sm p-2 rounded-full text-blue-900 shadow-sm"><i data-lucide="zoom-in" size="14"></i></div></div>
-                                        <div class="absolute bottom-1 left-1"><span class="bg-yellow-400 text-blue-900 font-black px-1.5 py-0.5 rounded text-[8px] md:text-[9px] uppercase shadow-sm">${j.code}</span></div>
+                                <div class="bg-white rounded-[1.25rem] p-3 shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-200 flex flex-col group cursor-pointer transform hover:-translate-y-1" onclick="window.navigate('jurusan')">
+                                    <div class="relative w-full aspect-square mb-3 bg-transparent flex items-center justify-center rounded-xl overflow-hidden" onclick="event.stopPropagation(); window.openLightbox('${j.image}')">
+                                        <img src="${j.image}" class="w-full h-full object-contain group-hover:scale-105 transition duration-500">
+                                        <div class="absolute bottom-0 left-0">
+                                            <span class="bg-yellow-400 text-blue-900 font-black px-2 py-1 rounded text-[9px] uppercase shadow-sm">${j.code}</span>
+                                        </div>
                                     </div>
-                                    <div class="pt-3 pb-1 text-center flex-1 flex flex-col items-center justify-center">
-                                        <h4 class="font-bold text-[10px] md:text-xs text-blue-900 group-hover:text-blue-600 transition-colors leading-snug">${j.name}</h4>
+                                    <div class="flex-1 flex items-center justify-center text-center">
+                                        <h4 class="font-bold text-[11px] md:text-xs text-blue-900 group-hover:text-blue-600 transition-colors leading-snug">${j.name}</h4>
                                     </div>
                                 </div>
                             `).join('') || '<div class="col-span-full py-10 text-center italic text-slate-400 border-2 border-dashed border-slate-200 rounded-[2rem]">Belum ada jurusan.</div>'}
@@ -682,20 +693,22 @@
                 </section>
 
                 <!-- Berita Terbaru -->
-                <section class="py-8 md:py-10 bg-white border-t border-slate-100">
+                <section class="py-10 md:py-16 bg-white border-t border-slate-100">
                     <div class="max-w-7xl mx-auto px-4">
-                        <div class="text-center mb-8"><h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase">Kabar Terbaru</h3></div>
+                        <div class="text-center mb-10"><h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase">Kabar Terbaru</h3></div>
                         
-                        <div class="flex flex-wrap justify-center gap-6 mb-8">
+                        <div class="flex flex-wrap justify-center gap-6 mb-10">
                             ${window.beritaList.slice(0, 3).map(n => `
-                                <div class="w-full sm:w-[320px] bg-white rounded-[1.5rem] overflow-hidden border shadow-sm hover:shadow-md group cursor-pointer flex flex-col transition-transform transform hover:-translate-y-1" onclick="window.navigate('berita-detail', '${n.id}')">
-                                    <div class="h-44 overflow-hidden relative shrink-0 m-2 rounded-xl">
-                                        <img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
-                                        <div class="absolute top-3 left-3"><span class="bg-white/90 backdrop-blur-sm text-blue-900 font-black px-2.5 py-1 rounded-lg text-[9px] uppercase shadow-sm">${n.category}</span></div>
+                                <div class="w-full sm:w-[320px] bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col transform hover:-translate-y-1" onclick="window.navigate('berita-detail', '${n.id}')">
+                                    <div class="p-2 pb-0 relative">
+                                        <div class="h-44 w-full rounded-[1.5rem] overflow-hidden relative">
+                                            <img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                                            <div class="absolute top-3 left-3"><span class="bg-white text-blue-900 font-black px-3 py-1.5 rounded-full text-[9px] uppercase shadow-sm">${n.category}</span></div>
+                                        </div>
                                     </div>
-                                    <div class="p-4 md:p-5 flex-1 flex flex-col text-center md:text-left">
-                                        <div class="text-[9px] font-bold text-slate-400 uppercase mb-2"><i data-lucide="calendar" size="12" class="inline"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</div>
-                                        <h4 class="font-black text-base md:text-lg text-blue-900 group-hover:text-blue-600 line-clamp-2 leading-snug">${n.title}</h4>
+                                    <div class="p-6 pt-5 flex-1 flex flex-col text-left">
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i data-lucide="calendar" size="14" class="text-slate-400"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</div>
+                                        <h4 class="font-black text-lg text-blue-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">${n.title}</h4>
                                     </div>
                                 </div>
                             `).join('') || '<div class="w-full py-12 text-center italic text-slate-400 border-2 border-dashed border-slate-200 rounded-2xl">Belum ada berita.</div>'}
@@ -936,8 +949,19 @@
         // --- DASHBOARD ADMIN ---
         window.renderLoginForm = () => {
             document.getElementById('content').innerHTML = `
-                <div class="max-w-md mx-auto py-24 px-6 text-center"><div class="bg-white p-8 rounded-3xl shadow-2xl border relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-2 bg-blue-600"></div><h2 class="text-2xl font-bold mb-6 text-blue-900 uppercase">Login Admin</h2>
-                <form onsubmit="window.adminLogin(event)" class="space-y-4"><input type="text" id="login-user" placeholder="Username" required class="w-full px-4 py-3 border rounded-xl bg-slate-50 outline-none"><input type="password" id="login-pass" placeholder="Password" required class="w-full px-4 py-3 border rounded-xl bg-slate-50 outline-none"><button type="submit" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold">MASUK</button></form></div></div>`;
+                <div class="min-h-[70vh] flex items-center justify-center bg-slate-50 py-20 px-4">
+                    <div class="max-w-md w-full bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 text-center relative overflow-hidden">
+                        <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="lock" size="32"></i></div>
+                        <h2 class="text-2xl font-black text-blue-900 mb-2 uppercase tracking-tight">Otorisasi Akses</h2>
+                        <p class="text-slate-500 text-sm mb-8">Silakan masuk menggunakan kredensial admin Anda.</p>
+                        <form onsubmit="window.adminLogin(event)" class="space-y-4">
+                            <input type="text" id="login-user" placeholder="Username" required class="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-slate-50 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm">
+                            <input type="password" id="login-pass" placeholder="Password" required class="w-full px-5 py-4 border border-slate-200 rounded-2xl bg-slate-50 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all text-sm mb-4">
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-1">Masuk ke Dashboard</button>
+                        </form>
+                    </div>
+                </div>`;
+            lucide.createIcons();
         };
 
         window.adminLogin = async (e) => {
@@ -953,24 +977,54 @@
 
         window.renderAdminDashboard = () => {
             const cont = document.getElementById('content');
-            cont.innerHTML = `<div class="max-w-7xl mx-auto py-12 px-4">
-                <div class="flex justify-between items-center mb-10 bg-blue-900 text-white p-8 rounded-[2rem] shadow-xl"><div><h2 class="text-2xl font-black uppercase">Dashboard ${window.userRole.toUpperCase()}</h2></div><button onclick="window.logoutAdmin()" class="bg-white/10 hover:bg-red-500 transition px-6 py-3 rounded-xl font-bold border border-white/20 text-xs uppercase">LOGOUT</button></div>
-                <div class="flex flex-wrap gap-2 mb-8 bg-slate-200 p-2 rounded-2xl w-fit border border-slate-300">
-                    <button onclick="window.setAdminTab('overview')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">RINGKASAN</button>
-                    ${window.userRole==='admin' ? `
-                        <button onclick="window.setAdminTab('site')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">INFO WEB</button>
-                        <button onclick="window.setAdminTab('menu')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">NAVIGASI</button>
-                        <button onclick="window.setAdminTab('profil')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">PROFIL</button>
-                        <button onclick="window.setAdminTab('jurusan')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">JURUSAN</button>
-                        <button onclick="window.setAdminTab('guru')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">GURU</button>
-                        <button onclick="window.setAdminTab('mitra')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">MITRA</button>
-                        <button onclick="window.setAdminTab('alumni')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">ALUMNI</button>
-                    ` : ''}
-                    <button onclick="window.setAdminTab('berita')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">BERITA</button>
-                    <button onclick="window.setAdminTab('galeri')" class="admin-tab px-6 py-3 rounded-xl text-[10px] font-black transition">GALERI FOTO & SLIDE</button>
+            cont.innerHTML = `
+                <div class="bg-blue-900 py-16 md:py-24 relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 24px 24px;"></div>
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div class="max-w-7xl mx-auto px-4 relative z-10">
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div class="text-center md:text-left text-white">
+                                <h2 class="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2">Panel Admin</h2>
+                                <p class="text-blue-200 text-sm md:text-base">Pusat kendali website SMK Gajahmada 1 Metro</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div id="admin-tab-content" class="bg-white p-8 md:p-12 rounded-[2.5rem] border shadow-xl min-h-[400px]"></div>
-            </div>`;
+                
+                <div class="max-w-7xl mx-auto px-4 -mt-10 relative z-20 pb-20">
+                    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                        <!-- Sidebar -->
+                        <div class="lg:w-64 shrink-0">
+                            <div class="bg-white rounded-[2rem] p-3 shadow-xl border border-slate-100 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-1.5 thin-scrollbar sticky top-24">
+                                <div class="hidden lg:flex items-center gap-4 p-3 mb-2 border-b border-slate-100">
+                                    <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shrink-0"><i data-lucide="shield-check" size="20"></i></div>
+                                    <div><p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Login Role</p><p class="font-black text-blue-900 uppercase text-xs">${window.userRole}</p></div>
+                                </div>
+                                <button onclick="window.setAdminTab('overview')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="layout-dashboard" size="16"></i> Ringkasan</button>
+                                ${window.userRole==='admin' ? `
+                                    <button onclick="window.setAdminTab('site')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="settings" size="16"></i> Pengaturan Web</button>
+                                    <button onclick="window.setAdminTab('menu')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="menu-square" size="16"></i> Navigasi Menu</button>
+                                    <button onclick="window.setAdminTab('profil')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="school" size="16"></i> Profil Sekolah</button>
+                                    <button onclick="window.setAdminTab('jurusan')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="book-open" size="16"></i> Program Keahlian</button>
+                                    <button onclick="window.setAdminTab('guru')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="users" size="16"></i> Tenaga Pendidik</button>
+                                    <button onclick="window.setAdminTab('mitra')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="briefcase" size="16"></i> Kemitraan</button>
+                                    <button onclick="window.setAdminTab('alumni')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="graduation-cap" size="16"></i> Tracer Alumni</button>
+                                ` : ''}
+                                <button onclick="window.setAdminTab('berita')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="newspaper" size="16"></i> Mading Berita</button>
+                                <button onclick="window.setAdminTab('galeri')" class="admin-tab shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-3"><i data-lucide="image" size="16"></i> Galeri Foto</button>
+                                
+                                <hr class="my-2 border-slate-100 hidden lg:block">
+                                <button onclick="window.logoutAdmin()" class="shrink-0 w-auto lg:w-full text-left px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all text-red-500 hover:bg-red-50 flex items-center gap-3"><i data-lucide="log-out" size="16"></i> Keluar Akses</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="flex-1 min-w-0">
+                            <div id="admin-tab-content"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
             window.setAdminTab(window.currentAdminTab);
         };
 
@@ -978,135 +1032,383 @@
             window.currentAdminTab = tab;
             const container = document.getElementById('admin-tab-content');
             if (!container) return;
+            
+            // Highlight Tab yang Aktif
             document.querySelectorAll('.admin-tab').forEach(b => {
                 const active = b.innerText.toLowerCase().includes(tab.slice(0,3));
-                b.classList.toggle('active', active); b.classList.toggle('shadow-lg', active);
+                if (active) {
+                    b.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                    b.classList.remove('text-slate-500', 'hover:bg-slate-50');
+                } else {
+                    b.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+                    b.classList.add('text-slate-500', 'hover:bg-slate-50');
+                }
             });
 
+            // Reusable UI Classes untuk Form
+            const inputClass = "w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all";
+            const labelClass = "text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block pl-1";
+            const btnClass = "w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-1 uppercase text-xs tracking-widest";
+            const cardClass = "bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.05)] mb-8";
+            const listCardClass = "bg-white p-4 md:p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all group";
+            
+            const btnEdit = "bg-slate-50 hover:bg-blue-100 text-blue-600 p-2.5 rounded-xl transition";
+            const btnDelete = "bg-slate-50 hover:bg-red-100 text-red-500 p-2.5 rounded-xl transition";
+
             if (tab === 'overview') {
-                container.innerHTML = `<div class="text-center py-20 italic">Selamat datang di Panel Administrasi SMK Gajahmada 1 Metro</div>`;
+                container.innerHTML = `
+                    <div class="${cardClass}">
+                        <div class="mb-8 border-b border-slate-100 pb-6">
+                            <h3 class="text-2xl font-black text-blue-900">Ringkasan Sistem</h3>
+                            <p class="text-slate-500 text-sm mt-1">Status dan data terkini dari website Anda.</p>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="bg-blue-50 rounded-2xl p-5 border border-blue-100 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform"><i data-lucide="newspaper" class="text-blue-500 mb-3" size="28"></i><h4 class="text-3xl font-black text-blue-900">${window.beritaList.length}</h4><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Berita</p></div>
+                            <div class="bg-green-50 rounded-2xl p-5 border border-green-100 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform"><i data-lucide="book-open" class="text-green-500 mb-3" size="28"></i><h4 class="text-3xl font-black text-green-900">${window.jurusanList.length}</h4><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Jurusan</p></div>
+                            <div class="bg-orange-50 rounded-2xl p-5 border border-orange-100 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform"><i data-lucide="users" class="text-orange-500 mb-3" size="28"></i><h4 class="text-3xl font-black text-orange-900">${window.guruList.length}</h4><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Guru</p></div>
+                            <div class="bg-purple-50 rounded-2xl p-5 border border-purple-100 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform"><i data-lucide="graduation-cap" class="text-purple-500 mb-3" size="28"></i><h4 class="text-3xl font-black text-purple-900">${window.alumniList.length}</h4><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Alumni</p></div>
+                        </div>
+                    </div>`;
             } 
             else if (tab === 'site') {
                 container.innerHTML = `
-                    <form onsubmit="window.handleSaveConfig(event)" class="grid md:grid-cols-2 gap-12">
-                        <div class="space-y-6">
-                            <h4 class="font-black text-blue-900 border-b pb-3 mb-4 uppercase">Identitas Web</h4>
-                            <div><label class="text-[10px] font-black">URL Logo</label><input type="url" id="conf-logo" value="${window.siteConfig.logoImage}" required class="w-full p-4 border rounded-2xl"></div>
-                            <div><label class="text-[10px] font-black">Nama Sekolah</label><input type="text" id="conf-name" value="${window.siteConfig.name}" required class="w-full p-4 border rounded-2xl"></div>
-                            <div><label class="text-[10px] font-black">Slogan Singkat</label><input type="text" id="conf-slogan" value="${window.siteConfig.slogan}" required class="w-full p-4 border rounded-2xl"></div>
-                            
-                            <h4 class="font-black text-blue-900 border-b pb-3 mb-4 mt-8 uppercase">Angka Statistik (Beranda)</h4>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label class="text-[10px] font-black">Stat 1</label><input type="text" id="c-s1-val" value="${window.siteConfig.stat1Val}" class="w-full p-3 border rounded-xl mb-1"><input type="text" id="c-s1-lab" value="${window.siteConfig.stat1Label}" class="w-full p-3 border rounded-xl"></div>
-                                <div><label class="text-[10px] font-black">Stat 2</label><input type="text" id="c-s2-val" value="${window.siteConfig.stat2Val}" class="w-full p-3 border rounded-xl mb-1"><input type="text" id="c-s2-lab" value="${window.siteConfig.stat2Label}" class="w-full p-3 border rounded-xl"></div>
-                                <div><label class="text-[10px] font-black">Stat 3</label><input type="text" id="c-s3-val" value="${window.siteConfig.stat3Val}" class="w-full p-3 border rounded-xl mb-1"><input type="text" id="c-s3-lab" value="${window.siteConfig.stat3Label}" class="w-full p-3 border rounded-xl"></div>
-                                <div><label class="text-[10px] font-black">Stat 4</label><input type="text" id="c-s4-val" value="${window.siteConfig.stat4Val}" class="w-full p-3 border rounded-xl mb-1"><input type="text" id="c-s4-lab" value="${window.siteConfig.stat4Label}" class="w-full p-3 border rounded-xl"></div>
+                    <form onsubmit="window.handleSaveConfig(event)" class="${cardClass}">
+                        <div class="mb-8 border-b border-slate-100 pb-6"><h3 class="text-2xl font-black text-blue-900">Pengaturan Dasar Web</h3></div>
+                        <div class="grid lg:grid-cols-2 gap-10">
+                            <div class="space-y-5">
+                                <h4 class="font-black text-blue-900 mb-4 uppercase text-xs tracking-widest bg-blue-50 px-4 py-2 rounded-lg inline-block">Identitas Utama</h4>
+                                <div><label class="${labelClass}">URL Logo Sekolah</label><input type="url" id="conf-logo" value="${window.siteConfig.logoImage}" required class="${inputClass}"></div>
+                                <div><label class="${labelClass}">Nama Sekolah</label><input type="text" id="conf-name" value="${window.siteConfig.name}" required class="${inputClass}"></div>
+                                <div><label class="${labelClass}">Slogan Singkat</label><input type="text" id="conf-slogan" value="${window.siteConfig.slogan}" required class="${inputClass}"></div>
+                                
+                                <h4 class="font-black text-blue-900 mb-4 mt-8 uppercase text-xs tracking-widest bg-blue-50 px-4 py-2 rounded-lg inline-block">Angka Statistik (Beranda)</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div><label class="${labelClass}">Statistik 1</label><input type="text" id="c-s1-val" value="${window.siteConfig.stat1Val}" placeholder="Angka" class="${inputClass} mb-2"><input type="text" id="c-s1-lab" value="${window.siteConfig.stat1Label}" placeholder="Label" class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Statistik 2</label><input type="text" id="c-s2-val" value="${window.siteConfig.stat2Val}" placeholder="Angka" class="${inputClass} mb-2"><input type="text" id="c-s2-lab" value="${window.siteConfig.stat2Label}" placeholder="Label" class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Statistik 3</label><input type="text" id="c-s3-val" value="${window.siteConfig.stat3Val}" placeholder="Angka" class="${inputClass} mb-2"><input type="text" id="c-s3-lab" value="${window.siteConfig.stat3Label}" placeholder="Label" class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Statistik 4</label><input type="text" id="c-s4-val" value="${window.siteConfig.stat4Val}" placeholder="Angka" class="${inputClass} mb-2"><input type="text" id="c-s4-lab" value="${window.siteConfig.stat4Label}" placeholder="Label" class="${inputClass}"></div>
+                                </div>
+                                
+                                <h4 class="font-black text-blue-900 mb-4 mt-8 uppercase text-xs tracking-widest bg-blue-50 px-4 py-2 rounded-lg inline-block">Sosial Media Footer</h4>
+                                <div class="space-y-3">
+                                    <input type="url" id="conf-facebook" value="${window.siteConfig.socialFacebook || ''}" placeholder="URL Facebook Lengkap" class="${inputClass}">
+                                    <input type="url" id="conf-instagram" value="${window.siteConfig.socialInstagram || ''}" placeholder="URL Instagram Lengkap" class="${inputClass}">
+                                    <input type="url" id="conf-youtube" value="${window.siteConfig.socialYoutube || ''}" placeholder="URL YouTube Channel Lengkap" class="${inputClass}">
+                                    <input type="url" id="conf-twitter" value="${window.siteConfig.socialTwitter || ''}" placeholder="URL Twitter / X Lengkap" class="${inputClass}">
+                                </div>
                             </div>
-                            
-                            <h4 class="font-black text-blue-900 border-b pb-3 mb-4 mt-8 uppercase">Sosial Media Footer</h4>
-                            <div class="space-y-2">
-                                <input type="url" id="conf-facebook" value="${window.siteConfig.socialFacebook || ''}" placeholder="URL Facebook Lengkap" class="w-full p-3 border rounded-xl bg-slate-50 text-xs">
-                                <input type="url" id="conf-instagram" value="${window.siteConfig.socialInstagram || ''}" placeholder="URL Instagram Lengkap" class="w-full p-3 border rounded-xl bg-slate-50 text-xs">
-                                <input type="url" id="conf-youtube" value="${window.siteConfig.socialYoutube || ''}" placeholder="URL YouTube Channel Lengkap" class="w-full p-3 border rounded-xl bg-slate-50 text-xs">
-                                <input type="url" id="conf-twitter" value="${window.siteConfig.socialTwitter || ''}" placeholder="URL Twitter / X Lengkap" class="w-full p-3 border rounded-xl bg-slate-50 text-xs">
+
+                            <div class="space-y-5">
+                                <h4 class="font-black text-blue-900 mb-4 uppercase text-xs tracking-widest bg-blue-50 px-4 py-2 rounded-lg inline-block">Sambutan & Video</h4>
+                                <div><label class="${labelClass}">Nama Pimpinan</label><input type="text" id="conf-s-name" value="${window.siteConfig.sambutanName}" required class="${inputClass}"></div>
+                                <div><label class="${labelClass}">Jabatan</label><input type="text" id="conf-s-role" value="${window.siteConfig.sambutanRole}" required class="${inputClass}"></div>
+                                <div><label class="${labelClass}">URL Foto Pimpinan</label><input type="url" id="conf-s-img" value="${window.siteConfig.sambutanImage}" required class="${inputClass}"></div>
+                                <div><label class="${labelClass}">Teks Sambutan</label><textarea id="conf-s-text" rows="2" class="${inputClass}">${window.siteConfig.sambutanText}</textarea></div>
+                                
+                                <div>
+                                    <label class="${labelClass}">3 Link Video YouTube</label>
+                                    <div class="space-y-2">
+                                        <input type="url" id="conf-video1" value="${window.siteConfig.videoUrl1 || ''}" placeholder="Link Video 1" class="${inputClass}">
+                                        <input type="url" id="conf-video2" value="${window.siteConfig.videoUrl2 || ''}" placeholder="Link Video 2" class="${inputClass}">
+                                        <input type="url" id="conf-video3" value="${window.siteConfig.videoUrl3 || ''}" placeholder="Link Video 3" class="${inputClass}">
+                                    </div>
+                                </div>
+                                
+                                <h4 class="font-black text-blue-900 mb-4 mt-8 uppercase text-xs tracking-widest bg-blue-50 px-4 py-2 rounded-lg inline-block">Pop-up Pengumuman</h4>
+                                <select id="conf-pop-status" class="${inputClass} font-bold text-blue-600">
+                                    <option value="false" ${window.siteConfig.popupEnabled === 'false' ? 'selected' : ''}>MATIKAN POP-UP (OFF)</option>
+                                    <option value="true" ${window.siteConfig.popupEnabled === 'true' ? 'selected' : ''}>HIDUPKAN POP-UP (ON)</option>
+                                </select>
+                                <input type="url" id="conf-pop-img" value="${window.siteConfig.popupImage || ''}" placeholder="URL Gambar / Poster Pop-up" class="${inputClass}">
+                                <input type="url" id="conf-pop-link" value="${window.siteConfig.popupLink || ''}" placeholder="URL Tujuan Jika Diklik (Opsional)" class="${inputClass}">
+
+                                <h4 class="font-black text-blue-900 mb-4 mt-8 uppercase text-xs tracking-widest bg-blue-50 px-4 py-2 rounded-lg inline-block">Kontak (WhatsApp & Email)</h4>
+                                <p class="text-[10px] text-slate-500 mb-2 italic">Format wajib: 628xxx (misal: 62812345678)</p>
+                                <input type="text" id="conf-wa-daftar" value="${window.siteConfig.waPendaftaran || ''}" placeholder="WA Admin Pendaftaran" class="${inputClass} mb-2">
+                                <input type="text" id="conf-wa-umum" value="${window.siteConfig.waUmum || ''}" placeholder="WA Admin Umum" class="${inputClass} mb-2">
+                                <input type="text" id="conf-wa-kerja" value="${window.siteConfig.waKerjasama || ''}" placeholder="WA Hubungan Kerjasama" class="${inputClass} mb-2">
+
+                                <input type="text" id="conf-address" value="${window.siteConfig.address}" placeholder="Alamat Lengkap Kantor" required class="${inputClass} mb-2">
+                                <div class="flex gap-2"><input type="text" id="conf-phone" value="${window.siteConfig.phone}" placeholder="No Telp (07xx)" class="${inputClass}"><input type="email" id="conf-email" value="${window.siteConfig.email}" placeholder="Email Sekolah" class="${inputClass}"></div>
                             </div>
                         </div>
-                        <div class="space-y-6">
-                            <h4 class="font-black text-blue-900 border-b pb-3 mb-4 uppercase">Video & Sambutan</h4>
-                            <div><label class="text-[10px] font-black">Nama Pimpinan</label><input type="text" id="conf-s-name" value="${window.siteConfig.sambutanName}" required class="w-full p-4 border rounded-2xl"></div>
-                            <div><label class="text-[10px] font-black">Jabatan</label><input type="text" id="conf-s-role" value="${window.siteConfig.sambutanRole}" required class="w-full p-4 border rounded-2xl"></div>
-                            <div><label class="text-[10px] font-black">URL Foto Pimpinan</label><input type="url" id="conf-s-img" value="${window.siteConfig.sambutanImage}" required class="w-full p-4 border rounded-2xl"></div>
-                            <div><label class="text-[10px] font-black">Teks Sambutan</label><textarea id="conf-s-text" rows="2" class="w-full p-4 border rounded-2xl">${window.siteConfig.sambutanText}</textarea></div>
-                            <div class="space-y-2 pt-2">
-                                <label class="text-[10px] font-black text-blue-600 block">3 Video YouTube Beranda</label>
-                                <input type="url" id="conf-video1" value="${window.siteConfig.videoUrl1 || ''}" placeholder="Link Video 1" class="w-full p-3 border rounded-xl bg-blue-50 text-xs">
-                                <input type="url" id="conf-video2" value="${window.siteConfig.videoUrl2 || ''}" placeholder="Link Video 2" class="w-full p-3 border rounded-xl bg-blue-50 text-xs">
-                                <input type="url" id="conf-video3" value="${window.siteConfig.videoUrl3 || ''}" placeholder="Link Video 3" class="w-full p-3 border rounded-xl bg-blue-50 text-xs">
-                            </div>
-                            
-                            <h4 class="font-black text-blue-900 border-b pb-2 mb-2 mt-4 uppercase">Pop-up Pengumuman</h4>
-                            <select id="conf-pop-status" class="w-full p-3 border rounded-xl mb-2 bg-white text-xs font-bold">
-                                <option value="false" ${window.siteConfig.popupEnabled === 'false' ? 'selected' : ''}>NONAKTIFKAN POP-UP</option>
-                                <option value="true" ${window.siteConfig.popupEnabled === 'true' ? 'selected' : ''}>AKTIFKAN POP-UP</option>
-                            </select>
-                            <input type="url" id="conf-pop-img" value="${window.siteConfig.popupImage || ''}" placeholder="URL Gambar / Poster Pop-up" class="w-full p-3 border rounded-xl mb-2 text-xs">
-                            <input type="url" id="conf-pop-link" value="${window.siteConfig.popupLink || ''}" placeholder="URL Tujuan Jika Diklik (Opsional)" class="w-full p-3 border rounded-xl mb-2 text-xs">
-
-                            <h4 class="font-black text-blue-900 border-b pb-2 mb-2 mt-4 uppercase">Layanan Info (WhatsApp)</h4>
-                            <p class="text-[9px] text-slate-400 font-bold mb-2">Gunakan format 628xxx (misal: 62812345678)</p>
-                            <input type="text" id="conf-wa-daftar" value="${window.siteConfig.waPendaftaran || ''}" placeholder="WA Admin Pendaftaran" class="w-full p-3 border rounded-xl mb-2 text-xs bg-slate-50">
-                            <input type="text" id="conf-wa-umum" value="${window.siteConfig.waUmum || ''}" placeholder="WA Admin Umum" class="w-full p-3 border rounded-xl mb-2 text-xs bg-slate-50">
-                            <input type="text" id="conf-wa-kerja" value="${window.siteConfig.waKerjasama || ''}" placeholder="WA Hubungan Kerjasama" class="w-full p-3 border rounded-xl mb-2 text-xs bg-slate-50">
-
-                            <h4 class="font-black text-blue-900 border-b pb-2 mb-2 mt-4 uppercase">Kontak Alamat & Email</h4>
-                            <input type="text" id="conf-address" value="${window.siteConfig.address}" placeholder="Alamat" required class="w-full p-3 border rounded-xl mb-2 text-xs">
-                            <div class="flex gap-2"><input type="text" id="conf-phone" value="${window.siteConfig.phone}" placeholder="No Telp Kantor" class="w-1/2 p-3 border rounded-xl text-xs"><input type="email" id="conf-email" value="${window.siteConfig.email}" placeholder="Email" class="w-1/2 p-3 border rounded-xl text-xs"></div>
-                        </div>
-                        <div class="md:col-span-2 pt-4"><button type="submit" class="bg-blue-600 text-white font-black py-4 px-12 rounded-2xl shadow-lg w-full">SIMPAN SEMUA PENGATURAN</button></div>
+                        <div class="mt-10 pt-6 border-t border-slate-100"><button type="submit" class="${btnClass}">SIMPAN SEMUA PENGATURAN</button></div>
                     </form>`;
             }
             else if (tab === 'menu') {
                 const opt = availablePages.map(p => `<option value="${p.id}">${p.title}</option>`).join('');
-                container.innerHTML = `<div class="grid lg:grid-cols-2 gap-12">
-                    <div class="space-y-6"><h4 class="font-black text-blue-900 uppercase border-b pb-3 mb-6">Tambah Menu Utama</h4>
-                    <form onsubmit="window.handleAddMenu(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border"><input type="text" id="menu-title" required placeholder="Judul Menu" class="w-full p-4 border rounded-2xl"><select id="menu-type" onchange="document.getElementById('tgt-in').style.display=this.value==='link'?'block':'none'; document.getElementById('tgt-ex').style.display=this.value==='external'?'block':'none';" class="w-full p-4 border rounded-2xl bg-white"><option value="link">Halaman Internal</option><option value="external">URL Eksternal</option><option value="dropdown">Dropdown</option></select><div id="tgt-in"><select id="menu-target-in" class="w-full p-4 border rounded-2xl bg-white">${opt}</select></div><div id="tgt-ex" style="display:none;"><input type="url" id="menu-target-ex" placeholder="https://" class="w-full p-4 border rounded-2xl"></div><button type="submit" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl">TAMBAH</button></form></div>
-                    <div class="space-y-6"><h4 class="font-black text-blue-900 uppercase border-b pb-3 mb-6">Struktur Menu</h4>
-                    <div class="space-y-4">${(window.siteConfig.menuItems || []).map(m => `<div class="bg-white border p-6 rounded-3xl"><div class="flex justify-between items-center mb-4"><h5 class="font-bold text-blue-900 uppercase text-sm">${m.title}</h5><button type="button" onclick="window.requestDelete('menuItem', '${m.id}')" class="text-red-500"><i data-lucide="trash-2" size="18"></i></button></div>${m.type==='dropdown'?`<div class="pl-6 border-l-2 space-y-2 mb-4">${(m.children||[]).map(s=>`<div class="flex justify-between text-xs bg-slate-50 p-2 rounded"><span>${s.title}</span><button type="button" onclick="window.requestDelete('subMenuItem', '${m.id}|${s.id}')" class="text-red-400"><i data-lucide="x" size="14"></i></button></div>`).join('')}</div><form onsubmit="window.handleAddSubMenu(event, '${m.id}')" class="flex gap-2"><input type="text" id="sub-t-${m.id}" placeholder="Sub Menu" required class="flex-1 p-2 border rounded text-xs"><select id="sub-trg-${m.id}" class="p-2 border rounded text-xs bg-white w-28">${opt}</select><button type="submit" class="bg-blue-100 text-blue-900 px-3 rounded"><i data-lucide="plus" size="14"></i></button></form>`:''}</div>`).join('')}</div></div></div>`;
+                container.innerHTML = `
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <div class="${cardClass}">
+                            <div class="mb-6 border-b border-slate-100 pb-4"><h3 class="text-xl font-black text-blue-900">Tambah Menu Utama</h3></div>
+                            <form onsubmit="window.handleAddMenu(event)" class="space-y-4">
+                                <input type="text" id="menu-title" required placeholder="Judul Menu (Misal: Tentang)" class="${inputClass}">
+                                <select id="menu-type" onchange="document.getElementById('tgt-in').style.display=this.value==='link'?'block':'none'; document.getElementById('tgt-ex').style.display=this.value==='external'?'block':'none';" class="${inputClass}">
+                                    <option value="link">Halaman Internal (Dalam Web)</option>
+                                    <option value="external">URL Eksternal (Link Luar)</option>
+                                    <option value="dropdown">Dropdown (Memiliki Sub-menu)</option>
+                                </select>
+                                <div id="tgt-in"><select id="menu-target-in" class="${inputClass}">${opt}</select></div>
+                                <div id="tgt-ex" style="display:none;"><input type="url" id="menu-target-ex" placeholder="https://" class="${inputClass}"></div>
+                                <button type="submit" class="${btnClass} mt-2">TAMBAH MENU</button>
+                            </form>
+                        </div>
+                        <div class="${cardClass}">
+                            <div class="mb-6 border-b border-slate-100 pb-4"><h3 class="text-xl font-black text-blue-900">Struktur Saat Ini</h3></div>
+                            <div class="space-y-4">${(window.siteConfig.menuItems || []).map(m => `
+                                <div class="bg-slate-50 border border-slate-200 p-5 rounded-[1.5rem]">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h5 class="font-black text-blue-900 uppercase text-sm flex items-center gap-2"><i data-lucide="${m.type==='dropdown'?'folder':'link'}" size="16"></i> ${m.title}</h5>
+                                        <button type="button" onclick="window.requestDelete('menuItem', '${m.id}')" class="${btnDelete}"><i data-lucide="trash-2" size="16"></i></button>
+                                    </div>
+                                    ${m.type==='dropdown'?`
+                                    <div class="pl-6 border-l-2 border-slate-200 space-y-2 mb-4">
+                                        ${(m.children||[]).map(s=>`
+                                        <div class="flex justify-between items-center text-xs bg-white border border-slate-100 p-3 rounded-xl shadow-sm">
+                                            <span class="font-bold text-slate-600">${s.title}</span>
+                                            <button type="button" onclick="window.requestDelete('subMenuItem', '${m.id}|${s.id}')" class="text-red-400 hover:text-red-600 transition"><i data-lucide="x" size="14"></i></button>
+                                        </div>`).join('')}
+                                    </div>
+                                    <form onsubmit="window.handleAddSubMenu(event, '${m.id}')" class="flex gap-2">
+                                        <input type="text" id="sub-t-${m.id}" placeholder="Judul Sub Menu" required class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500">
+                                        <select id="sub-trg-${m.id}" class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 w-32">${opt}</select>
+                                        <button type="submit" class="bg-blue-600 text-white px-3 rounded-lg hover:bg-blue-700 transition"><i data-lucide="plus" size="14"></i></button>
+                                    </form>`:''}
+                                </div>`).join('')}
+                            </div>
+                        </div>
+                    </div>`;
             }
             else if (tab === 'profil') {
-                container.innerHTML = `<h3 class="text-2xl font-black mb-8 border-b pb-6 text-blue-900">Halaman Profil</h3>
-                    <form onsubmit="window.handleSaveProfil(event)" class="space-y-6 max-w-5xl">
-                        <div><label class="font-bold text-blue-900 mb-2 block">URL Banner Profil</label><input type="url" id="prof-img" value="${window.siteConfig.profilImage || ''}" required class="w-full p-4 border rounded-2xl bg-slate-50"></div>
-                        <div><label class="font-bold text-blue-900 mb-2 block">Sejarah</label><textarea id="prof-sejarah" rows="6" required class="w-full px-4 py-3 border rounded-xl bg-slate-50">${window.siteConfig.profilSejarah || ''}</textarea></div>
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div><label class="font-bold text-blue-900 mb-2 block">Visi</label><textarea id="prof-visi" rows="5" required class="w-full px-4 py-3 border rounded-xl bg-slate-50">${window.siteConfig.profilVisi || ''}</textarea></div>
-                            <div><label class="font-bold text-blue-900 mb-2 block">Misi</label><textarea id="prof-misi" rows="5" required class="w-full px-4 py-3 border rounded-xl bg-slate-50">${window.siteConfig.profilMisi || ''}</textarea></div>
-                        </div><button type="submit" class="bg-blue-600 text-white font-black py-4 px-12 rounded-2xl shadow-xl">SIMPAN PROFIL</button>
-                    </form>`;
+                container.innerHTML = `
+                    <div class="${cardClass} max-w-4xl">
+                        <div class="mb-8 border-b border-slate-100 pb-6">
+                            <h3 class="text-2xl font-black text-blue-900">Manajemen Profil Sekolah</h3>
+                        </div>
+                        <form onsubmit="window.handleSaveProfil(event)" class="space-y-6">
+                            <div><label class="${labelClass}">URL Banner Profil</label><input type="url" id="prof-img" value="${window.siteConfig.profilImage || ''}" required class="${inputClass}"></div>
+                            <div><label class="${labelClass}">Sejarah Singkat</label><textarea id="prof-sejarah" rows="6" required class="${inputClass}">${window.siteConfig.profilSejarah || ''}</textarea></div>
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div><label class="${labelClass}">Visi</label><textarea id="prof-visi" rows="5" required class="${inputClass}">${window.siteConfig.profilVisi || ''}</textarea></div>
+                                <div><label class="${labelClass}">Misi</label><textarea id="prof-misi" rows="5" required class="${inputClass}">${window.siteConfig.profilMisi || ''}</textarea></div>
+                            </div>
+                            <div class="pt-6 border-t border-slate-100"><button type="submit" class="${btnClass}">SIMPAN PROFIL</button></div>
+                        </form>
+                    </div>`;
             }
             else if (tab === 'jurusan') {
-                container.innerHTML = `<div class="grid lg:grid-cols-3 gap-10"><div class="lg:col-span-1"><form onsubmit="window.handleSaveJurusan(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border shadow-sm sticky top-4">
-                    <h3 class="font-bold mb-4 text-blue-900 text-xl">${window.editItem ? 'Edit Jurusan' : 'Tambah Jurusan'}</h3>
-                    <input type="text" id="j-code" placeholder="Kode (Misal: TKJ)" value="${window.editItem?.code || ''}" required class="w-full p-4 border rounded-2xl"><input type="text" id="j-name" placeholder="Nama Jurusan" value="${window.editItem?.name || ''}" required class="w-full p-4 border rounded-2xl"><input type="url" id="j-img" placeholder="URL Gambar" value="${window.editItem?.image || ''}" required class="w-full p-4 border rounded-2xl"><textarea id="j-desc" placeholder="Deskripsi" required rows="4" class="w-full p-4 border rounded-2xl">${window.editItem?.desc || ''}</textarea>
-                    <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl uppercase text-xs font-black">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div></form></div>
-                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">${window.jurusanList.map(j => `<div class="bg-white border p-4 rounded-[2rem] flex items-center gap-4"><img src="${j.image}" class="w-16 h-16 rounded-2xl object-cover shrink-0"><div class="flex-1"><h4 class="font-bold text-sm text-blue-900 leading-tight">${j.name}</h4><p class="text-[10px] text-slate-400 uppercase">${j.code}</p></div><div class="flex gap-2"><button onclick="window.setEditItem('jurusan', '${j.id}')" class="text-blue-600 p-2"><i data-lucide="edit-2" size="18"></i></button><button onclick="window.requestDelete('jurusan', '${j.id}')" class="text-red-500 p-2"><i data-lucide="trash-2" size="18"></i></button></div></div>`).join('')}</div></div>`;
+                container.innerHTML = `
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-1">
+                            <form onsubmit="window.handleSaveJurusan(event)" class="${cardClass} sticky top-28">
+                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Jurusan' : 'Tambah Jurusan'}</h3>
+                                <div class="space-y-4">
+                                    <div><label class="${labelClass}">Kode (Misal: TKJ)</label><input type="text" id="j-code" value="${window.editItem?.code || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Nama Program</label><input type="text" id="j-name" value="${window.editItem?.name || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">URL Gambar</label><input type="url" id="j-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Deskripsi</label><textarea id="j-desc" required rows="4" class="${inputClass}">${window.editItem?.desc || ''}</textarea></div>
+                                </div>
+                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <div class="grid grid-cols-1 gap-4">${window.jurusanList.map(j => `
+                                <div class="${listCardClass}">
+                                    <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-200"><img src="${j.image}" class="w-full h-full object-cover"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-black text-sm text-blue-900 truncate">${j.name}</h4>
+                                        <p class="text-[10px] text-blue-500 font-bold uppercase mt-1 bg-blue-50 px-2 py-0.5 rounded inline-block">${j.code}</p>
+                                    </div>
+                                    <div class="flex gap-2 shrink-0">
+                                        <button onclick="window.setEditItem('jurusan', '${j.id}')" class="${btnEdit}"><i data-lucide="edit-2" size="18"></i></button>
+                                        <button onclick="window.requestDelete('jurusan', '${j.id}')" class="${btnDelete}"><i data-lucide="trash-2" size="18"></i></button>
+                                    </div>
+                                </div>`).join('') || '<div class="py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada jurusan tersimpan.</div>'}
+                            </div>
+                        </div>
+                    </div>`;
             }
             else if (tab === 'guru') {
-                container.innerHTML = `<div class="grid lg:grid-cols-3 gap-10"><div class="lg:col-span-1"><form onsubmit="window.handleSaveGuru(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border shadow-sm sticky top-4">
-                    <h3 class="font-bold mb-4 text-blue-900 text-xl">${window.editItem ? 'Edit Guru' : 'Tambah Guru'}</h3>
-                    <input type="text" id="g-name" placeholder="Nama Guru" value="${window.editItem?.name || ''}" required class="w-full p-4 border rounded-2xl"><input type="text" id="g-sub" placeholder="Mengajar" value="${window.editItem?.subject || ''}" required class="w-full p-4 border rounded-2xl"><input type="url" id="g-img" placeholder="URL Foto" value="${window.editItem?.image || ''}" required class="w-full p-4 border rounded-2xl"><textarea id="g-quote" placeholder="Motto" required rows="3" class="w-full p-4 border rounded-2xl">${window.editItem?.quote || ''}</textarea>
-                    <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl uppercase text-xs font-black">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div></form></div>
-                    <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">${window.guruList.map(g => `<div class="bg-white border p-4 rounded-[2rem] flex items-center gap-4"><img src="${g.image}" class="w-14 h-14 rounded-full object-cover shrink-0"><div class="flex-1"><h4 class="font-bold text-sm text-blue-900">${g.name}</h4><p class="text-[10px] text-slate-400">${g.subject}</p></div><div class="flex gap-2"><button onclick="window.setEditItem('guru', '${g.id}')" class="text-blue-600 p-1"><i data-lucide="edit-2" size="18"></i></button><button onclick="window.requestDelete('guru', '${g.id}')" class="text-red-500 p-1"><i data-lucide="trash-2" size="18"></i></button></div></div>`).join('')}</div></div>`;
+                container.innerHTML = `
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-1">
+                            <form onsubmit="window.handleSaveGuru(event)" class="${cardClass} sticky top-28">
+                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Guru' : 'Tambah Guru'}</h3>
+                                <div class="space-y-4">
+                                    <div><label class="${labelClass}">Nama Lengkap</label><input type="text" id="g-name" value="${window.editItem?.name || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Mata Pelajaran / Jabatan</label><input type="text" id="g-sub" value="${window.editItem?.subject || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">URL Foto</label><input type="url" id="g-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Motto / Kutipan</label><textarea id="g-quote" required rows="3" class="${inputClass}">${window.editItem?.quote || ''}</textarea></div>
+                                </div>
+                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <div class="grid sm:grid-cols-2 gap-4">${window.guruList.map(g => `
+                                <div class="${listCardClass}">
+                                    <div class="w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-slate-100"><img src="${g.image}" class="w-full h-full object-cover"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="font-black text-sm text-blue-900 truncate">${g.name}</h4>
+                                        <p class="text-[10px] text-slate-500 font-medium truncate mt-0.5">${g.subject}</p>
+                                    </div>
+                                    <div class="flex flex-col gap-1 shrink-0">
+                                        <button onclick="window.setEditItem('guru', '${g.id}')" class="text-blue-500 hover:text-blue-700 bg-slate-50 p-1.5 rounded-lg transition"><i data-lucide="edit-2" size="14"></i></button>
+                                        <button onclick="window.requestDelete('guru', '${g.id}')" class="text-red-400 hover:text-red-600 bg-slate-50 p-1.5 rounded-lg transition"><i data-lucide="trash-2" size="14"></i></button>
+                                    </div>
+                                </div>`).join('') || '<div class="sm:col-span-2 py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada data pengajar.</div>'}
+                            </div>
+                        </div>
+                    </div>`;
             }
             else if (tab === 'mitra') {
-                container.innerHTML = `<div class="grid lg:grid-cols-3 gap-10"><div class="lg:col-span-1"><form onsubmit="window.handleSaveMitra(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border shadow-sm sticky top-4">
-                    <h3 class="font-bold mb-4 text-blue-900 text-xl">${window.editItem ? 'Edit Mitra' : 'Tambah Mitra'}</h3>
-                    <input type="text" id="m-name" placeholder="Nama Industri" value="${window.editItem?.name || ''}" required class="w-full p-4 border rounded-2xl"><input type="url" id="m-img" placeholder="URL Logo" value="${window.editItem?.image || ''}" required class="w-full p-4 border rounded-2xl"><textarea id="m-desc" placeholder="Keterangan" required rows="3" class="w-full p-4 border rounded-2xl">${window.editItem?.desc || ''}</textarea>
-                    <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl uppercase text-xs font-black">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div></form></div>
-                    <div class="lg:col-span-2 grid grid-cols-2 gap-4">${window.mitraList.map(m => `<div class="bg-white border p-4 rounded-[2rem] text-center"><img src="${m.image}" class="h-12 mx-auto object-contain mb-3"><h4 class="font-bold text-[11px] text-blue-900">${m.name}</h4><div class="flex justify-center gap-4 mt-3"><button onclick="window.setEditItem('mitra', '${m.id}')" class="text-blue-600"><i data-lucide="edit" size="16"></i></button><button onclick="window.requestDelete('mitra', '${m.id}')" class="text-red-500"><i data-lucide="trash-2" size="16"></i></button></div></div>`).join('')}</div></div>`;
+                container.innerHTML = `
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-1">
+                            <form onsubmit="window.handleSaveMitra(event)" class="${cardClass} sticky top-28">
+                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Mitra' : 'Tambah Mitra Industri'}</h3>
+                                <div class="space-y-4">
+                                    <div><label class="${labelClass}">Nama Perusahaan</label><input type="text" id="m-name" value="${window.editItem?.name || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">URL Logo Perusahaan</label><input type="url" id="m-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Keterangan Singkat</label><textarea id="m-desc" required rows="3" class="${inputClass}">${window.editItem?.desc || ''}</textarea></div>
+                                </div>
+                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <div class="grid sm:grid-cols-2 gap-4">${window.mitraList.map(m => `
+                                <div class="bg-white border border-slate-100 shadow-sm p-6 rounded-[2rem] text-center hover:shadow-md transition-all relative group">
+                                    <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="window.setEditItem('mitra', '${m.id}')" class="bg-slate-100 text-blue-600 p-2 rounded-lg hover:bg-blue-200"><i data-lucide="edit" size="14"></i></button>
+                                        <button onclick="window.requestDelete('mitra', '${m.id}')" class="bg-slate-100 text-red-500 p-2 rounded-lg hover:bg-red-200"><i data-lucide="trash-2" size="14"></i></button>
+                                    </div>
+                                    <img src="${m.image}" class="h-16 mx-auto object-contain mb-4">
+                                    <h4 class="font-black text-sm text-blue-900 line-clamp-1">${m.name}</h4>
+                                </div>`).join('') || '<div class="sm:col-span-2 py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada mitra tersimpan.</div>'}
+                            </div>
+                        </div>
+                    </div>`;
             }
             else if (tab === 'berita') {
-                container.innerHTML = `<div class="grid lg:grid-cols-3 gap-10"><div class="lg:col-span-1"><form onsubmit="window.handleSaveNews(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border shadow-sm">
-                    <h4 class="font-black text-blue-900 border-b pb-3 mb-4">${window.editItem ? 'Edit Berita' : 'Tulis Berita'}</h4>
-                    <input type="text" id="n-title" value="${window.editItem?.title || ''}" placeholder="Judul Berita" required class="w-full p-4 border rounded-2xl"><select id="n-cat" class="w-full p-4 border rounded-2xl bg-white"><option value="Kegiatan" ${window.editItem?.category==='Kegiatan'?'selected':''}>Kegiatan</option><option value="Prestasi" ${window.editItem?.category==='Prestasi'?'selected':''}>Prestasi</option><option value="Pengumuman" ${window.editItem?.category==='Pengumuman'?'selected':''}>Pengumuman</option></select><input type="url" id="n-img" value="${window.editItem?.image || ''}" placeholder="URL Gambar" required class="w-full p-4 border rounded-2xl"><textarea id="n-cnt" rows="6" placeholder="Isi Berita..." required class="w-full p-4 border rounded-2xl">${window.editItem?.content || ''}</textarea>
-                    <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-xs">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div></form></div>
-                    <div class="lg:col-span-2 space-y-4">${window.beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `<div class="bg-white border p-6 rounded-[2.5rem] flex items-center gap-6"><img src="${n.image}" class="w-20 h-20 rounded-[1.5rem] object-cover shrink-0"><div class="flex-1 overflow-hidden"><h4 class="font-bold text-blue-900 truncate">${n.title}</h4><p class="text-xs text-slate-400">${n.category}</p></div><div class="flex gap-4"><button onclick="window.setEditItem('berita', '${n.id}')" class="text-blue-600"><i data-lucide="edit-2" size="20"></i></button><button onclick="window.requestDelete('berita', '${n.id}')" class="text-red-500"><i data-lucide="trash-2" size="20"></i></button></div></div>`).join('') || '<p class="text-center italic py-20 text-slate-400 border-2 border-dashed rounded-[2rem]">Belum ada berita.</p>'}</div></div>`;
+                container.innerHTML = `
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-1">
+                            <form onsubmit="window.handleSaveNews(event)" class="${cardClass}">
+                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Berita' : 'Tulis Berita Baru'}</h3>
+                                <div class="space-y-4">
+                                    <div><label class="${labelClass}">Judul Berita</label><input type="text" id="n-title" value="${window.editItem?.title || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Kategori</label>
+                                        <select id="n-cat" class="${inputClass}">
+                                            <option value="Kegiatan" ${window.editItem?.category==='Kegiatan'?'selected':''}>Kegiatan</option>
+                                            <option value="Prestasi" ${window.editItem?.category==='Prestasi'?'selected':''}>Prestasi</option>
+                                            <option value="Pengumuman" ${window.editItem?.category==='Pengumuman'?'selected':''}>Pengumuman</option>
+                                        </select>
+                                    </div>
+                                    <div><label class="${labelClass}">URL Gambar Sampul</label><input type="url" id="n-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Isi Konten Berita</label><textarea id="n-cnt" rows="8" required class="${inputClass} resize-y">${window.editItem?.content || ''}</textarea></div>
+                                </div>
+                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">PUBLIKASIKAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2 space-y-4">
+                            ${window.beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `
+                                <div class="bg-white border border-slate-100 shadow-sm p-5 rounded-[2rem] flex flex-col sm:flex-row items-center gap-6 hover:shadow-md transition-all group">
+                                    <div class="w-full sm:w-32 h-32 rounded-[1.25rem] overflow-hidden shrink-0 relative">
+                                        <img src="${n.image}" class="w-full h-full object-cover">
+                                        <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[8px] font-black px-2 py-1 rounded-md uppercase text-blue-900">${n.category}</div>
+                                    </div>
+                                    <div class="flex-1 min-w-0 w-full">
+                                        <p class="text-[10px] font-bold text-slate-400 mb-1"><i data-lucide="clock" size="10" class="inline"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</p>
+                                        <h4 class="font-black text-blue-900 text-base line-clamp-2 leading-snug mb-2">${n.title}</h4>
+                                        <p class="text-xs text-slate-500 line-clamp-2">${n.content}</p>
+                                    </div>
+                                    <div class="flex sm:flex-col gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 sm:border-l border-slate-100 pt-3 sm:pt-0 sm:pl-4 mt-3 sm:mt-0">
+                                        <button onclick="window.setEditItem('berita', '${n.id}')" class="${btnEdit} flex items-center justify-center"><i data-lucide="edit-3" size="18"></i></button>
+                                        <button onclick="window.requestDelete('berita', '${n.id}')" class="${btnDelete} flex items-center justify-center"><i data-lucide="trash-2" size="18"></i></button>
+                                    </div>
+                                </div>`).join('') || '<div class="py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada berita.</div>'}
+                        </div>
+                    </div>`;
             }
             else if (tab === 'galeri') {
                 const opt = availablePages.map(p => `<option value="${p.id}" ${window.editItem?.btnTarget===p.id?'selected':''}>${p.title}</option>`).join('');
-                container.innerHTML = `<div class="grid lg:grid-cols-3 gap-10"><div class="lg:col-span-1"><form onsubmit="window.handleSaveGallery(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border shadow-sm">
-                    <h4 class="font-black text-blue-900 border-b pb-3 mb-4">${window.editItem ? 'Edit Slide' : 'Tambah Foto Slide'}</h4>
-                    <input type="text" id="g-cap" placeholder="Keterangan Teks" value="${window.editItem?.caption || ''}" required class="w-full p-4 border rounded-2xl"><input type="url" id="g-url" placeholder="URL Gambar" value="${window.editItem?.url || ''}" required class="w-full p-4 border rounded-2xl">
-                    <div class="pt-4 border-t"><label class="text-[10px] font-bold uppercase mb-2 block">Tujuan Tombol (Opsional)</label><input type="text" id="g-btntx" placeholder="Teks Tombol" value="${window.editItem?.btnText || ''}" class="w-full p-3 border rounded-xl mb-2"><select id="g-btntp" class="w-full p-3 border rounded-xl bg-white mb-2"><option value="link" ${window.editItem?.btnType==='link'?'selected':''}>Ke Halaman Web</option><option value="external" ${window.editItem?.btnType==='external'?'selected':''}>Ke URL Eksternal</option></select><input type="text" id="g-btntg" placeholder="ID Halaman / Tautan Web" value="${window.editItem?.btnTarget || ''}" class="w-full p-3 border rounded-xl"></div>
-                    <div class="flex gap-2 pt-2"><button type="submit" class="flex-1 bg-yellow-400 text-blue-900 font-black py-4 rounded-2xl uppercase text-xs shadow-lg">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div></form></div>
-                    <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">${window.galleryList.map(g => `<div class="group relative aspect-square rounded-[2rem] overflow-hidden border shadow-sm"><img src="${g.url}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-blue-900/80 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition"><button onclick="window.setEditItem('gallery', '${g.id}')" class="bg-white p-3 rounded-xl text-blue-600 shadow-xl"><i data-lucide="edit" size="18"></i></button><button onclick="window.requestDelete('gallery', '${g.id}')" class="bg-white p-3 rounded-xl text-red-600 shadow-xl"><i data-lucide="trash-2" size="18"></i></button></div></div>`).join('')}</div></div>`;
+                container.innerHTML = `
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-1">
+                            <form onsubmit="window.handleSaveGallery(event)" class="${cardClass} sticky top-28">
+                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Slide Foto' : 'Upload Foto Galeri'}</h3>
+                                <div class="space-y-4">
+                                    <div><label class="${labelClass}">Keterangan Singkat (Caption)</label><input type="text" id="g-cap" value="${window.editItem?.caption || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">URL Gambar Asli</label><input type="url" id="g-url" value="${window.editItem?.url || ''}" required class="${inputClass}"></div>
+                                    
+                                    <div class="pt-6 border-t border-slate-100">
+                                        <h4 class="font-bold text-xs text-blue-900 mb-3 uppercase tracking-widest"><i data-lucide="link-2" size="14" class="inline"></i> Tautan Tombol (Opsional)</h4>
+                                        <label class="${labelClass}">Teks Tombol</label>
+                                        <input type="text" id="g-btntx" value="${window.editItem?.btnText || ''}" placeholder="Misal: Daftar Sekarang" class="${inputClass} mb-3">
+                                        <label class="${labelClass}">Jenis Tautan</label>
+                                        <select id="g-btntp" class="${inputClass} mb-3">
+                                            <option value="link" ${window.editItem?.btnType==='link'?'selected':''}>Halaman Internal (Dalam Web)</option>
+                                            <option value="external" ${window.editItem?.btnType==='external'?'selected':''}>URL Eksternal (Link Luar)</option>
+                                        </select>
+                                        <label class="${labelClass}">ID Tujuan / Link Lengkap</label>
+                                        <input type="text" id="g-btntg" value="${window.editItem?.btnTarget || ''}" placeholder="ID Halaman atau https://..." class="${inputClass}">
+                                    </div>
+                                </div>
+                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1 !bg-yellow-400 !text-blue-900 hover:!bg-yellow-500 !shadow-yellow-400/30">SIMPAN FOTO</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">${window.galleryList.map(g => `
+                                <div class="group relative aspect-square rounded-[1.5rem] overflow-hidden border border-slate-200 shadow-sm">
+                                    <img src="${g.url}" class="w-full h-full object-cover">
+                                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-blue-900/90 to-transparent p-4 pt-10 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                        <p class="text-white text-[10px] font-bold line-clamp-1 mb-2">${g.caption}</p>
+                                        <div class="flex justify-center gap-2">
+                                            <button onclick="window.setEditItem('gallery', '${g.id}')" class="bg-white/20 hover:bg-white text-white hover:text-blue-600 p-2 rounded-lg backdrop-blur-sm transition"><i data-lucide="edit-3" size="14"></i></button>
+                                            <button onclick="window.requestDelete('gallery', '${g.id}')" class="bg-white/20 hover:bg-red-500 text-white p-2 rounded-lg backdrop-blur-sm transition"><i data-lucide="trash-2" size="14"></i></button>
+                                        </div>
+                                    </div>
+                                </div>`).join('') || '<div class="col-span-full py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada galeri.</div>'}
+                            </div>
+                        </div>
+                    </div>`;
             }
             else if (tab === 'alumni') {
                 const pnd = window.alumniList.filter(a => a.status === 'pending');
                 const app = window.alumniList.filter(a => a.status === 'approved');
-                container.innerHTML = `<div class="space-y-12">
-                    <div><h3 class="font-bold mb-6 text-yellow-600 text-xl border-b pb-4">Menunggu Persetujuan (${pnd.length})</h3><div class="grid md:grid-cols-3 gap-6">${pnd.map(a => `<div class="bg-yellow-50 rounded-2xl border p-6"><div class="flex gap-4 mb-4"><img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=fefce8&color=a16207&size=100';" class="w-12 h-12 rounded-full object-cover"><div><h4 class="font-bold text-sm">${a.name}</h4><p class="text-[10px] text-slate-500">Lulusan ${a.graduationYear}</p></div></div><p class="text-xs mb-4 text-slate-600 italic">"${a.quote}"</p><div class="flex gap-2"><button onclick="window.handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 text-white font-bold py-2 rounded-lg text-xs">Setujui</button><button onclick="window.requestDelete('alumni', '${a.id}')" class="flex-1 bg-red-100 text-red-600 font-bold py-2 rounded-lg text-xs">Tolak</button></div></div>`).join('') || '<p class="text-slate-400 italic">Tidak ada antrian.</p>'}</div></div>
-                    <div><h3 class="font-bold mb-6 text-green-600 text-xl border-b pb-4">Alumni Aktif (${app.length})</h3><div class="grid md:grid-cols-4 gap-6">${app.map(a => `<div class="bg-white rounded-2xl border p-4 text-center relative group"><img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=eff6ff&color=1e3a8a&size=100';" class="w-16 h-16 rounded-full mx-auto object-cover mb-2"><h4 class="font-bold text-sm">${a.name}</h4><p class="text-[10px] text-slate-400">${a.graduationYear}</p><button onclick="window.requestDelete('alumni', '${a.id}')" class="absolute top-2 right-2 p-1.5 bg-red-50 text-red-500 rounded-lg opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" size="14"></i></button></div>`).join('') || '<p class="text-slate-400 italic">Belum ada alumni.</p>'}</div></div></div>`;
+                container.innerHTML = `
+                    <div class="space-y-10">
+                        <div class="${cardClass} !p-6 border-yellow-200 bg-yellow-50/30">
+                            <h3 class="font-black mb-6 text-yellow-600 text-lg uppercase flex items-center gap-2"><i data-lucide="clock"></i> Menunggu Persetujuan (${pnd.length})</h3>
+                            <div class="grid lg:grid-cols-2 gap-4">${pnd.map(a => `
+                                <div class="bg-white rounded-2xl border border-yellow-100 p-5 shadow-sm">
+                                    <div class="flex gap-4 mb-4 items-center">
+                                        <img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=fefce8&color=a16207&size=100';" class="w-14 h-14 rounded-full object-cover shrink-0">
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="font-black text-sm text-blue-900 truncate">${a.name}</h4>
+                                            <p class="text-[10px] font-bold text-slate-400 mt-0.5">Lulusan ${a.graduationYear} &bull; ${a.workplace}</p>
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-50 rounded-xl p-3 mb-4 text-[11px] text-slate-600 italic">"${a.quote}"</div>
+                                    <div class="flex gap-3">
+                                        <button onclick="window.handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-2.5 rounded-xl transition text-[10px] uppercase tracking-widest"><i data-lucide="check-circle" size="14" class="inline mr-1"></i> Setujui</button>
+                                        <button onclick="window.requestDelete('alumni', '${a.id}')" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 font-black py-2.5 rounded-xl transition text-[10px] uppercase tracking-widest"><i data-lucide="x-circle" size="14" class="inline mr-1"></i> Tolak</button>
+                                    </div>
+                                </div>`).join('') || '<p class="text-slate-400 italic text-sm px-2">Tidak ada data alumni yang mengantre.</p>'}
+                            </div>
+                        </div>
+                        
+                        <div class="${cardClass} !p-6">
+                            <h3 class="font-black mb-6 text-green-600 text-lg uppercase flex items-center gap-2"><i data-lucide="users-2"></i> Database Alumni Aktif (${app.length})</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${app.map(a => `
+                                <div class="bg-slate-50 rounded-[1.5rem] border border-slate-100 p-5 text-center relative group hover:bg-white hover:shadow-md transition">
+                                    <button onclick="window.requestDelete('alumni', '${a.id}')" class="absolute top-2 right-2 p-2 bg-white text-red-500 rounded-xl shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-50"><i data-lucide="trash-2" size="14"></i></button>
+                                    <img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=eff6ff&color=1e3a8a&size=100';" class="w-16 h-16 rounded-full mx-auto object-cover mb-3 border-2 border-white shadow-sm">
+                                    <h4 class="font-black text-xs text-blue-900 leading-snug line-clamp-1">${a.name}</h4>
+                                    <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase">${a.graduationYear}</p>
+                                </div>`).join('') || '<p class="col-span-full text-slate-400 italic text-sm">Belum ada alumni yang disetujui.</p>'}
+                            </div>
+                        </div>
+                    </div>`;
             }
             lucide.createIcons();
         };
