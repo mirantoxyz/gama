@@ -438,8 +438,9 @@
         };
 
         window.moveCarousel = (dir) => {
-            if (window.galleryList.length <= 1) return;
-            window.goToSlide((window.carouselIndex + (dir === 'next' ? 1 : -1) + window.galleryList.length) % window.galleryList.length);
+            const items = document.querySelectorAll('.carousel-item');
+            if (items.length <= 1) return;
+            window.goToSlide((window.carouselIndex + (dir === 'next' ? 1 : -1) + items.length) % items.length);
         };
         window.goToSlide = (idx) => {
             const items = document.querySelectorAll('.carousel-item');
@@ -601,40 +602,46 @@
                 
                 if (gridItems !== '') {
                     videoHTML = `
-                        <div class="mt-4 pt-4 border-t border-slate-200">
-                            <div class="text-center mb-3">
-                                <div class="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-slate-900 text-white text-[9px] font-bold uppercase tracking-widest rounded-full shadow-sm">
-                                    <i data-lucide="play-circle" size="14" class="text-yellow-400"></i> Video Profil
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-${Math.min(validVideoUrls.length, 3)} gap-3 md:gap-4">
-                                ${gridItems}
+                <!-- Video Profil -->
+                <section class="py-10 md:py-14 bg-slate-50 border-t border-slate-100">
+                    <div class="max-w-6xl mx-auto px-4">
+                        <div class="text-center mb-8">
+                            <div class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-900 text-white text-[10px] md:text-xs font-bold uppercase tracking-widest rounded-full shadow-md">
+                                <i data-lucide="play-circle" size="16" class="text-yellow-400"></i> Video Profil Institusi
                             </div>
                         </div>
+                        <div class="grid grid-cols-1 md:grid-cols-${Math.min(validVideoUrls.length, 3)} gap-4 md:gap-6">
+                            ${gridItems}
+                        </div>
+                    </div>
+                </section>
                     `;
                 }
             }
+
+            // FILTER HANYA FOTO YANG DIAKTIFKAN UNTUK CAROUSEL
+            const carouselData = window.galleryList.filter(g => g.showInCarousel !== false).sort((a,b) => b.timestamp - a.timestamp);
 
             document.getElementById('content').innerHTML = `
                 <!-- Slider Utama -->
                 <section class="relative bg-slate-900 h-[350px] md:h-[500px] overflow-hidden">
                     <div id="carousel-inner" class="h-full relative">
-                        ${window.galleryList.length > 0 ? window.galleryList.map((g, i) => `
+                        ${carouselData.length > 0 ? carouselData.map((g, i) => `
                             <div class="carousel-item h-full w-full absolute inset-0 ${i === window.carouselIndex ? 'active' : ''}">
                                 <img src="${g.url}" class="w-full h-full object-cover">
                                 <div class="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-slate-900/40 to-transparent"></div>
                                 <div class="absolute inset-0 flex items-center max-w-7xl mx-auto px-6 md:px-12"><div class="max-w-2xl text-white"><div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/20 text-yellow-400 border border-yellow-400/30 text-[10px] font-black uppercase tracking-widest mb-4 backdrop-blur-sm"><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span> Selamat Datang</div><h2 class="text-3xl md:text-5xl font-black mb-4 uppercase tracking-tighter leading-tight drop-shadow-2xl">${g.caption}</h2><p class="text-xs md:text-sm text-blue-100 mb-6 max-w-lg leading-relaxed line-clamp-3">${window.siteConfig.slogan}</p>${g.btnText ? `<button onclick="${g.btnType==='external'?`window.open('${g.btnTarget}')`:`window.navigate('${g.btnTarget}')`}" class="bg-yellow-400 text-blue-900 hover:bg-white font-black px-6 py-3 rounded-xl text-[10px] md:text-xs uppercase tracking-widest shadow-xl">${g.btnText}</button>` : ''}</div></div>
                             </div>`).join('') : '<div class="h-full flex items-center justify-center text-white italic">Menunggu Foto Slide...</div>'}
                     </div>
-                    ${window.galleryList.length > 1 ? `<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">${window.galleryList.map((_, i) => `<button onclick="window.goToSlide(${i})" class="w-10 h-1.5 rounded-full transition-all duration-300 slide-dot ${i === window.carouselIndex ? 'bg-yellow-400' : 'bg-white/30'}"></button>`).join('')}</div>` : ''}
+                    ${carouselData.length > 1 ? `<div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">${carouselData.map((_, i) => `<button onclick="window.goToSlide(${i})" class="w-10 h-1.5 rounded-full transition-all duration-300 slide-dot ${i === window.carouselIndex ? 'bg-yellow-400' : 'bg-white/30'}"></button>`).join('')}</div>` : ''}
                 </section>
 
-                <!-- Sambutan Pimpinan & Video -->
+                <!-- Sambutan Pimpinan -->
                 <section class="py-4 md:py-6 bg-slate-50 border-b border-slate-200 relative overflow-hidden">
                     <div class="max-w-6xl mx-auto px-4 relative z-10">
                         
                         <!-- CARD SAMBUTAN BARU -->
-                        <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.05)] p-4 md:p-5 w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-5 md:gap-6 ${videoHTML === '' ? '' : 'mb-4'}">
+                        <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.05)] p-4 md:p-5 w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-5 md:gap-6">
                             <!-- image side -->
                             <div class="shrink-0 relative mt-1 md:mt-0">
                                 <div class="absolute inset-0 bg-blue-600 rounded-2xl translate-x-1.5 translate-y-1.5"></div>
@@ -653,8 +660,6 @@
                             </div>
                         </div>
 
-                        <!-- Area Video -->
-                        ${videoHTML}
                     </div>
                 </section>
 
@@ -718,8 +723,11 @@
                     </div>
                 </section>
 
+                <!-- Video Profil -->
+                ${videoHTML}
+
                 <!-- Mitra Industri -->
-                <section class="py-8 md:py-10 bg-slate-50 border-t border-slate-100">
+                <section class="py-8 md:py-10 bg-white border-t border-slate-100">
                     <div class="max-w-7xl mx-auto px-4 text-center">
                         <h3 class="text-xl md:text-2xl font-black text-blue-900 uppercase mb-8 text-center">Mitra Industri Strategis</h3>
                         <div class="flex flex-wrap justify-center gap-6 md:gap-12 items-center">
@@ -729,7 +737,7 @@
                 </section>
 
                 <!-- Kunjungi Kampus (Peta) -->
-                <section class="py-8 md:py-10 bg-white">
+                <section class="py-8 md:py-10 bg-slate-50 border-t border-slate-100">
                     <div class="max-w-7xl mx-auto px-4">
                         <div class="bg-blue-900 rounded-[2.5rem] p-4 shadow-xl relative flex flex-col md:flex-row gap-4 border-b-8 border-yellow-400">
                             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px;"></div>
@@ -752,39 +760,6 @@
             `;
             window.startCarousel();
             setTimeout(window.checkPopup, 1000);
-        };
-
-        window.renderGallery = () => {
-            const images = window.galleryList.sort((a,b) => b.timestamp - a.timestamp);
-            
-            document.getElementById('content').innerHTML = `
-                <div class="bg-blue-900 py-20 md:py-24 text-center text-white relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-yellow-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                    <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-                    <div class="relative z-10 max-w-3xl mx-auto px-4">
-                        <h2 class="text-sm font-bold text-yellow-400 tracking-widest uppercase mb-3"><i data-lucide="image" size="16" class="inline"></i> Dokumentasi</h2>
-                        <h3 class="text-3xl md:text-5xl font-black uppercase tracking-tighter">Galeri Foto Sekolah</h3>
-                        <p class="text-blue-200 mt-4 text-sm md:text-base leading-relaxed">Kumpulan momen, kegiatan, dan fasilitas di lingkungan SMK Gajahmada 1 Metro.</p>
-                    </div>
-                </div>
-                <div class="max-w-7xl mx-auto py-16 px-4">
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                        ${images.map(g => `
-                            <div class="bg-white rounded-2xl p-2.5 md:p-3 shadow-sm border border-slate-100 group cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col" onclick="window.openLightbox('${g.url}')">
-                                <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-3">
-                                    <img src="${g.url}" alt="${g.caption}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
-                                    <div class="absolute inset-0 bg-blue-900/30 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
-                                        <div class="bg-white/90 backdrop-blur-sm p-3 rounded-full text-blue-900 shadow-lg transform scale-50 group-hover:scale-100 transition-all duration-300">
-                                            <i data-lucide="zoom-in" size="20"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="text-center font-bold text-blue-900 text-xs md:text-sm line-clamp-2 px-2 flex-1 pb-1">${g.caption}</p>
-                            </div>
-                        `).join('') || '<div class="col-span-full py-20 text-center italic text-slate-400 border-2 border-dashed border-slate-200 rounded-[2rem]">Belum ada foto di galeri dokumentasi.</div>'}
-                    </div>
-                </div>
-            `;
         };
 
         window.renderProfil = () => {
@@ -1352,6 +1327,13 @@
                                         <label class="${labelClass}">ID Tujuan / Link Lengkap</label>
                                         <input type="text" id="g-btntg" value="${window.editItem?.btnTarget || ''}" placeholder="ID Halaman atau https://..." class="${inputClass}">
                                     </div>
+                                    
+                                    <div class="pt-4 border-t border-slate-100 mt-4">
+                                        <label class="flex items-center gap-3 cursor-pointer group">
+                                            <input type="checkbox" id="g-carousel" class="w-5 h-5 text-blue-600 rounded-md border-slate-300 focus:ring-blue-500" ${(!window.editItem || window.editItem.showInCarousel !== false) ? 'checked' : ''}>
+                                            <span class="text-[11px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-blue-600 transition">Tampilkan di Slider Beranda</span>
+                                        </label>
+                                    </div>
                                 </div>
                                 <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1 !bg-yellow-400 !text-blue-900 hover:!bg-yellow-500 !shadow-yellow-400/30">SIMPAN FOTO</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
                             </form>
@@ -1359,8 +1341,11 @@
                         <div class="lg:col-span-2">
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">${window.galleryList.map(g => `
                                 <div class="group relative aspect-square rounded-[1.5rem] overflow-hidden border border-slate-200 shadow-sm">
+                                    <div class="absolute top-3 left-3 opacity-100 z-10 transition-opacity">
+                                        ${g.showInCarousel !== false ? `<span class="bg-blue-600 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-md uppercase">DI SLIDER</span>` : `<span class="bg-slate-400 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-md uppercase">SEMBUNYI</span>`}
+                                    </div>
                                     <img src="${g.url}" class="w-full h-full object-cover">
-                                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-blue-900/90 to-transparent p-4 pt-10 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity text-center">
+                                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-blue-900/90 to-transparent p-4 pt-10 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity text-center z-10">
                                         <p class="text-white text-[10px] font-bold line-clamp-1 mb-2">${g.caption}</p>
                                         <div class="flex justify-center gap-2">
                                             <button onclick="window.setEditItem('gallery', '${g.id}')" class="bg-white/20 hover:bg-white text-white hover:text-blue-600 p-2 rounded-lg backdrop-blur-sm transition"><i data-lucide="edit-3" size="14"></i></button>
@@ -1536,7 +1521,15 @@
         window.handleSaveGallery = async (e) => {
             e.preventDefault();
             try {
-                const d = { caption: window.escapeHTML(document.getElementById('g-cap').value), url: window.escapeHTML(document.getElementById('g-url').value), btnText: window.escapeHTML(document.getElementById('g-btntx').value), btnType: document.getElementById('g-btntp').value, btnTarget: window.escapeHTML(document.getElementById('g-btntg').value), timestamp: window.editItem ? window.editItem.timestamp : Date.now() };
+                const d = { 
+                    caption: window.escapeHTML(document.getElementById('g-cap').value), 
+                    url: window.escapeHTML(document.getElementById('g-url').value), 
+                    btnText: window.escapeHTML(document.getElementById('g-btntx').value), 
+                    btnType: document.getElementById('g-btntp').value, 
+                    btnTarget: window.escapeHTML(document.getElementById('g-btntg').value), 
+                    showInCarousel: document.getElementById('g-carousel').checked,
+                    timestamp: window.editItem ? window.editItem.timestamp : Date.now() 
+                };
                 if(window.editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', window.editItem.id), d);
                 else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
                 window.editItem = null; window.showToast("Slide Tersimpan!"); window.renderAdminDashboard();
