@@ -1069,43 +1069,13 @@
             window.currentAdminTab = tab;
             const container = document.getElementById('admin-tab-content');
             if (!container) return;
-            
-            // Highlight Tab yang Aktif
             document.querySelectorAll('.admin-tab').forEach(b => {
                 const active = b.innerText.toLowerCase().includes(tab.slice(0,3));
-                if (active) {
-                    b.classList.add('bg-blue-600', 'text-white', 'shadow-md');
-                    b.classList.remove('text-slate-500', 'hover:bg-slate-50');
-                } else {
-                    b.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
-                    b.classList.add('text-slate-500', 'hover:bg-slate-50');
-                }
+                b.classList.toggle('active', active); b.classList.toggle('shadow-lg', active);
             });
 
-            // Reusable UI Classes untuk Form
-            const inputClass = "w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all";
-            const labelClass = "text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block pl-1";
-            const btnClass = "w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-1 uppercase text-xs tracking-widest";
-            const cardClass = "bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.05)] mb-8";
-            const listCardClass = "bg-white p-4 md:p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all group";
-            
-            const btnEdit = "bg-slate-50 hover:bg-blue-100 text-blue-600 p-2.5 rounded-xl transition";
-            const btnDelete = "bg-slate-50 hover:bg-red-100 text-red-500 p-2.5 rounded-xl transition";
-
             if (tab === 'overview') {
-                container.innerHTML = `
-                    <div class="${cardClass}">
-                        <div class="mb-8 border-b border-slate-100 pb-6">
-                            <h3 class="text-2xl font-black text-blue-900">Ringkasan Sistem</h3>
-                            <p class="text-slate-500 text-sm mt-1">Status dan data terkini dari website Anda.</p>
-                        </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div class="bg-blue-50 rounded-2xl p-5 border border-blue-100 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform"><i data-lucide="newspaper" class="text-blue-500 mb-3" size="28"></i><h4 class="text-3xl font-black text-blue-900">${window.beritaList.length}</h4><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Berita</p></div>
-                            <div class="bg-green-50 rounded-2xl p-5 border border-green-100 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform"><i data-lucide="book-open" class="text-green-500 mb-3" size="28"></i><h4 class="text-3xl font-black text-green-900">${window.jurusanList.length}</h4><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Jurusan</p></div>
-                            <div class="bg-orange-50 rounded-2xl p-5 border border-orange-100 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform"><i data-lucide="users" class="text-orange-500 mb-3" size="28"></i><h4 class="text-3xl font-black text-orange-900">${window.guruList.length}</h4><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Guru</p></div>
-                            <div class="bg-purple-50 rounded-2xl p-5 border border-purple-100 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform"><i data-lucide="graduation-cap" class="text-purple-500 mb-3" size="28"></i><h4 class="text-3xl font-black text-purple-900">${window.alumniList.length}</h4><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Alumni</p></div>
-                        </div>
-                    </div>`;
+                container.innerHTML = `<div class="text-center py-20 italic">Selamat datang di Panel Administrasi SMK Gajahmada 1 Metro</div>`;
             } 
             else if (tab === 'site') {
                 container.innerHTML = `
@@ -1298,85 +1268,86 @@
                     </div>`;
             }
             else if (tab === 'mitra') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-1">
-                            <form onsubmit="window.handleSaveMitra(event)" class="${cardClass} sticky top-28">
-                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Mitra' : 'Tambah Mitra Industri'}</h3>
-                                <div class="space-y-4">
-                                    <div><label class="${labelClass}">Nama Perusahaan</label><input type="text" id="m-name" value="${window.editItem?.name || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">URL Logo Perusahaan</label><input type="url" id="m-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">Keterangan Singkat</label><textarea id="m-desc" required rows="3" class="${inputClass}">${window.editItem?.desc || ''}</textarea></div>
-                                </div>
-                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
-                            </form>
-                        </div>
-                        <div class="lg:col-span-2">
-                            <div class="grid sm:grid-cols-2 gap-4">${window.mitraList.map(m => `
-                                <div class="bg-white border border-slate-100 shadow-sm p-6 rounded-[2rem] text-center hover:shadow-md transition-all relative group">
-                                    <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onclick="window.setEditItem('mitra', '${m.id}')" class="bg-slate-100 text-blue-600 p-2 rounded-lg hover:bg-blue-200"><i data-lucide="edit" size="14"></i></button>
-                                        <button onclick="window.requestDelete('mitra', '${m.id}')" class="bg-slate-100 text-red-500 p-2 rounded-lg hover:bg-red-200"><i data-lucide="trash-2" size="14"></i></button>
-                                    </div>
-                                    <img src="${m.image}" class="h-16 mx-auto object-contain mb-4">
-                                    <h4 class="font-black text-sm text-blue-900 line-clamp-1">${m.name}</h4>
-                                </div>`).join('') || '<div class="sm:col-span-2 py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada mitra tersimpan.</div>'}
-                            </div>
-                        </div>
-                    </div>`;
+                container.innerHTML = `<div class="grid lg:grid-cols-3 gap-10"><div class="lg:col-span-1"><form onsubmit="window.handleSaveMitra(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border shadow-sm sticky top-4">
+                    <h3 class="font-bold mb-4 text-blue-900 text-xl">${window.editItem ? 'Edit Mitra' : 'Tambah Mitra'}</h3>
+                    <input type="text" id="m-name" placeholder="Nama Industri" value="${window.editItem?.name || ''}" required class="w-full p-4 border rounded-2xl"><input type="url" id="m-img" placeholder="URL Logo" value="${window.editItem?.image || ''}" required class="w-full p-4 border rounded-2xl"><textarea id="m-desc" placeholder="Keterangan" required rows="3" class="w-full p-4 border rounded-2xl">${window.editItem?.desc || ''}</textarea>
+                    <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl uppercase text-xs font-black">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div></form></div>
+                    <div class="lg:col-span-2 grid grid-cols-2 gap-4">${window.mitraList.map(m => `<div class="bg-white border p-4 rounded-[2rem] text-center"><img src="${m.image}" class="h-12 mx-auto object-contain mb-3"><h4 class="font-bold text-[11px] text-blue-900">${m.name}</h4><div class="flex justify-center gap-4 mt-3"><button onclick="window.setEditItem('mitra', '${m.id}')" class="text-blue-600"><i data-lucide="edit" size="16"></i></button><button onclick="window.requestDelete('mitra', '${m.id}')" class="text-red-500"><i data-lucide="trash-2" size="16"></i></button></div></div>`).join('')}</div></div>`;
             }
             else if (tab === 'berita') {
                 container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-1">
-                            <form onsubmit="window.handleSaveNews(event)" class="${cardClass} sticky top-28 max-h-[85vh] overflow-y-auto thin-scrollbar">
-                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Berita' : 'Tulis Berita Baru'}</h3>
-                                <div class="space-y-4">
-                                    <div><label class="${labelClass}">Judul Berita</label><input type="text" id="n-title" value="${window.editItem?.title || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">Kategori</label>
-                                        <select id="n-cat" class="${inputClass}">
-                                            <option value="Kegiatan" ${window.editItem?.category==='Kegiatan'?'selected':''}>Kegiatan</option>
-                                            <option value="Prestasi" ${window.editItem?.category==='Prestasi'?'selected':''}>Prestasi</option>
-                                            <option value="Pengumuman" ${window.editItem?.category==='Pengumuman'?'selected':''}>Pengumuman</option>
-                                        </select>
-                                    </div>
-                                    <div><label class="${labelClass}">URL Gambar Sampul</label><input type="url" id="n-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
-                                    
-                                    <!-- Area Quill Editor -->
+                    <div class="space-y-12">
+                        <!-- Area Form Tulis Berita Dibuat Memanjang/Lebar (Full Width) -->
+                        <div class="bg-slate-50 p-6 md:p-8 rounded-[2rem] border shadow-sm max-w-4xl mx-auto">
+                            <form onsubmit="window.handleSaveNews(event)">
+                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-200 text-xl md:text-2xl">${window.editItem ? 'Edit Berita' : 'Tulis Berita Baru'}</h3>
+                                
+                                <div class="grid md:grid-cols-2 gap-6 mb-6">
                                     <div>
-                                        <label class="${labelClass} mb-1">Isi Konten Berita</label>
-                                        <div id="n-cnt-editor"></div>
+                                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Judul Berita</label>
+                                        <input type="text" id="n-title" value="${window.editItem?.title || ''}" placeholder="Masukkan judul..." required class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 bg-white">
                                     </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Kategori</label>
+                                            <select id="n-cat" class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 bg-white cursor-pointer">
+                                                <option value="Kegiatan" ${window.editItem?.category==='Kegiatan'?'selected':''}>Kegiatan</option>
+                                                <option value="Prestasi" ${window.editItem?.category==='Prestasi'?'selected':''}>Prestasi</option>
+                                                <option value="Pengumuman" ${window.editItem?.category==='Pengumuman'?'selected':''}>Pengumuman</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">URL Gambar Sampul</label>
+                                            <input type="url" id="n-img" value="${window.editItem?.image || ''}" placeholder="https://..." required class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 bg-white">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-6">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Isi Konten Berita</label>
+                                    <div id="n-cnt-editor"></div>
                                     <input type="hidden" id="n-cnt-hidden" required>
                                 </div>
-                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">PUBLIKASIKAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
+                                
+                                <div class="flex gap-4 border-t border-slate-200 pt-6">
+                                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl uppercase text-sm tracking-widest transition shadow-lg shadow-blue-600/30">
+                                        ${window.editItem ? 'SIMPAN PERUBAHAN' : 'PUBLIKASIKAN BERITA'}
+                                    </button>
+                                    ${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-black px-8 rounded-2xl transition uppercase text-sm tracking-widest">BATAL</button>`:''}
+                                </div>
                             </form>
                         </div>
-                        <div class="lg:col-span-2 space-y-4">
-                            ${window.beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `
-                                <div class="bg-white border border-slate-100 shadow-sm p-5 rounded-[2rem] flex flex-col sm:flex-row items-center gap-6 hover:shadow-md transition-all group">
-                                    <div class="w-full sm:w-32 h-32 rounded-[1.25rem] overflow-hidden shrink-0 relative">
-                                        <img src="${n.image}" class="w-full h-full object-cover">
-                                        <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[8px] font-black px-2 py-1 rounded-md uppercase text-blue-900">${n.category}</div>
-                                    </div>
-                                    <div class="flex-1 min-w-0 w-full">
-                                        <p class="text-[10px] font-bold text-slate-400 mb-1"><i data-lucide="clock" size="10" class="inline"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</p>
-                                        <h4 class="font-black text-blue-900 text-base line-clamp-2 leading-snug mb-2">${n.title}</h4>
-                                        <p class="text-xs text-slate-500 line-clamp-2">${n.content.replace(/<[^>]*>?/gm, '')}</p>
-                                    </div>
-                                    <div class="flex sm:flex-col gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 sm:border-l border-slate-100 pt-3 sm:pt-0 sm:pl-4 mt-3 sm:mt-0">
-                                        <button onclick="window.setEditItem('berita', '${n.id}')" class="${btnEdit} flex items-center justify-center"><i data-lucide="edit-3" size="18"></i></button>
-                                        <button onclick="window.requestDelete('berita', '${n.id}')" class="${btnDelete} flex items-center justify-center"><i data-lucide="trash-2" size="18"></i></button>
-                                    </div>
-                                </div>`).join('') || '<div class="py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada berita.</div>'}
+                        
+                        <!-- Daftar Berita yang Sudah Diterbitkan -->
+                        <div>
+                            <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">Berita Terpublikasi</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                ${window.beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `
+                                    <div class="bg-white border border-slate-100 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] p-5 md:p-6 rounded-[2rem] flex flex-col sm:flex-row items-start sm:items-center gap-6 hover:shadow-md transition-all group">
+                                        <div class="w-full sm:w-32 h-32 rounded-[1.25rem] overflow-hidden shrink-0 relative bg-slate-100">
+                                            <img src="${n.image}" class="w-full h-full object-cover">
+                                            <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[8px] font-black px-2 py-1 rounded-md uppercase text-blue-900 shadow-sm">${n.category}</div>
+                                        </div>
+                                        <div class="flex-1 min-w-0 w-full">
+                                            <p class="text-[10px] font-bold text-slate-400 mb-1.5 flex items-center gap-1.5"><i data-lucide="clock" size="12"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</p>
+                                            <h4 class="font-black text-blue-900 text-base line-clamp-2 leading-snug mb-2 group-hover:text-blue-600 transition-colors">${n.title}</h4>
+                                            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">${n.content.replace(/<[^>]*>?/gm, '')}</p>
+                                        </div>
+                                        <div class="flex sm:flex-col gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-4 mt-4 sm:mt-0">
+                                            <button onclick="window.setEditItem('berita', '${n.id}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center p-3 rounded-xl transition flex-1 sm:flex-none"><i data-lucide="edit-3" size="18"></i></button>
+                                            <button onclick="window.requestDelete('berita', '${n.id}')" class="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center p-3 rounded-xl transition flex-1 sm:flex-none"><i data-lucide="trash-2" size="18"></i></button>
+                                        </div>
+                                    </div>`).join('') || '<div class="col-span-full py-20 text-center italic text-slate-400 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">Belum ada berita yang diterbitkan.</div>'}
+                            </div>
                         </div>
-                    </div>`;
+                    </div>
+                `;
                 
-                // Inisialisasi Quill setelah DOM di-render
+                // Inisialisasi Quill Editor
                 setTimeout(() => {
                     const toolbarOptions = [
                         [{ 'header': [1, 2, 3, false] }],
-                        ['bold', 'italic', 'underline'],
+                        ['bold', 'italic', 'underline', 'strike'],
                         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                         ['link'],
                         ['clean']
@@ -1384,16 +1355,14 @@
                     
                     window.quillEditor = new Quill('#n-cnt-editor', {
                         theme: 'snow',
-                        placeholder: 'Tulis isi berita di sini...',
+                        placeholder: 'Mulai menulis isi berita di sini...',
                         modules: { toolbar: toolbarOptions }
                     });
 
-                    // Jika mode Edit, masukkan konten lama ke editor
                     if(window.editItem && window.editItem.content) {
                         window.quillEditor.clipboard.dangerouslyPasteHTML(window.editItem.content);
                     }
                     
-                    // Update input hidden setiap kali editor berubah (untuk validasi & simpan)
                     window.quillEditor.on('text-change', function() {
                         document.getElementById('n-cnt-hidden').value = window.quillEditor.root.innerHTML === '<p><br></p>' ? '' : window.quillEditor.root.innerHTML;
                     });
