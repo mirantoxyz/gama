@@ -1069,10 +1069,22 @@
             window.currentAdminTab = tab;
             const container = document.getElementById('admin-tab-content');
             if (!container) return;
+            
+            // Highlight Tab yang Aktif dengan desain sidebar gaya baru
             document.querySelectorAll('.admin-tab').forEach(b => {
                 const active = b.innerText.toLowerCase().includes(tab.slice(0,3));
-                b.classList.toggle('active', active); b.classList.toggle('shadow-lg', active);
+                b.classList.toggle('active', active);
             });
+
+            // Reusable UI Classes untuk Form
+            const inputClass = "w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all";
+            const labelClass = "text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block pl-1";
+            const btnClass = "w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-1 uppercase text-xs tracking-widest";
+            const cardClass = "bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.05)] mb-8";
+            const listCardClass = "bg-white p-4 md:p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all group";
+            
+            const btnEdit = "bg-slate-50 hover:bg-blue-100 text-blue-600 p-2.5 rounded-xl transition";
+            const btnDelete = "bg-slate-50 hover:bg-red-100 text-red-500 p-2.5 rounded-xl transition";
 
             if (tab === 'overview') {
                 container.innerHTML = `<div class="text-center py-20 italic">Selamat datang di Panel Administrasi SMK Gajahmada 1 Metro</div>`;
