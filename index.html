@@ -344,6 +344,16 @@
             t.classList.remove('translate-y-20', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
         };
 
+        window.parseMarkdown = (text) => {
+            if (!text) return '';
+            let html = window.escapeHTML(text);
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-slate-800">$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
+            html = html.replace(/__(.*?)__/g, '<u class="underline decoration-slate-300 underline-offset-4">$1</u>');
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 font-bold hover:underline decoration-blue-600 hover:text-blue-800 transition">$1</a>');
+            return html;
+        };
+
         window.toggleLayananInfo = () => {
             window.isLayananOpen = !window.isLayananOpen;
             const modal = document.getElementById('layanan-info-modal');
@@ -762,13 +772,46 @@
             setTimeout(window.checkPopup, 1000);
         };
 
+        window.renderGallery = () => {
+            const images = window.galleryList.sort((a,b) => b.timestamp - a.timestamp);
+            
+            document.getElementById('content').innerHTML = `
+                <div class="bg-blue-900 py-20 md:py-24 text-center text-white relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-yellow-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                    <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                    <div class="relative z-10 max-w-3xl mx-auto px-4">
+                        <h2 class="text-sm font-bold text-yellow-400 tracking-widest uppercase mb-3"><i data-lucide="image" size="16" class="inline"></i> Dokumentasi</h2>
+                        <h3 class="text-3xl md:text-5xl font-black uppercase tracking-tighter">Galeri Foto Sekolah</h3>
+                        <p class="text-blue-200 mt-4 text-sm md:text-base leading-relaxed">Kumpulan momen, kegiatan, dan fasilitas di lingkungan SMK Gajahmada 1 Metro.</p>
+                    </div>
+                </div>
+                <div class="max-w-7xl mx-auto py-16 px-4">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        ${images.map(g => `
+                            <div class="bg-white rounded-2xl p-2.5 md:p-3 shadow-sm border border-slate-100 group cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col" onclick="window.openLightbox('${g.url}')">
+                                <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-3">
+                                    <img src="${g.url}" alt="${g.caption}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+                                    <div class="absolute inset-0 bg-blue-900/30 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                                        <div class="bg-white/90 backdrop-blur-sm p-3 rounded-full text-blue-900 shadow-lg transform scale-50 group-hover:scale-100 transition-all duration-300">
+                                            <i data-lucide="zoom-in" size="20"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-center font-bold text-blue-900 text-xs md:text-sm line-clamp-2 px-2 flex-1 pb-1">${g.caption}</p>
+                            </div>
+                        `).join('') || '<div class="col-span-full py-20 text-center italic text-slate-400 border-2 border-dashed border-slate-200 rounded-[2rem]">Belum ada foto di galeri dokumentasi.</div>'}
+                    </div>
+                </div>
+            `;
+        };
+
         window.renderProfil = () => {
             document.getElementById('content').innerHTML = `
                 <div class="relative h-[250px] bg-blue-900 overflow-hidden"><img src="${window.siteConfig.profilImage}" class="w-full h-full object-cover opacity-30"><div class="absolute inset-0 flex items-center justify-center"><h2 class="text-4xl font-black text-white uppercase tracking-widest">PROFIL SEKOLAH</h2></div></div>
                 <div class="max-w-5xl mx-auto px-4 py-16"><div class="bg-white rounded-[3rem] p-10 shadow-xl space-y-12">
-                    <div class="grid lg:grid-cols-2 gap-10"><div><h3 class="section-title text-2xl font-black text-blue-900">Sejarah</h3><p class="text-slate-600 text-sm leading-relaxed text-justify whitespace-pre-line">${window.siteConfig.profilSejarah || 'Data belum diisi.'}</p></div>
-                    <div class="space-y-8"><div class="bg-blue-50 p-8 rounded-3xl border-l-8 border-blue-600"><h4 class="font-bold text-blue-900 mb-2 uppercase">Visi</h4><p class="italic text-slate-700">"${window.siteConfig.profilVisi || '...'}"</p></div>
-                    <div class="bg-yellow-50 p-8 rounded-3xl border-l-8 border-yellow-400"><h4 class="font-bold text-yellow-900 mb-4 uppercase">Misi</h4><ul class="space-y-3 text-sm">${(window.siteConfig.profilMisi || '').split('\n').filter(m => m.trim() !== '').map(m => `<li class="flex gap-3"><i data-lucide="check-circle" class="text-yellow-600 shrink-0" size="16"></i> ${m}</li>`).join('')}</ul></div></div></div>
+                    <div class="grid lg:grid-cols-2 gap-10"><div><h3 class="section-title text-2xl font-black text-blue-900">Sejarah</h3><p class="text-slate-600 text-sm leading-relaxed text-justify whitespace-pre-line">${window.parseMarkdown(window.siteConfig.profilSejarah) || 'Data belum diisi.'}</p></div>
+                    <div class="space-y-8"><div class="bg-blue-50 p-8 rounded-3xl border-l-8 border-blue-600"><h4 class="font-bold text-blue-900 mb-2 uppercase">Visi</h4><p class="italic text-slate-700">"${window.parseMarkdown(window.siteConfig.profilVisi) || '...'}"</p></div>
+                    <div class="bg-yellow-50 p-8 rounded-3xl border-l-8 border-yellow-400"><h4 class="font-bold text-yellow-900 mb-4 uppercase">Misi</h4><ul class="space-y-3 text-sm">${(window.siteConfig.profilMisi || '').split('\n').filter(m => m.trim() !== '').map(m => `<li class="flex gap-3"><i data-lucide="check-circle" class="text-yellow-600 shrink-0" size="16"></i> ${window.parseMarkdown(m)}</li>`).join('')}</ul></div></div></div>
                 </div></div>`;
         };
 
@@ -833,7 +876,7 @@
                                 <div class="p-6 md:p-8 flex-1 flex flex-col text-left">
                                     <div class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><i data-lucide="calendar" size="14" class="text-blue-500"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</div>
                                     <h4 class="font-black text-lg md:text-xl mb-4 text-blue-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">${n.title}</h4>
-                                    <p class="text-slate-500 text-sm line-clamp-3 leading-relaxed flex-1">${n.content}</p>
+                                    <p class="text-slate-500 text-sm line-clamp-3 leading-relaxed flex-1">${n.content.replace(/[*_\[\]()]/g, '')}</p>
                                     <div class="mt-6 pt-4 border-t border-slate-50 text-[11px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-2 group-hover:gap-3 transition-all">Baca Selengkapnya &rarr;</div>
                                 </div>
                             </div>`).join('') || '<div class="col-span-full py-20 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-[2rem]">Belum ada berita yang dipublikasikan.</div>'}
@@ -880,9 +923,9 @@
                         </div>
                     </div>
                     
-                    <!-- Area Teks Bacaan -->
-                    <div class="text-slate-700 leading-loose text-justify md:text-lg whitespace-pre-line font-medium">
-                        ${n.content}
+                    <!-- Area Teks Bacaan dengan Parser Markdown -->
+                    <div class="text-slate-600 leading-loose text-justify md:text-lg whitespace-pre-line font-medium">
+                        ${window.parseMarkdown(n.content)}
                     </div>
                 </div>`;
         };
@@ -1279,7 +1322,18 @@
                                         </select>
                                     </div>
                                     <div><label class="${labelClass}">URL Gambar Sampul</label><input type="url" id="n-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">Isi Konten Berita</label><textarea id="n-cnt" rows="8" required class="${inputClass} resize-y">${window.editItem?.content || ''}</textarea></div>
+                                    
+                                    <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl text-[10px] text-blue-900">
+                                        <p class="font-bold uppercase tracking-widest mb-2"><i data-lucide="info" size="12" class="inline"></i> Format Teks (Markdown):</p>
+                                        <ul class="space-y-1 ml-2">
+                                            <li>Ketik <code>**Tebal**</code> untuk <b>Tebal</b></li>
+                                            <li>Ketik <code>*Miring*</code> untuk <i>Miring</i></li>
+                                            <li>Ketik <code>__Garis Bawah__</code> untuk <u>Garis Bawah</u></li>
+                                            <li>Ketik <code>[Teks Link](https://web.com)</code> untuk Tautan</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div><label class="${labelClass}">Isi Konten Berita</label><textarea id="n-cnt" rows="10" required class="${inputClass} resize-y">${window.editItem?.content || ''}</textarea></div>
                                 </div>
                                 <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">PUBLIKASIKAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
                             </form>
@@ -1294,7 +1348,7 @@
                                     <div class="flex-1 min-w-0 w-full">
                                         <p class="text-[10px] font-bold text-slate-400 mb-1"><i data-lucide="clock" size="10" class="inline"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</p>
                                         <h4 class="font-black text-blue-900 text-base line-clamp-2 leading-snug mb-2">${n.title}</h4>
-                                        <p class="text-xs text-slate-500 line-clamp-2">${n.content}</p>
+                                        <p class="text-xs text-slate-500 line-clamp-2">${n.content.replace(/[*_\[\]()]/g, '')}</p>
                                     </div>
                                     <div class="flex sm:flex-col gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 sm:border-l border-slate-100 pt-3 sm:pt-0 sm:pl-4 mt-3 sm:mt-0">
                                         <button onclick="window.setEditItem('berita', '${n.id}')" class="${btnEdit} flex items-center justify-center"><i data-lucide="edit-3" size="18"></i></button>
@@ -1511,7 +1565,14 @@
         window.handleSaveNews = async (e) => {
             e.preventDefault();
             try {
-                const d = { title: window.escapeHTML(document.getElementById('n-title').value), category: document.getElementById('n-cat').value, image: window.escapeHTML(document.getElementById('n-img').value), content: window.escapeHTML(document.getElementById('n-cnt').value), timestamp: window.editItem ? window.editItem.timestamp : Date.now() };
+                // Jangan me-replace isi konten secara total, biarkan utuh agar format markdown tetap ada
+                const d = { 
+                    title: window.escapeHTML(document.getElementById('n-title').value), 
+                    category: document.getElementById('n-cat').value, 
+                    image: window.escapeHTML(document.getElementById('n-img').value), 
+                    content: document.getElementById('n-cnt').value, 
+                    timestamp: window.editItem ? window.editItem.timestamp : Date.now() 
+                };
                 if(window.editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'berita', window.editItem.id), d);
                 else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'berita'), d);
                 window.editItem = null; window.showToast("Berita Tersimpan!"); window.renderAdminDashboard();
