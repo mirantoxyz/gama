@@ -733,7 +733,7 @@
                         <div class="text-center mb-10"><h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase">Kabar Terbaru</h3></div>
                         
                         <div class="flex flex-wrap justify-center gap-6 mb-10">
-                            ${window.beritaList.slice(0, 3).map(n => `
+                            ${window.beritaList.sort((a,b) => b.timestamp - a.timestamp).slice(0, 3).map(n => `
                                 <div class="w-full sm:w-[320px] bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col transform hover:-translate-y-1" onclick="window.navigate('berita-detail', '${n.id}')">
                                     <div class="p-2 pb-0 relative">
                                         <div class="h-44 w-full rounded-[1.5rem] overflow-hidden relative">
@@ -1268,11 +1268,32 @@
                     </div>`;
             }
             else if (tab === 'mitra') {
-                container.innerHTML = `<div class="grid lg:grid-cols-3 gap-10"><div class="lg:col-span-1"><form onsubmit="window.handleSaveMitra(event)" class="space-y-4 p-6 bg-slate-50 rounded-3xl border shadow-sm sticky top-4">
-                    <h3 class="font-bold mb-4 text-blue-900 text-xl">${window.editItem ? 'Edit Mitra' : 'Tambah Mitra'}</h3>
-                    <input type="text" id="m-name" placeholder="Nama Industri" value="${window.editItem?.name || ''}" required class="w-full p-4 border rounded-2xl"><input type="url" id="m-img" placeholder="URL Logo" value="${window.editItem?.image || ''}" required class="w-full p-4 border rounded-2xl"><textarea id="m-desc" placeholder="Keterangan" required rows="3" class="w-full p-4 border rounded-2xl">${window.editItem?.desc || ''}</textarea>
-                    <div class="flex gap-2"><button type="submit" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl uppercase text-xs font-black">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="bg-slate-200 px-6 rounded-2xl font-bold">BATAL</button>`:''}</div></form></div>
-                    <div class="lg:col-span-2 grid grid-cols-2 gap-4">${window.mitraList.map(m => `<div class="bg-white border p-4 rounded-[2rem] text-center"><img src="${m.image}" class="h-12 mx-auto object-contain mb-3"><h4 class="font-bold text-[11px] text-blue-900">${m.name}</h4><div class="flex justify-center gap-4 mt-3"><button onclick="window.setEditItem('mitra', '${m.id}')" class="text-blue-600"><i data-lucide="edit" size="16"></i></button><button onclick="window.requestDelete('mitra', '${m.id}')" class="text-red-500"><i data-lucide="trash-2" size="16"></i></button></div></div>`).join('')}</div></div>`;
+                container.innerHTML = `
+                    <div class="grid lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-1">
+                            <form onsubmit="window.handleSaveMitra(event)" class="${cardClass} sticky top-28">
+                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Mitra' : 'Tambah Mitra Industri'}</h3>
+                                <div class="space-y-4">
+                                    <div><label class="${labelClass}">Nama Perusahaan</label><input type="text" id="m-name" value="${window.editItem?.name || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">URL Logo Perusahaan</label><input type="url" id="m-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Keterangan Singkat</label><textarea id="m-desc" required rows="3" class="${inputClass}">${window.editItem?.desc || ''}</textarea></div>
+                                </div>
+                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <div class="grid sm:grid-cols-2 gap-4">${window.mitraList.map(m => `
+                                <div class="bg-white border border-slate-100 shadow-sm p-6 rounded-[2rem] text-center hover:shadow-md transition-all relative group">
+                                    <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="window.setEditItem('mitra', '${m.id}')" class="bg-slate-100 text-blue-600 p-2 rounded-lg hover:bg-blue-200"><i data-lucide="edit" size="14"></i></button>
+                                        <button onclick="window.requestDelete('mitra', '${m.id}')" class="bg-slate-100 text-red-500 p-2 rounded-lg hover:bg-red-200"><i data-lucide="trash-2" size="14"></i></button>
+                                    </div>
+                                    <img src="${m.image}" class="h-16 mx-auto object-contain mb-4">
+                                    <h4 class="font-black text-sm text-blue-900 line-clamp-1">${m.name}</h4>
+                                </div>`).join('') || '<div class="sm:col-span-2 py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada mitra tersimpan.</div>'}
+                            </div>
+                        </div>
+                    </div>`;
             }
             else if (tab === 'berita') {
                 container.innerHTML = `
