@@ -16,7 +16,7 @@
     <meta property="og:title" content="SMK GAJAHMADA 1 METRO - Sistem Terintegrasi">
     <meta property="og:description" content="Website Resmi SMK Gajahmada 1 Metro. Membentuk lulusan unggul, disiplin, kreatif, dan berakhlak mulia.">
     <!-- GANTI URL INI dengan link foto yang ingin muncul di Google/WA saat link dibagikan -->
-    <meta property="og:image" content="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhPgVCWnaeR7Evfv3eoiHd-ZSKKW0GtyVHQ_I0AIJynZSqENI71djdoI2GmtJWNzXKTr41ylXu2R5ajc8J_5iZcyUWplPHOtfxhtE-CYLUJw1EaCK-SlzPPkTBe0OT6i7ZjyroAlv4jH_NcUHGhFeats2JqKfJLRcoR2xYyPnJ4jmVGVHZdZ5YB5_ATn2ek/s320/512%20Gama.png">
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png">
     <meta property="og:url" content="https://smkgajahmada1metro.sch.id/">
 
     <!-- Twitter Card -->
@@ -27,7 +27,7 @@
     <meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png">
 
     <!-- Favicon Dinamis -->
-    <link rel="icon" id="favicon" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhPgVCWnaeR7Evfv3eoiHd-ZSKKW0GtyVHQ_I0AIJynZSqENI71djdoI2GmtJWNzXKTr41ylXu2R5ajc8J_5iZcyUWplPHOtfxhtE-CYLUJw1EaCK-SlzPPkTBe0OT6i7ZjyroAlv4jH_NcUHGhFeats2JqKfJLRcoR2xYyPnJ4jmVGVHZdZ5YB5_ATn2ek/s320/512%20Gama.png" type="image/png">
+    <link rel="icon" id="favicon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png" type="image/png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -754,7 +754,7 @@
                         <div class="text-center mb-10"><h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase">Kabar Terbaru</h3></div>
                         
                         <div class="flex flex-wrap justify-center gap-6 mb-10">
-                            ${window.beritaList.sort((a,b) => b.timestamp - a.timestamp).slice(0, 3).map(n => `
+                            ${window.beritaList.slice(0, 4).map(n => `
                                 <div class="w-full sm:w-[320px] bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col transform hover:-translate-y-1" onclick="window.navigate('berita-detail', '${n.id}')">
                                     <div class="p-2 pb-0 relative">
                                         <div class="h-44 w-full rounded-[1.5rem] overflow-hidden relative">
@@ -774,7 +774,7 @@
                     </div>
                 </section>
 
-                <!-- Area Video Profil (Dipindah ke atas Mitra Industri) -->
+                <!-- Video Profil -->
                 ${videoHTML}
 
                 <!-- Mitra Industri -->
@@ -1491,15 +1491,43 @@
             else if (tab === 'alumni') {
                 const pnd = window.alumniList.filter(a => a.status === 'pending');
                 const app = window.alumniList.filter(a => a.status === 'approved');
+                
+                // Form Input Edit untuk Admin
+                let editFormHTML = '';
+                if (window.editItem && window.editItem.status !== undefined) {
+                    editFormHTML = `
+                        <div class="${cardClass} bg-blue-50/50 border-blue-100">
+                            <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-blue-100 text-xl">Edit Data Alumni</h3>
+                            <form onsubmit="window.handleSaveAlumni(event)" class="space-y-4">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div><label class="${labelClass}">Nama Lengkap</label><input type="text" id="a-name" value="${window.editItem.name || ''}" required class="${inputClass}"></div>
+                                    <div><label class="${labelClass}">Tahun Kelulusan</label><input type="number" id="a-year" value="${window.editItem.graduationYear || ''}" required class="${inputClass}"></div>
+                                </div>
+                                <div><label class="${labelClass}">Tempat Kerja / Kuliah</label><input type="text" id="a-work" value="${window.editItem.workplace || ''}" required class="${inputClass}"></div>
+                                <div><label class="${labelClass}">URL Foto (Facebook/Drive)</label><input type="url" id="a-img" value="${window.editItem.image || ''}" required class="${inputClass}"></div>
+                                <div><label class="${labelClass}">Kesan Pesan</label><textarea id="a-quote" required rows="3" class="${inputClass}">${window.editItem.quote || ''}</textarea></div>
+                                <div class="flex gap-3 mt-6">
+                                    <button type="submit" class="${btnClass} flex-1">SIMPAN PERUBAHAN</button>
+                                    <button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>
+                                </div>
+                            </form>
+                        </div>
+                    `;
+                }
+
                 container.innerHTML = `
+                    ${editFormHTML}
                     <div class="space-y-10">
                         <div class="${cardClass} !p-6 border-yellow-200 bg-yellow-50/30">
                             <h3 class="font-black mb-6 text-yellow-600 text-lg uppercase flex items-center gap-2"><i data-lucide="clock"></i> Menunggu Persetujuan (${pnd.length})</h3>
                             <div class="grid lg:grid-cols-2 gap-4">${pnd.map(a => `
-                                <div class="bg-white rounded-2xl border border-yellow-100 p-5 shadow-sm">
+                                <div class="bg-white rounded-2xl border border-yellow-100 p-5 shadow-sm relative group">
+                                    <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="window.setEditItem('alumni', '${a.id}')" class="bg-blue-50 text-blue-600 p-1.5 rounded-lg hover:bg-blue-100" title="Edit Data"><i data-lucide="edit" size="14"></i></button>
+                                    </div>
                                     <div class="flex gap-4 mb-4 items-center">
                                         <img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=fefce8&color=a16207&size=100';" class="w-14 h-14 rounded-full object-cover shrink-0">
-                                        <div class="flex-1 min-w-0">
+                                        <div class="flex-1 min-w-0 pr-8">
                                             <h4 class="font-black text-sm text-blue-900 truncate">${a.name}</h4>
                                             <p class="text-[10px] font-bold text-slate-400 mt-0.5">Lulusan ${a.graduationYear} &bull; ${a.workplace}</p>
                                         </div>
@@ -1517,7 +1545,10 @@
                             <h3 class="font-black mb-6 text-green-600 text-lg uppercase flex items-center gap-2"><i data-lucide="users-2"></i> Database Alumni Aktif (${app.length})</h3>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${app.map(a => `
                                 <div class="bg-slate-50 rounded-[1.5rem] border border-slate-100 p-5 text-center relative group hover:bg-white hover:shadow-md transition">
-                                    <button onclick="window.requestDelete('alumni', '${a.id}')" class="absolute top-2 right-2 p-2 bg-white text-red-500 rounded-xl shadow-sm opacity-0 group-hover:opacity-100 transition hover:bg-red-50"><i data-lucide="trash-2" size="14"></i></button>
+                                    <div class="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition z-10">
+                                        <button onclick="window.setEditItem('alumni', '${a.id}')" class="p-1.5 bg-white text-blue-600 rounded-lg shadow-sm hover:bg-blue-50 border"><i data-lucide="edit-3" size="14"></i></button>
+                                        <button onclick="window.requestDelete('alumni', '${a.id}')" class="p-1.5 bg-white text-red-500 rounded-lg shadow-sm hover:bg-red-50 border"><i data-lucide="trash-2" size="14"></i></button>
+                                    </div>
                                     <img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=eff6ff&color=1e3a8a&size=100';" class="w-16 h-16 rounded-full mx-auto object-cover mb-3 border-2 border-white shadow-sm">
                                     <h4 class="font-black text-xs text-blue-900 leading-snug line-clamp-1">${a.name}</h4>
                                     <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase">${a.graduationYear}</p>
@@ -1680,6 +1711,24 @@
             } catch (err) { window.handleFirebaseError(err); }
         };
 
+        window.handleSaveAlumni = async (e) => {
+            e.preventDefault();
+            try {
+                if(!window.editItem) return;
+                const d = { 
+                    name: window.escapeHTML(document.getElementById('a-name').value), 
+                    graduationYear: window.escapeHTML(document.getElementById('a-year').value), 
+                    workplace: window.escapeHTML(document.getElementById('a-work').value), 
+                    image: window.escapeHTML(document.getElementById('a-img').value), 
+                    quote: window.escapeHTML(document.getElementById('a-quote').value), 
+                    status: window.editItem.status, 
+                    timestamp: window.editItem.timestamp 
+                };
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'alumni', window.editItem.id), d);
+                window.editItem = null; window.showToast("Data Alumni Diperbarui!"); window.renderAdminDashboard();
+            } catch (err) { window.handleFirebaseError(err); }
+        };
+
         window.handleSubmitAlumniTracer = async (e) => {
             e.preventDefault();
             try {
@@ -1701,6 +1750,7 @@
             else if(col === 'jurusan') list = window.jurusanList;
             else if(col === 'guru') list = window.guruList;
             else if(col === 'mitra') list = window.mitraList;
+            else if(col === 'alumni') list = window.alumniList;
             window.editItem = list.find(x => x.id === id);
             window.renderAdminDashboard();
         };
