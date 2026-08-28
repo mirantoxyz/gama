@@ -16,7 +16,7 @@
     <meta property="og:title" content="SMK GAJAHMADA 1 METRO - Sistem Terintegrasi">
     <meta property="og:description" content="Website Resmi SMK Gajahmada 1 Metro. Membentuk lulusan unggul, disiplin, kreatif, dan berakhlak mulia.">
     <!-- GANTI URL INI dengan link foto yang ingin muncul di Google/WA saat link dibagikan -->
-    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png">
+    <meta property="og:image" content="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhPgVCWnaeR7Evfv3eoiHd-ZSKKW0GtyVHQ_I0AIJynZSqENI71djdoI2GmtJWNzXKTr41ylXu2R5ajc8J_5iZcyUWplPHOtfxhtE-CYLUJw1EaCK-SlzPPkTBe0OT6i7ZjyroAlv4jH_NcUHGhFeats2JqKfJLRcoR2xYyPnJ4jmVGVHZdZ5YB5_ATn2ek/s320/512%20Gama.png">
     <meta property="og:url" content="https://smkgajahmada1metro.sch.id/">
 
     <!-- Twitter Card -->
@@ -24,10 +24,10 @@
     <meta name="twitter:title" content="SMK GAJAHMADA 1 METRO">
     <meta name="twitter:description" content="Website Resmi SMK Gajahmada 1 Metro. Membentuk lulusan unggul dan siap kerja.">
     <!-- GANTI URL INI DENGAN FOTO YANG SAMA SEPERTI DI ATAS -->
-    <meta name="twitter:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png">
+    <meta name="twitter:image" content="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhPgVCWnaeR7Evfv3eoiHd-ZSKKW0GtyVHQ_I0AIJynZSqENI71djdoI2GmtJWNzXKTr41ylXu2R5ajc8J_5iZcyUWplPHOtfxhtE-CYLUJw1EaCK-SlzPPkTBe0OT6i7ZjyroAlv4jH_NcUHGhFeats2JqKfJLRcoR2xYyPnJ4jmVGVHZdZ5YB5_ATn2ek/s320/512%20Gama.png">
 
     <!-- Favicon Dinamis -->
-    <link rel="icon" id="favicon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png" type="image/png">
+    <link rel="icon" id="favicon" href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhPgVCWnaeR7Evfv3eoiHd-ZSKKW0GtyVHQ_I0AIJynZSqENI71djdoI2GmtJWNzXKTr41ylXu2R5ajc8J_5iZcyUWplPHOtfxhtE-CYLUJw1EaCK-SlzPPkTBe0OT6i7ZjyroAlv4jH_NcUHGhFeats2JqKfJLRcoR2xYyPnJ4jmVGVHZdZ5YB5_ATn2ek/s320/512%20Gama.png" type="image/png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -48,6 +48,47 @@
         @media (min-width: 768px) { .carousel-item { height: 600px; } }
         .carousel-item.active { display: block; animation: fadeIn 0.8s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Style untuk News Slider */
+        .news-slider-container {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 2rem;
+            gap: 1.5rem;
+        }
+        .news-slider-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        .news-slider-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .news-slider-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .news-slider-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .news-slide {
+            scroll-snap-align: start;
+            flex: 0 0 calc(100% - 2rem);
+            min-width: 280px;
+            max-width: 350px;
+        }
+        @media (min-width: 768px) {
+            .news-slide {
+                flex: 0 0 calc(50% - 1.5rem);
+            }
+        }
+        @media (min-width: 1024px) {
+            .news-slide {
+                flex: 0 0 calc(33.333% - 1.5rem);
+            }
+        }
 
         .nav-link { position: relative; transition: color 0.2s; white-space: nowrap; }
         .nav-link.active-link { color: #1d4ed8; }
@@ -386,18 +427,13 @@
             t.classList.remove('translate-y-20', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
         };
 
-        // Fungsi parseMarkdown lama dipertahankan untuk kompatibilitas ke belakang, 
-        // namun untuk berita baru akan menggunakan Quill Editor yang merender HTML native.
-        window.parseMarkdown = (text) => {
-            if (!text) return '';
-            if (text.includes('<p>') || text.includes('<strong>') || text.includes('<ul>')) return text;
-            
-            let html = window.escapeHTML(text);
-            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-slate-800">$1</strong>');
-            html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
-            html = html.replace(/__(.*?)__/g, '<u class="underline decoration-slate-300 underline-offset-4">$1</u>');
-            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-blue-600 font-bold hover:underline decoration-blue-600 hover:text-blue-800 transition">$1</a>');
-            return html;
+        // Fungsi scroll untuk slider berita
+        window.scrollNews = (direction) => {
+            const container = document.getElementById('news-slider');
+            if (container) {
+                const scrollAmount = direction === 'left' ? -350 : 350;
+                container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
         };
 
         window.toggleLayananInfo = () => {
@@ -672,6 +708,9 @@
 
             // FILTER HANYA FOTO YANG DIAKTIFKAN UNTUK CAROUSEL
             const carouselData = window.galleryList.filter(g => g.showInCarousel !== false).sort((a,b) => b.timestamp - a.timestamp);
+            
+            // Siapkan 10 Berita Terbaru
+            const latestNews = window.beritaList.sort((a,b) => b.timestamp - a.timestamp).slice(0, 10);
 
             document.getElementById('content').innerHTML = `
                 <!-- Slider Utama -->
@@ -748,14 +787,20 @@
                     </div>
                 </section>
 
-                <!-- Berita Terbaru -->
-                <section class="py-10 md:py-16 bg-white border-t border-slate-100">
-                    <div class="max-w-7xl mx-auto px-4">
-                        <div class="text-center mb-10"><h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase">Kabar Terbaru</h3></div>
+                <!-- Berita Terbaru (SLIDER HORIZONTAL) -->
+                <section class="py-10 md:py-16 bg-white border-t border-slate-100 overflow-hidden">
+                    <div class="max-w-7xl mx-auto px-4 relative">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="text-2xl md:text-3xl font-black text-blue-900 uppercase">Kabar Terbaru</h3>
+                            <div class="hidden md:flex gap-2">
+                                <button onclick="window.scrollNews('left')" class="p-3 bg-slate-50 border border-slate-200 rounded-full hover:bg-blue-50 hover:text-blue-600 transition"><i data-lucide="chevron-left" size="20"></i></button>
+                                <button onclick="window.scrollNews('right')" class="p-3 bg-slate-50 border border-slate-200 rounded-full hover:bg-blue-50 hover:text-blue-600 transition"><i data-lucide="chevron-right" size="20"></i></button>
+                            </div>
+                        </div>
                         
-                        <div class="flex flex-wrap justify-center gap-6 mb-10">
-                            ${window.beritaList.slice(0, 4).map(n => `
-                                <div class="w-full sm:w-[320px] bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col transform hover:-translate-y-1" onclick="window.navigate('berita-detail', '${n.id}')">
+                        <div id="news-slider" class="news-slider-container">
+                            ${latestNews.map(n => `
+                                <div class="news-slide bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col transform hover:-translate-y-1" onclick="window.navigate('berita-detail', '${n.id}')">
                                     <div class="p-2 pb-0 relative">
                                         <div class="h-44 w-full rounded-[1.5rem] overflow-hidden relative">
                                             <img src="${n.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
@@ -770,7 +815,7 @@
                             `).join('') || '<div class="w-full py-12 text-center italic text-slate-400 border-2 border-dashed border-slate-200 rounded-2xl">Belum ada berita.</div>'}
                         </div>
                         
-                        <div class="text-center"><button onclick="window.navigate('berita')" class="px-6 py-3 bg-slate-50 border border-slate-200 text-blue-900 font-black uppercase text-[10px] md:text-xs rounded-xl hover:bg-blue-900 hover:text-white transition">Semua Berita</button></div>
+                        <div class="text-center mt-6 md:mt-10"><button onclick="window.navigate('berita')" class="px-6 py-3 bg-slate-50 border border-slate-200 text-blue-900 font-black uppercase text-[10px] md:text-xs rounded-xl hover:bg-blue-900 hover:text-white transition">Lihat Semua Berita</button></div>
                     </div>
                 </section>
 
@@ -811,6 +856,7 @@
             `;
             window.startCarousel();
             setTimeout(window.checkPopup, 1000);
+            lucide.createIcons();
         };
 
         window.renderGallery = () => {
@@ -920,7 +966,7 @@
                                     <div class="prose-berita text-slate-500 text-sm line-clamp-3 leading-relaxed flex-1">${n.content}</div>
                                     <div class="mt-6 pt-4 border-t border-slate-50 text-[11px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-2 group-hover:gap-3 transition-all">Baca Selengkapnya &rarr;</div>
                                 </div>
-                            </div>`).join('') || '<div class="col-span-full py-20 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-[2rem]">Belum ada berita yang dipublikasikan.</div>'}
+                            </div>`).join('') || '<div class="col-span-full py-20 text-center italic text-slate-400 border-2 border-dashed border-slate-200 rounded-[2rem]">Belum ada berita yang dipublikasikan.</div>'}
                     </div>
                 </div>`;
         };
@@ -1095,7 +1141,13 @@
             // Highlight Tab yang Aktif dengan desain sidebar gaya baru
             document.querySelectorAll('.admin-tab').forEach(b => {
                 const active = b.innerText.toLowerCase().includes(tab.slice(0,3));
-                b.classList.toggle('active', active);
+                if (active) {
+                    b.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                    b.classList.remove('text-slate-500', 'hover:bg-slate-50');
+                } else {
+                    b.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+                    b.classList.add('text-slate-500', 'hover:bg-slate-50');
+                }
             });
 
             // Reusable UI Classes untuk Form
@@ -1243,568 +1295,4 @@
                             <div><label class="${labelClass}">Sejarah Singkat</label><textarea id="prof-sejarah" rows="6" required class="${inputClass}">${window.siteConfig.profilSejarah || ''}</textarea></div>
                             <div class="grid md:grid-cols-2 gap-6">
                                 <div><label class="${labelClass}">Visi</label><textarea id="prof-visi" rows="5" required class="${inputClass}">${window.siteConfig.profilVisi || ''}</textarea></div>
-                                <div><label class="${labelClass}">Misi</label><textarea id="prof-misi" rows="5" required class="${inputClass}">${window.siteConfig.profilMisi || ''}</textarea></div>
-                            </div>
-                            <div class="pt-6 border-t border-slate-100"><button type="submit" class="${btnClass}">SIMPAN PROFIL</button></div>
-                        </form>
-                    </div>`;
-            }
-            else if (tab === 'jurusan') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-1">
-                            <form onsubmit="window.handleSaveJurusan(event)" class="${cardClass} sticky top-28">
-                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Jurusan' : 'Tambah Jurusan'}</h3>
-                                <div class="space-y-4">
-                                    <div><label class="${labelClass}">Kode (Misal: TKJ)</label><input type="text" id="j-code" value="${window.editItem?.code || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">Nama Program</label><input type="text" id="j-name" value="${window.editItem?.name || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">URL Gambar</label><input type="url" id="j-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">Deskripsi</label><textarea id="j-desc" required rows="4" class="${inputClass}">${window.editItem?.desc || ''}</textarea></div>
-                                </div>
-                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
-                            </form>
-                        </div>
-                        <div class="lg:col-span-2">
-                            <div class="grid grid-cols-1 gap-4">${window.jurusanList.map(j => `
-                                <div class="${listCardClass}">
-                                    <div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-200"><img src="${j.image}" class="w-full h-full object-cover"></div>
-                                    <div class="flex-1 min-w-0">
-                                        <h4 class="font-black text-sm text-blue-900 truncate">${j.name}</h4>
-                                        <p class="text-[10px] text-blue-500 font-bold uppercase mt-1 bg-blue-50 px-2 py-0.5 rounded inline-block">${j.code}</p>
-                                    </div>
-                                    <div class="flex gap-2 shrink-0">
-                                        <button onclick="window.setEditItem('jurusan', '${j.id}')" class="${btnEdit}"><i data-lucide="edit-2" size="18"></i></button>
-                                        <button onclick="window.requestDelete('jurusan', '${j.id}')" class="${btnDelete}"><i data-lucide="trash-2" size="18"></i></button>
-                                    </div>
-                                </div>`).join('') || '<div class="py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada jurusan tersimpan.</div>'}
-                            </div>
-                        </div>
-                    </div>`;
-            }
-            else if (tab === 'guru') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-1">
-                            <form onsubmit="window.handleSaveGuru(event)" class="${cardClass} sticky top-28">
-                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Guru' : 'Tambah Guru'}</h3>
-                                <div class="space-y-4">
-                                    <div><label class="${labelClass}">Nama Lengkap</label><input type="text" id="g-name" value="${window.editItem?.name || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">Mata Pelajaran / Jabatan</label><input type="text" id="g-sub" value="${window.editItem?.subject || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">URL Foto</label><input type="url" id="g-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">Motto / Kutipan</label><textarea id="g-quote" required rows="3" class="${inputClass}">${window.editItem?.quote || ''}</textarea></div>
-                                </div>
-                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
-                            </form>
-                        </div>
-                        <div class="lg:col-span-2">
-                            <div class="grid sm:grid-cols-2 gap-4">${window.guruList.map(g => `
-                                <div class="${listCardClass}">
-                                    <div class="w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-slate-100"><img src="${g.image}" class="w-full h-full object-cover"></div>
-                                    <div class="flex-1 min-w-0">
-                                        <h4 class="font-black text-sm text-blue-900 truncate">${g.name}</h4>
-                                        <p class="text-[10px] text-slate-500 font-medium truncate mt-0.5">${g.subject}</p>
-                                    </div>
-                                    <div class="flex flex-col gap-1 shrink-0">
-                                        <button onclick="window.setEditItem('guru', '${g.id}')" class="text-blue-500 hover:text-blue-700 bg-slate-50 p-1.5 rounded-lg transition"><i data-lucide="edit-2" size="14"></i></button>
-                                        <button onclick="window.requestDelete('guru', '${g.id}')" class="text-red-400 hover:text-red-600 bg-slate-50 p-1.5 rounded-lg transition"><i data-lucide="trash-2" size="14"></i></button>
-                                    </div>
-                                </div>`).join('') || '<div class="sm:col-span-2 py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada data pengajar.</div>'}
-                            </div>
-                        </div>
-                    </div>`;
-            }
-            else if (tab === 'mitra') {
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-1">
-                            <form onsubmit="window.handleSaveMitra(event)" class="${cardClass} sticky top-28">
-                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Mitra' : 'Tambah Mitra Industri'}</h3>
-                                <div class="space-y-4">
-                                    <div><label class="${labelClass}">Nama Perusahaan</label><input type="text" id="m-name" value="${window.editItem?.name || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">URL Logo Perusahaan</label><input type="url" id="m-img" value="${window.editItem?.image || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">Keterangan Singkat</label><textarea id="m-desc" required rows="3" class="${inputClass}">${window.editItem?.desc || ''}</textarea></div>
-                                </div>
-                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1">SIMPAN</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
-                            </form>
-                        </div>
-                        <div class="lg:col-span-2">
-                            <div class="grid sm:grid-cols-2 gap-4">${window.mitraList.map(m => `
-                                <div class="bg-white border border-slate-100 shadow-sm p-6 rounded-[2rem] text-center hover:shadow-md transition-all relative group">
-                                    <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onclick="window.setEditItem('mitra', '${m.id}')" class="bg-slate-100 text-blue-600 p-2 rounded-lg hover:bg-blue-200"><i data-lucide="edit" size="14"></i></button>
-                                        <button onclick="window.requestDelete('mitra', '${m.id}')" class="bg-slate-100 text-red-500 p-2 rounded-lg hover:bg-red-200"><i data-lucide="trash-2" size="14"></i></button>
-                                    </div>
-                                    <img src="${m.image}" class="h-16 mx-auto object-contain mb-4">
-                                    <h4 class="font-black text-sm text-blue-900 line-clamp-1">${m.name}</h4>
-                                </div>`).join('') || '<div class="sm:col-span-2 py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada mitra tersimpan.</div>'}
-                            </div>
-                        </div>
-                    </div>`;
-            }
-            else if (tab === 'berita') {
-                container.innerHTML = `
-                    <div class="space-y-12">
-                        <!-- Area Form Tulis Berita Dibuat Memanjang/Lebar (Full Width) -->
-                        <div class="bg-slate-50 p-6 md:p-8 rounded-[2rem] border shadow-sm max-w-4xl mx-auto">
-                            <form onsubmit="window.handleSaveNews(event)">
-                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-200 text-xl md:text-2xl">${window.editItem ? 'Edit Berita' : 'Tulis Berita Baru'}</h3>
-                                
-                                <div class="grid md:grid-cols-2 gap-6 mb-6">
-                                    <div>
-                                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Judul Berita</label>
-                                        <input type="text" id="n-title" value="${window.editItem?.title || ''}" placeholder="Masukkan judul..." required class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 bg-white">
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Kategori</label>
-                                            <select id="n-cat" class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 bg-white cursor-pointer">
-                                                <option value="Kegiatan" ${window.editItem?.category==='Kegiatan'?'selected':''}>Kegiatan</option>
-                                                <option value="Prestasi" ${window.editItem?.category==='Prestasi'?'selected':''}>Prestasi</option>
-                                                <option value="Pengumuman" ${window.editItem?.category==='Pengumuman'?'selected':''}>Pengumuman</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">URL Gambar Sampul</label>
-                                            <input type="url" id="n-img" value="${window.editItem?.image || ''}" placeholder="https://..." required class="w-full p-4 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 bg-white">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-6">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Isi Konten Berita</label>
-                                    <div id="n-cnt-editor"></div>
-                                    <input type="hidden" id="n-cnt-hidden" required>
-                                </div>
-                                
-                                <div class="flex gap-4 border-t border-slate-200 pt-6">
-                                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl uppercase text-sm tracking-widest transition shadow-lg shadow-blue-600/30">
-                                        ${window.editItem ? 'SIMPAN PERUBAHAN' : 'PUBLIKASIKAN BERITA'}
-                                    </button>
-                                    ${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-black px-8 rounded-2xl transition uppercase text-sm tracking-widest">BATAL</button>`:''}
-                                </div>
-                            </form>
-                        </div>
-                        
-                        <!-- Daftar Berita yang Sudah Diterbitkan -->
-                        <div>
-                            <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">Berita Terpublikasi</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                ${window.beritaList.sort((a,b)=>b.timestamp-a.timestamp).map(n => `
-                                    <div class="bg-white border border-slate-100 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] p-5 md:p-6 rounded-[2rem] flex flex-col sm:flex-row items-start sm:items-center gap-6 hover:shadow-md transition-all group">
-                                        <div class="w-full sm:w-32 h-32 rounded-[1.25rem] overflow-hidden shrink-0 relative bg-slate-100">
-                                            <img src="${n.image}" class="w-full h-full object-cover">
-                                            <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-[8px] font-black px-2 py-1 rounded-md uppercase text-blue-900 shadow-sm">${n.category}</div>
-                                        </div>
-                                        <div class="flex-1 min-w-0 w-full">
-                                            <p class="text-[10px] font-bold text-slate-400 mb-1.5 flex items-center gap-1.5"><i data-lucide="clock" size="12"></i> ${new Date(n.timestamp).toLocaleDateString('id-ID')}</p>
-                                            <h4 class="font-black text-blue-900 text-base line-clamp-2 leading-snug mb-2 group-hover:text-blue-600 transition-colors">${n.title}</h4>
-                                            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">${n.content.replace(/<[^>]*>?/gm, '')}</p>
-                                        </div>
-                                        <div class="flex sm:flex-col gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-4 mt-4 sm:mt-0">
-                                            <button onclick="window.setEditItem('berita', '${n.id}')" class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center p-3 rounded-xl transition flex-1 sm:flex-none"><i data-lucide="edit-3" size="18"></i></button>
-                                            <button onclick="window.requestDelete('berita', '${n.id}')" class="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center p-3 rounded-xl transition flex-1 sm:flex-none"><i data-lucide="trash-2" size="18"></i></button>
-                                        </div>
-                                    </div>`).join('') || '<div class="col-span-full py-20 text-center italic text-slate-400 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200">Belum ada berita yang diterbitkan.</div>'}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                // Inisialisasi Quill Editor
-                setTimeout(() => {
-                    const toolbarOptions = [
-                        [{ 'header': [1, 2, 3, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                        ['link'],
-                        ['clean']
-                    ];
-                    
-                    window.quillEditor = new Quill('#n-cnt-editor', {
-                        theme: 'snow',
-                        placeholder: 'Mulai menulis isi berita di sini...',
-                        modules: { toolbar: toolbarOptions }
-                    });
-
-                    if(window.editItem && window.editItem.content) {
-                        window.quillEditor.clipboard.dangerouslyPasteHTML(window.editItem.content);
-                    }
-                    
-                    window.quillEditor.on('text-change', function() {
-                        document.getElementById('n-cnt-hidden').value = window.quillEditor.root.innerHTML === '<p><br></p>' ? '' : window.quillEditor.root.innerHTML;
-                    });
-                }, 100);
-            }
-            else if (tab === 'galeri') {
-                const opt = availablePages.map(p => `<option value="${p.id}" ${window.editItem?.btnTarget===p.id?'selected':''}>${p.title}</option>`).join('');
-                container.innerHTML = `
-                    <div class="grid lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-1">
-                            <form onsubmit="window.handleSaveGallery(event)" class="${cardClass} sticky top-28">
-                                <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-slate-100 text-xl">${window.editItem ? 'Edit Slide Foto' : 'Upload Foto Galeri'}</h3>
-                                <div class="space-y-4">
-                                    <div><label class="${labelClass}">Keterangan Singkat (Caption)</label><input type="text" id="g-cap" value="${window.editItem?.caption || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">URL Gambar Asli</label><input type="url" id="g-url" value="${window.editItem?.url || ''}" required class="${inputClass}"></div>
-                                    
-                                    <div class="pt-6 border-t border-slate-100">
-                                        <h4 class="font-bold text-xs text-blue-900 mb-3 uppercase tracking-widest"><i data-lucide="link-2" size="14" class="inline"></i> Tautan Tombol (Opsional)</h4>
-                                        <label class="${labelClass}">Teks Tombol</label>
-                                        <input type="text" id="g-btntx" value="${window.editItem?.btnText || ''}" placeholder="Misal: Daftar Sekarang" class="${inputClass} mb-3">
-                                        <label class="${labelClass}">Jenis Tautan</label>
-                                        <select id="g-btntp" class="${inputClass} mb-3">
-                                            <option value="link" ${window.editItem?.btnType==='link'?'selected':''}>Halaman Internal (Dalam Web)</option>
-                                            <option value="external" ${window.editItem?.btnType==='external'?'selected':''}>URL Eksternal (Link Luar)</option>
-                                        </select>
-                                        <label class="${labelClass}">ID Tujuan / Link Lengkap</label>
-                                        <input type="text" id="g-btntg" value="${window.editItem?.btnTarget || ''}" placeholder="ID Halaman atau https://..." class="${inputClass}">
-                                    </div>
-                                    
-                                    <div class="pt-4 border-t border-slate-100 mt-4">
-                                        <label class="flex items-center gap-3 cursor-pointer group">
-                                            <input type="checkbox" id="g-carousel" class="w-5 h-5 text-blue-600 rounded-md border-slate-300 focus:ring-blue-500" ${(!window.editItem || window.editItem.showInCarousel !== false) ? 'checked' : ''}>
-                                            <span class="text-[11px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-blue-600 transition">Tampilkan di Slider Beranda</span>
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="flex gap-3 mt-6"><button type="submit" class="${btnClass} flex-1 !bg-yellow-400 !text-blue-900 hover:!bg-yellow-500 !shadow-yellow-400/30">SIMPAN FOTO</button>${window.editItem ? `<button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>`:''}</div>
-                            </form>
-                        </div>
-                        <div class="lg:col-span-2">
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">${window.galleryList.map(g => `
-                                <div class="group relative aspect-square rounded-[1.5rem] overflow-hidden border border-slate-200 shadow-sm">
-                                    <div class="absolute top-3 left-3 opacity-100 z-10 transition-opacity">
-                                        ${g.showInCarousel !== false ? `<span class="bg-blue-600 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-md uppercase">DI SLIDER</span>` : `<span class="bg-slate-400 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-md uppercase">SEMBUNYI</span>`}
-                                    </div>
-                                    <img src="${g.url}" class="w-full h-full object-cover">
-                                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-blue-900/90 to-transparent p-4 pt-10 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity text-center z-10">
-                                        <p class="text-white text-[10px] font-bold line-clamp-1 mb-2">${g.caption}</p>
-                                        <div class="flex justify-center gap-2">
-                                            <button onclick="window.setEditItem('gallery', '${g.id}')" class="bg-white/20 hover:bg-white text-white hover:text-blue-600 p-2 rounded-lg backdrop-blur-sm transition"><i data-lucide="edit-3" size="14"></i></button>
-                                            <button onclick="window.requestDelete('gallery', '${g.id}')" class="bg-white/20 hover:bg-red-500 text-white p-2 rounded-lg backdrop-blur-sm transition"><i data-lucide="trash-2" size="14"></i></button>
-                                        </div>
-                                    </div>
-                                </div>`).join('') || '<div class="col-span-full py-20 text-center italic text-slate-400 bg-slate-50 rounded-3xl border border-dashed">Belum ada galeri.</div>'}
-                            </div>
-                        </div>
-                    </div>`;
-            }
-            else if (tab === 'alumni') {
-                const pnd = window.alumniList.filter(a => a.status === 'pending');
-                const app = window.alumniList.filter(a => a.status === 'approved');
-                
-                // Form Input Edit untuk Admin
-                let editFormHTML = '';
-                if (window.editItem && window.editItem.status !== undefined) {
-                    editFormHTML = `
-                        <div class="${cardClass} bg-blue-50/50 border-blue-100">
-                            <h3 class="font-black text-blue-900 mb-6 pb-4 border-b border-blue-100 text-xl">Edit Data Alumni</h3>
-                            <form onsubmit="window.handleSaveAlumni(event)" class="space-y-4">
-                                <div class="grid md:grid-cols-2 gap-4">
-                                    <div><label class="${labelClass}">Nama Lengkap</label><input type="text" id="a-name" value="${window.editItem.name || ''}" required class="${inputClass}"></div>
-                                    <div><label class="${labelClass}">Tahun Kelulusan</label><input type="number" id="a-year" value="${window.editItem.graduationYear || ''}" required class="${inputClass}"></div>
-                                </div>
-                                <div><label class="${labelClass}">Tempat Kerja / Kuliah</label><input type="text" id="a-work" value="${window.editItem.workplace || ''}" required class="${inputClass}"></div>
-                                <div><label class="${labelClass}">URL Foto (Facebook/Drive)</label><input type="url" id="a-img" value="${window.editItem.image || ''}" required class="${inputClass}"></div>
-                                <div><label class="${labelClass}">Kesan Pesan</label><textarea id="a-quote" required rows="3" class="${inputClass}">${window.editItem.quote || ''}</textarea></div>
-                                <div class="flex gap-3 mt-6">
-                                    <button type="submit" class="${btnClass} flex-1">SIMPAN PERUBAHAN</button>
-                                    <button type="button" onclick="window.cancelEdit()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-4 rounded-xl transition text-xs tracking-widest uppercase">BATAL</button>
-                                </div>
-                            </form>
-                        </div>
-                    `;
-                }
-
-                container.innerHTML = `
-                    ${editFormHTML}
-                    <div class="space-y-10">
-                        <div class="${cardClass} !p-6 border-yellow-200 bg-yellow-50/30">
-                            <h3 class="font-black mb-6 text-yellow-600 text-lg uppercase flex items-center gap-2"><i data-lucide="clock"></i> Menunggu Persetujuan (${pnd.length})</h3>
-                            <div class="grid lg:grid-cols-2 gap-4">${pnd.map(a => `
-                                <div class="bg-white rounded-2xl border border-yellow-100 p-5 shadow-sm relative group">
-                                    <div class="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onclick="window.setEditItem('alumni', '${a.id}')" class="bg-blue-50 text-blue-600 p-1.5 rounded-lg hover:bg-blue-100" title="Edit Data"><i data-lucide="edit" size="14"></i></button>
-                                    </div>
-                                    <div class="flex gap-4 mb-4 items-center">
-                                        <img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=fefce8&color=a16207&size=100';" class="w-14 h-14 rounded-full object-cover shrink-0">
-                                        <div class="flex-1 min-w-0 pr-8">
-                                            <h4 class="font-black text-sm text-blue-900 truncate">${a.name}</h4>
-                                            <p class="text-[10px] font-bold text-slate-400 mt-0.5">Lulusan ${a.graduationYear} &bull; ${a.workplace}</p>
-                                        </div>
-                                    </div>
-                                    <div class="bg-slate-50 rounded-xl p-3 mb-4 text-[11px] text-slate-600 italic">"${a.quote}"</div>
-                                    <div class="flex gap-3">
-                                        <button onclick="window.handleApproveAlumni('${a.id}')" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-2.5 rounded-xl transition text-[10px] uppercase tracking-widest"><i data-lucide="check-circle" size="14" class="inline mr-1"></i> Setujui</button>
-                                        <button onclick="window.requestDelete('alumni', '${a.id}')" class="flex-1 bg-red-100 hover:bg-red-200 text-red-600 font-black py-2.5 rounded-xl transition text-[10px] uppercase tracking-widest"><i data-lucide="x-circle" size="14" class="inline mr-1"></i> Tolak</button>
-                                    </div>
-                                </div>`).join('') || '<p class="text-slate-400 italic text-sm px-2">Tidak ada data alumni yang mengantre.</p>'}
-                            </div>
-                        </div>
-                        
-                        <div class="${cardClass} !p-6">
-                            <h3 class="font-black mb-6 text-green-600 text-lg uppercase flex items-center gap-2"><i data-lucide="users-2"></i> Database Alumni Aktif (${app.length})</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">${app.map(a => `
-                                <div class="bg-slate-50 rounded-[1.5rem] border border-slate-100 p-5 text-center relative group hover:bg-white hover:shadow-md transition">
-                                    <div class="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition z-10">
-                                        <button onclick="window.setEditItem('alumni', '${a.id}')" class="p-1.5 bg-white text-blue-600 rounded-lg shadow-sm hover:bg-blue-50 border"><i data-lucide="edit-3" size="14"></i></button>
-                                        <button onclick="window.requestDelete('alumni', '${a.id}')" class="p-1.5 bg-white text-red-500 rounded-lg shadow-sm hover:bg-red-50 border"><i data-lucide="trash-2" size="14"></i></button>
-                                    </div>
-                                    <img src="${a.image}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(a.name)}&background=eff6ff&color=1e3a8a&size=100';" class="w-16 h-16 rounded-full mx-auto object-cover mb-3 border-2 border-white shadow-sm">
-                                    <h4 class="font-black text-xs text-blue-900 leading-snug line-clamp-1">${a.name}</h4>
-                                    <p class="text-[9px] font-bold text-slate-400 mt-1 uppercase">${a.graduationYear}</p>
-                                </div>`).join('') || '<p class="col-span-full text-slate-400 italic text-sm">Belum ada alumni yang disetujui.</p>'}
-                            </div>
-                        </div>
-                    </div>`;
-            }
-            lucide.createIcons();
-        };
-
-        // --- DASHBOARD EVENT HANDLERS ---
-        window.handleSaveConfig = async (e) => {
-            e.preventDefault();
-            try {
-                const d = { 
-                    logoImage: window.escapeHTML(document.getElementById('conf-logo').value), 
-                    name: window.escapeHTML(document.getElementById('conf-name').value), 
-                    slogan: window.escapeHTML(document.getElementById('conf-slogan').value), 
-                    address: window.escapeHTML(document.getElementById('conf-address').value),
-                    phone: window.escapeHTML(document.getElementById('conf-phone').value),
-                    email: window.escapeHTML(document.getElementById('conf-email').value),
-                    sambutanName: window.escapeHTML(document.getElementById('conf-s-name').value),
-                    sambutanRole: window.escapeHTML(document.getElementById('conf-s-role').value),
-                    sambutanImage: window.escapeHTML(document.getElementById('conf-s-img').value),
-                    sambutanText: window.escapeHTML(document.getElementById('conf-s-text').value),
-                    videoUrl1: window.escapeHTML(document.getElementById('conf-video1').value),
-                    videoUrl2: window.escapeHTML(document.getElementById('conf-video2').value),
-                    videoUrl3: window.escapeHTML(document.getElementById('conf-video3').value),
-                    popupEnabled: document.getElementById('conf-pop-status').value,
-                    popupImage: window.escapeHTML(document.getElementById('conf-pop-img').value),
-                    popupLink: window.escapeHTML(document.getElementById('conf-pop-link').value),
-                    socialFacebook: window.escapeHTML(document.getElementById('conf-facebook').value),
-                    socialInstagram: window.escapeHTML(document.getElementById('conf-instagram').value),
-                    socialYoutube: window.escapeHTML(document.getElementById('conf-youtube').value),
-                    socialTwitter: window.escapeHTML(document.getElementById('conf-twitter').value),
-                    waPendaftaran: window.escapeHTML(document.getElementById('conf-wa-daftar').value),
-                    waUmum: window.escapeHTML(document.getElementById('conf-wa-umum').value),
-                    waKerjasama: window.escapeHTML(document.getElementById('conf-wa-kerja').value),
-                    stat1Val: window.escapeHTML(document.getElementById('c-s1-val').value),
-                    stat1Label: window.escapeHTML(document.getElementById('c-s1-lab').value),
-                    stat2Val: window.escapeHTML(document.getElementById('c-s2-val').value),
-                    stat2Label: window.escapeHTML(document.getElementById('c-s2-lab').value),
-                    stat3Val: window.escapeHTML(document.getElementById('c-s3-val').value),
-                    stat3Label: window.escapeHTML(document.getElementById('c-s3-lab').value),
-                    stat4Val: window.escapeHTML(document.getElementById('c-s4-val').value),
-                    stat4Label: window.escapeHTML(document.getElementById('c-s4-lab').value)
-                };
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
-                sessionStorage.removeItem('popup_seen'); // Hapus sesi agar pop-up terlihat langsung setelah disimpan
-                window.showToast("Pengaturan Disimpan!");
-            } catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.handleAddMenu = async (e) => {
-            e.preventDefault();
-            try {
-                const type = document.getElementById('menu-type').value;
-                const target = type === 'link' ? document.getElementById('menu-target-in').value : (type === 'external' ? window.escapeHTML(document.getElementById('menu-target-ex').value) : '');
-                const newItem = { id: 'm_'+Date.now(), title: window.escapeHTML(document.getElementById('menu-title').value), type, target, children: [] };
-                const updated = [...(window.siteConfig.menuItems || []), newItem];
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: updated }, { merge: true });
-                window.showToast("Menu Ditambahkan!"); e.target.reset(); 
-            } catch (err) { window.handleFirebaseError(err); } 
-        };
-
-        window.handleAddSubMenu = async (e, pid) => {
-            e.preventDefault();
-            try {
-                const title = window.escapeHTML(document.getElementById(`sub-t-${pid}`).value);
-                const target = document.getElementById(`sub-trg-${pid}`).value;
-                const newMenus = JSON.parse(JSON.stringify(window.siteConfig.menuItems));
-                const parent = newMenus.find(m => m.id === pid);
-                if(parent) {
-                    if(!parent.children) parent.children = [];
-                    parent.children.push({ id: 's_'+Date.now(), title, target, type: 'link' });
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), { menuItems: newMenus }, { merge: true });
-                    window.showToast("Sub-menu ditambahkan!");
-                }
-            } catch(err) { window.handleFirebaseError(err); } 
-        };
-
-        window.handleSaveProfil = async (e) => {
-            e.preventDefault();
-            try {
-                const d = { profilImage: window.escapeHTML(document.getElementById('prof-img').value), profilSejarah: window.escapeHTML(document.getElementById('prof-sejarah').value), profilVisi: window.escapeHTML(document.getElementById('prof-visi').value), profilMisi: window.escapeHTML(document.getElementById('prof-misi').value) };
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), d, { merge: true });
-                window.showToast("Profil Sekolah Disimpan!");
-            } catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.handleSaveJurusan = async (e) => {
-            e.preventDefault();
-            try {
-                const d = { code: window.escapeHTML(document.getElementById('j-code').value), name: window.escapeHTML(document.getElementById('j-name').value), image: window.escapeHTML(document.getElementById('j-img').value), desc: window.escapeHTML(document.getElementById('j-desc').value), timestamp: window.editItem ? window.editItem.timestamp : Date.now() };
-                if(window.editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jurusan', window.editItem.id), d);
-                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jurusan'), d);
-                window.editItem = null; window.showToast("Jurusan Tersimpan!"); window.renderAdminDashboard();
-            } catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.handleSaveGuru = async (e) => {
-            e.preventDefault();
-            try {
-                const d = { name: window.escapeHTML(document.getElementById('g-name').value), subject: window.escapeHTML(document.getElementById('g-sub').value), image: window.escapeHTML(document.getElementById('g-img').value), quote: window.escapeHTML(document.getElementById('g-quote').value), timestamp: window.editItem ? window.editItem.timestamp : Date.now() };
-                if(window.editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'guru', window.editItem.id), d);
-                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'guru'), d);
-                window.editItem = null; window.showToast("Guru Tersimpan!"); window.renderAdminDashboard();
-            } catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.handleSaveMitra = async (e) => {
-            e.preventDefault();
-            try {
-                const d = { name: window.escapeHTML(document.getElementById('m-name').value), image: window.escapeHTML(document.getElementById('m-img').value), desc: window.escapeHTML(document.getElementById('m-desc').value), timestamp: window.editItem ? window.editItem.timestamp : Date.now() };
-                if(window.editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'mitra', window.editItem.id), d);
-                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'mitra'), d);
-                window.editItem = null; window.showToast("Mitra Tersimpan!"); window.renderAdminDashboard();
-            } catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.handleSaveNews = async (e) => {
-            e.preventDefault();
-            try {
-                // Pastikan input hidden dari Quill editor sudah terisi
-                const content = document.getElementById('n-cnt-hidden').value;
-                if (!content || content.trim() === '') {
-                    window.showToast("Isi berita tidak boleh kosong!");
-                    return;
-                }
-                
-                const d = { 
-                    title: window.escapeHTML(document.getElementById('n-title').value), 
-                    category: document.getElementById('n-cat').value, 
-                    image: window.escapeHTML(document.getElementById('n-img').value), 
-                    content: content, // Simpan format HTML asli dari Quill
-                    timestamp: window.editItem ? window.editItem.timestamp : Date.now() 
-                };
-                if(window.editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'berita', window.editItem.id), d);
-                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'berita'), d);
-                window.editItem = null; window.showToast("Berita Tersimpan!"); window.renderAdminDashboard();
-            } catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.handleSaveGallery = async (e) => {
-            e.preventDefault();
-            try {
-                const d = { 
-                    caption: window.escapeHTML(document.getElementById('g-cap').value), 
-                    url: window.escapeHTML(document.getElementById('g-url').value), 
-                    btnText: window.escapeHTML(document.getElementById('g-btntx').value), 
-                    btnType: document.getElementById('g-btntp').value, 
-                    btnTarget: window.escapeHTML(document.getElementById('g-btntg').value), 
-                    showInCarousel: document.getElementById('g-carousel').checked,
-                    timestamp: window.editItem ? window.editItem.timestamp : Date.now() 
-                };
-                if(window.editItem) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gallery', window.editItem.id), d);
-                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'gallery'), d);
-                window.editItem = null; window.showToast("Slide Tersimpan!"); window.renderAdminDashboard();
-            } catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.handleSaveAlumni = async (e) => {
-            e.preventDefault();
-            try {
-                if(!window.editItem) return;
-                const d = { 
-                    name: window.escapeHTML(document.getElementById('a-name').value), 
-                    graduationYear: window.escapeHTML(document.getElementById('a-year').value), 
-                    workplace: window.escapeHTML(document.getElementById('a-work').value), 
-                    image: window.escapeHTML(document.getElementById('a-img').value), 
-                    quote: window.escapeHTML(document.getElementById('a-quote').value), 
-                    status: window.editItem.status, 
-                    timestamp: window.editItem.timestamp 
-                };
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'alumni', window.editItem.id), d);
-                window.editItem = null; window.showToast("Data Alumni Diperbarui!"); window.renderAdminDashboard();
-            } catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.handleSubmitAlumniTracer = async (e) => {
-            e.preventDefault();
-            try {
-                const d = { name: window.escapeHTML(document.getElementById('tracer-name').value), graduationYear: window.escapeHTML(document.getElementById('tracer-year').value), workplace: window.escapeHTML(document.getElementById('tracer-workplace').value), image: window.escapeHTML(document.getElementById('tracer-image').value), quote: window.escapeHTML(document.getElementById('tracer-quote').value), status: 'pending', timestamp: Date.now() };
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'alumni'), d);
-                window.showToast("Terkirim! Tunggu persetujuan admin."); e.target.reset();
-            } catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.handleApproveAlumni = async (id) => {
-            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'alumni', id), { status: 'approved' }); window.showToast("Disetujui!"); window.renderAdminDashboard(); }
-            catch (err) { window.handleFirebaseError(err); }
-        };
-
-        window.setEditItem = (col, id) => {
-            let list = [];
-            if(col === 'berita') list = window.beritaList;
-            else if(col === 'gallery') list = window.galleryList;
-            else if(col === 'jurusan') list = window.jurusanList;
-            else if(col === 'guru') list = window.guruList;
-            else if(col === 'mitra') list = window.mitraList;
-            else if(col === 'alumni') list = window.alumniList;
-            window.editItem = list.find(x => x.id === id);
-            window.renderAdminDashboard();
-        };
-
-        window.cancelEdit = () => { window.editItem = null; window.renderAdminDashboard(); };
-
-        // --- SISTEM INISIALISASI & FIREBASE SYNC ---
-        window.setupListeners = () => {
-            if (window.isSetup) return;
-            window.isSetup = true;
-
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'site_config', 'main'), (snap) => {
-                if (snap.exists()) window.siteConfig = { ...window.siteConfig, ...snap.data() };
-                window.updateSiteBranding(); window.renderNavigation(); window.refreshUI();
-            }, window.handleFirebaseError);
-
-            ['berita', 'gallery', 'jurusan', 'guru', 'mitra', 'alumni'].forEach(col => {
-                onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', col), (snap) => {
-                    const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    if(col === 'berita') window.beritaList = data;
-                    if(col === 'gallery') window.galleryList = data;
-                    if(col === 'jurusan') window.jurusanList = data;
-                    if(col === 'guru') window.guruList = data;
-                    if(col === 'mitra') window.mitraList = data;
-                    if(col === 'alumni') window.alumniList = data;
-                    window.refreshUI();
-                }, window.handleFirebaseError);
-            });
-        };
-
-        window.startCarousel = () => { clearInterval(window.cTimer); window.cTimer = setInterval(() => window.moveCarousel('next'), 6000); };
-        window.hideLoader = () => { const l = document.getElementById('initial-loader'); if (l) { l.classList.add('opacity-0'); setTimeout(() => l.remove(), 700); } };
-
-        window.onload = () => {
-            const initApp = async () => {
-                try { await signInAnonymously(auth); } catch (e) { console.warn("Anon Auth Fail."); }
-                window.setupListeners();
-                window.checkUrlAndRoute();
-                setTimeout(window.hideLoader, 1200);
-            };
-            initApp();
-        };
-
-        window.checkUrlAndRoute = () => {
-            try {
-                const params = new URLSearchParams(window.location.search);
-                if (params.has('berita')) { window.currentDataId = params.get('berita'); window.renderPage('berita-detail'); }
-                else if (params.has('p')) window.renderPage(params.get('p'));
-                else window.renderPage('home');
-            } catch (e) { window.renderPage('home'); }
-        };
-
-        window.addEventListener('popstate', () => window.checkUrlAndRoute());
-
-    </script>
-</body>
-</html>
+                                <div><label class="${labelClass}">Misi</label><textarea id="prof-misi" rows="5" required class="${inputClass}">${window.siteConfig.profilM
